@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>チャット - チャットアプリ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        #chat-container {
+            height: 500px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #f8f9fa;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 5px;
+            background-color: white;
+        }
+        .message-sender {
+            font-weight: bold;
+            color: #007bff;
+        }
+        .message-time {
+            font-size: 0.8em;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">チャットアプリ</a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">ようこそ、<span th:text="${#authentication.name}"></span>さん</span>
+                <a class="nav-link" th:href="@{/logout}">ログアウト</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>チャット</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="chat-container">
+                            <!-- メッセージがここに表示されます -->
+                        </div>
+                        <div class="mt-3">
+                            <div class="input-group">
+                                <input type="text" id="messageInput" class="form-control" placeholder="メッセージを入力してください...">
+                                <button class="btn btn-primary" type="button" id="sendButton">送信</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>オンラインユーザー</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul id="users-list" class="list-unstyled">
+                            <!-- オンラインユーザーがここに表示されます -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script>
+        let stompClient = null;
+        let currentUser = /*[[${#authentication.name}]]*/ '';
+
+        function connect() {
+            const socket = new SockJS('/ws');
+            stompClient = Stomp.over(socket);
+            
+            stompClient.connect({}, function (frame) {
+                console.log('Connected: ' + frame);
+                
+                // デフォルトチャットルームに参加
+                stompClient.subscribe('/topic/chatroom/1', function (message) {
+                    showMessage(JSON.parse(message.body));
+                });
+                
+                // ユーザー参加通知
+                stompClient.send("/app/chat.addUser", {}, JSON.stringify({
+                    senderUsername: currentUser,
+                    type: 'JOIN'
+                }));
+            });
+        }
+
+        function disconnect() {
+            if (stompClient !== null) {
+                stompClient.disconnect();
+            }
+            console.log("Disconnected");
+        }
+
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const messageContent = messageInput.value.trim();
+            
+            if (messageContent && stompClient) {
+                const message = {
+                    content: messageContent,
+                    chatRoomId: 1,
+                    senderUsername: currentUser,
+                    timestamp: new Date().toISOString()
+                };
+                
+                stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(message));
+                messageInput.value = '';
+            }
+        }
+
+        function showMessage(message) {
+            const chatContainer = document.getElementById('chat-container');
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message';
+            
+            const time = new Date(message.timestamp).toLocaleTimeString();
+            
+            messageElement.innerHTML = `
+                <div class="message-sender">${message.senderUsername}</div>
+                <div>${message.content}</div>
+                <div class="message-time">${time}</div>
+            `;
+            
+            chatContainer.appendChild(messageElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // イベントリスナー
+        document.getElementById('sendButton').addEventListener('click', sendMessage);
+        document.getElementById('messageInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // ページロード時に接続
+        window.addEventListener('load', function () {
+            connect();
+        });
+
+        // ページアンロード時に切断
+        window.addEventListener('beforeunload', function () {
+            disconnect();
+        });
+    </script>
+</body>
+</html>

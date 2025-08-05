@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新規登録 - チャットアプリ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card mt-5">
+                    <div class="card-header">
+                        <h2 class="text-center">新規登録</h2>
+                    </div>
+                    <div class="card-body">
+                        <!-- エラーメッセージ表示 -->
+                        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+                        
+                        <form th:action="@{/register}" th:object="${user}" method="post">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">ユーザー名</label>
+                                <input type="text" class="form-control" th:field="*{username}" id="username" required>
+                                <div th:if="${#fields.hasErrors('username')}" class="text-danger">
+                                    <span th:errors="*{username}"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="email" class="form-label">メールアドレス</label>
+                                <input type="email" class="form-control" th:field="*{email}" id="email" required>
+                                <div th:if="${#fields.hasErrors('email')}" class="text-danger">
+                                    <span th:errors="*{email}"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="password" class="form-label">パスワード</label>
+                                <input type="password" class="form-control" th:field="*{password}" id="password" required>
+                                <div th:if="${#fields.hasErrors('password')}" class="text-danger">
+                                    <span th:errors="*{password}"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">登録</button>
+                            </div>
+                        </form>
+                        
+                        <div class="text-center mt-3">
+                            <p>既にアカウントをお持ちの方は<a th:href="@{/login}">こちら</a>からログインしてください。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
