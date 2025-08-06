@@ -27,12 +27,16 @@ public class AuthController {
     @GetMapping("/login")
     public String loginPage(@RequestParam(value = "error", required = false) String error,
                            @RequestParam(value = "logout", required = false) String logout,
+                           @RequestParam(value = "success", required = false) String success,
                            Model model) {
         if (error != null) {
             model.addAttribute("error", "ユーザー名またはパスワードが正しくありません");
         }
         if (logout != null) {
             model.addAttribute("message", "ログアウトしました");
+        }
+        if (success != null) {
+            model.addAttribute("success", "登録が完了しました。ログインしてください。");
         }
         return "login";
     }
@@ -57,8 +61,7 @@ public class AuthController {
                 userDto.getPassword(),
                 userDto.getEmail()
             );
-            model.addAttribute("success", "登録が完了しました。ログインしてください。");
-            return "login";
+            return "redirect:/login?success=true";
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
             return "register";

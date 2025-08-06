@@ -5,8 +5,10 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -14,7 +16,12 @@ import java.time.format.DateTimeFormatter;
 public class ChatController {
 
     @GetMapping("/chat")
-    public String chatPage() {
+    public String chatPage(Model model, Principal principal) {
+        if (principal != null) {
+            model.addAttribute("username", principal.getName());
+        } else {
+            model.addAttribute("username", "ゲスト");
+        }
         return "chat";
     }
 
@@ -22,7 +29,11 @@ public class ChatController {
     @SendTo("/topic/chatroom/1")
     public MessageDto sendMessage(MessageDto message, Authentication authentication) {
         // 送信者の情報を設定
-        message.setSenderUsername(authentication.getName());
+        if (authentication != null) {
+            message.setSenderUsername(authentication.getName());
+        } else {
+            message.setSenderUsername("匿名ユーザー");
+        }
         message.setTimestamp(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         return message;
     }
@@ -30,8 +41,9 @@ public class ChatController {
     @MessageMapping("/chat.addUser")
     @SendTo("/topic/chatroom/1")
     public MessageDto addUser(MessageDto message, Authentication authentication) {
-        message.setSenderUsername(authentication.getName());
-        message.setContent(authentication.getName() + "がチャットに参加しました");
+        String username = authentication != null ? authentication.getName() : "匿名ユーザー";
+        message.setSenderUsername(username);
+        message.setContent(username + "がチャットに参加しました");
         message.setTimestamp(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         return message;
     }

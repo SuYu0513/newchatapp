@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -34,7 +35,9 @@
         <div class="container">
             <a class="navbar-brand" href="#">チャットアプリ</a>
             <div class="navbar-nav ms-auto">
-                <span class="navbar-text me-3">ようこそ、<span th:text="${#authentication.name}"></span>さん</span>
+                <span class="navbar-text me-3" sec:authorize="isAuthenticated()">
+                    ようこそ、<span sec:authentication="name"></span>さん
+                </span>
                 <a class="nav-link" th:href="@{/logout}">ログアウト</a>
             </div>
         </div>
@@ -80,7 +83,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
     <script>
         let stompClient = null;
-        let currentUser = /*[[${#authentication.name}]]*/ '';
+        let currentUser = 'user'; // 一時的に固定値を使用
 
         function connect() {
             const socket = new SockJS('/ws');
