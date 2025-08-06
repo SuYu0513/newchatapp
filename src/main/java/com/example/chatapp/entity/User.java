@@ -34,6 +34,9 @@ public class User {
     @Column(unique = true, nullable = false, length = 100)
     private String email;
     
+    @Column(unique = true, nullable = false, name = "friend_code")
+    private Integer friendCode;  // 8桁のフレンドコード
+    
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -92,6 +95,14 @@ public class User {
     
     public void setEmail(String email) {
         this.email = email;
+    }
+    
+    public Integer getFriendCode() {
+        return friendCode;
+    }
+    
+    public void setFriendCode(Integer friendCode) {
+        this.friendCode = friendCode;
     }
     
     public LocalDateTime getCreatedAt() {

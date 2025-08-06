@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>メッセージAPIテスト</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .room-button { margin: 10px; padding: 10px; background: #007bff; color: white; border: none; cursor: pointer; }
+        .message { padding: 10px; border-bottom: 1px solid #eee; }
+        #output { border: 1px solid #ccc; padding: 20px; margin-top: 20px; height: 400px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>メッセージAPI テスト (ポート8090)</h1>
+    
+    <div>
+        <button class="room-button" onclick="loadMessages(1)">ルーム1のメッセージ</button>
+        <button class="room-button" onclick="loadMessages(2)">ルーム2のメッセージ</button>
+        <button class="room-button" onclick="loadMessages(3)">ルーム3のメッセージ</button>
+        <button class="room-button" onclick="clearOutput()">クリア</button>
+    </div>
+    
+    <div id="output"></div>
+
+    <script>
+        function loadMessages(roomId) {
+            const output = document.getElementById('output');
+            output.innerHTML = `<p>ルーム${roomId}のメッセージを読み込み中...</p>`;
+            
+            fetch(`/api/messages/${roomId}`)
+                .then(response => {
+                    console.log('応答ステータス:', response.status);
+                    return response.json();
+                })
+                .then(messages => {
+                    console.log('受信したメッセージ:', messages);
+                    
+                    let html = `<h3>ルーム${roomId}のメッセージ (${messages.length}件)</h3>`;
+                    
+                    if (messages.length === 0) {
+                        html += '<p>メッセージがありません</p>';
+                    } else {
+                        messages.forEach(message => {
+                            html += `
+                                <div class="message">
+                                    <strong>${message.senderUsername}</strong>: ${message.content}
+                                    <br><small>時刻: ${message.timestamp} | ルームID: ${message.chatRoomId}</small>
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    output.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('エラー:', error);
+                    output.innerHTML = `<p style="color: red;">エラー: ${error.message}</p>`;
+                });
+        }
+        
+        function clearOutput() {
+            document.getElementById('output').innerHTML = '';
+        }
+    </script>
+</body>
+</html>

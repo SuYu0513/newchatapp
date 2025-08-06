@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.List;
+import java.util.ArrayList;
 
 @Service
 @Transactional
@@ -18,6 +20,9 @@ public class UserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private FriendCodeService friendCodeService;
 
     public User registerUser(String username, String password, String email) {
         // ユーザー名とメールアドレスの重複チェック
@@ -30,9 +35,13 @@ public class UserService {
 
         // パスワードをハッシュ化
         String hashedPassword = passwordEncoder.encode(password);
+        
+        // フレンドコードを生成
+        Integer friendCode = friendCodeService.generateUniqueFriendCode();
 
         // ユーザーを作成・保存
         User user = new User(username, hashedPassword, email);
+        user.setFriendCode(friendCode);
         return userRepository.save(user);
     }
 
@@ -54,5 +63,42 @@ public class UserService {
 
     public User save(User user) {
         return userRepository.save(user);
+    }
+
+    // ユーザー検索メソッド
+    public List<User> searchUsers(String query) {
+        List<User> results = new ArrayList<>();
+        
+        try {
+            // まずIDで検索を試行
+            Long id = Long.parseLong(query);
+            Optional<User> userById = userRepository.findById(id);
+            if (userById.isPresent()) {
+                results.add(userById.get());
+                return results;
+            }
+        } catch (NumberFormatException e) {
+            // IDでない場合は無視
+        }
+        
+        // フレンドコードで検索（完全一致）
+        try {
+            Integer friendCode = Integer.parseInt(query);
+            if (friendCodeService.isValidFriendCodeFormat(friendCode)) {
+                Optional<User> userByFriendCode = userRepository.findByFriendCode(friendCode);
+                if (userByFriendCode.isPresent()) {
+                    results.add(userByFriendCode.get());
+                    return results;
+                }
+            }
+        } catch (NumberFormatException e) {
+            // フレンドコードでない場合は無視
+        }
+        
+        // ユーザー名で部分一致検索
+        List<User> usersByUsername = userRepository.findByUsernameContainingIgnoreCase(query);
+        results.addAll(usersByUsername);
+        
+        return results;
     }
 }

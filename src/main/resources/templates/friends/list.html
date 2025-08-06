@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>フレンド管理 - ChatApp</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --warning-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            --dark-gradient: linear-gradient(135deg, #232526 0%, #414345 100%);
+        }
+
+        body {
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            margin: 20px auto;
+            max-width: 1200px;
+            padding: 30px;
+        }
+
+        .nav-tabs {
+            border: none;
+            margin-bottom: 30px;
+        }
+
+        .nav-tabs .nav-link {
+            border: none;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            color: #495057;
+            border-radius: 15px;
+            margin-right: 10px;
+            padding: 12px 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tabs .nav-link:hover {
+            background: var(--primary-gradient);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .nav-tabs .nav-link.active {
+            background: var(--primary-gradient);
+            color: white !important;
+            border: none;
+        }
+
+        .friend-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: none;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .friend-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .friend-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .friend-info {
+            flex: 1;
+            margin-left: 20px;
+        }
+
+        .friend-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .friend-status {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .status-online {
+            color: #48bb78 !important;
+        }
+
+        .status-offline {
+            color: #a0aec0 !important;
+        }
+
+        .btn-custom {
+            border: none;
+            border-radius: 10px;
+            padding: 8px 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin: 0 5px;
+        }
+
+        .btn-primary-custom {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success-custom {
+            background: var(--success-gradient);
+            color: white;
+        }
+
+        .btn-success-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+        }
+
+        .btn-danger-custom {
+            background: var(--danger-gradient);
+            color: white;
+        }
+
+        .btn-danger-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(250, 112, 154, 0.4);
+        }
+
+        .btn-warning-custom {
+            background: var(--warning-gradient);
+            color: #2d3748;
+        }
+
+        .btn-warning-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(168, 237, 234, 0.4);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .page-title {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            min-width: 300px;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .notification.alert-success {
+            background: var(--success-gradient);
+            color: white;
+        }
+
+        .notification.alert-danger {
+            background: var(--danger-gradient);
+            color: white;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner-border {
+            color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                margin: 10px;
+                padding: 20px;
+            }
+            
+            .friend-card {
+                padding: 15px;
+            }
+            
+            .friend-avatar {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+            
+            .friend-info {
+                margin-left: 15px;
+            }
+            
+            .btn-custom {
+                font-size: 0.8rem;
+                padding: 6px 12px;
+                margin: 2px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-container">
+            <h1 class="page-title">
+                <i class="fas fa-users"></i> フレンド管理
+            </h1>
+
+            <!-- タブナビゲーション -->
+            <ul class="nav nav-tabs" id="friendTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="friends-tab" data-bs-toggle="tab" data-bs-target="#friends" type="button" role="tab">
+                        <i class="fas fa-user-friends"></i> フレンド一覧
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="sent-requests-tab" data-bs-toggle="tab" data-bs-target="#sent-requests" type="button" role="tab">
+                        <i class="fas fa-paper-plane"></i> 送信済み申請
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="received-requests-tab" data-bs-toggle="tab" data-bs-target="#received-requests" type="button" role="tab">
+                        <i class="fas fa-inbox"></i> 受信申請
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="blocked-users-tab" data-bs-toggle="tab" data-bs-target="#blocked-users" type="button" role="tab">
+                        <i class="fas fa-ban"></i> ブロック一覧
+                    </button>
+                </li>
+            </ul>
+
+            <!-- タブコンテンツ -->
+            <div class="tab-content" id="friendTabContent">
+                <!-- フレンド一覧 -->
+                <div class="tab-pane fade show active" id="friends" role="tabpanel">
+                    <div class="loading-spinner" id="friends-loading">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">読み込み中...</span>
+                        </div>
+                    </div>
+                    <div id="friends-list"></div>
+                </div>
+
+                <!-- 送信済み申請 -->
+                <div class="tab-pane fade" id="sent-requests" role="tabpanel">
+                    <div class="loading-spinner" id="sent-loading">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">読み込み中...</span>
+                        </div>
+                    </div>
+                    <div id="sent-requests-list"></div>
+                </div>
+
+                <!-- 受信申請 -->
+                <div class="tab-pane fade" id="received-requests" role="tabpanel">
+                    <div class="loading-spinner" id="received-loading">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">読み込み中...</span>
+                        </div>
+                    </div>
+                    <div id="received-requests-list"></div>
+                </div>
+
+                <!-- ブロック一覧 -->
+                <div class="tab-pane fade" id="blocked-users" role="tabpanel">
+                    <div class="loading-spinner" id="blocked-loading">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">読み込み中...</span>
+                        </div>
+                    </div>
+                    <div id="blocked-users-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // フレンド管理のJavaScript機能
+        class FriendManager {
+            constructor() {
+                this.currentTab = 'friends';
+                this.init();
+            }
+
+            init() {
+                // タブ切り替えイベント
+                document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
+                    tab.addEventListener('shown.bs.tab', (e) => {
+                        const target = e.target.getAttribute('data-bs-target');
+                        this.currentTab = target.replace('#', '');
+                        this.loadTabData(this.currentTab);
+                    });
+                });
+
+                // 初期データロード
+                this.loadTabData('friends');
+            }
+
+            async loadTabData(tabName) {
+                const loadingElement = document.getElementById(`${tabName.replace('-', '')}-loading`);
+                const listElement = document.getElementById(`${tabName}-list`);
+
+                if (loadingElement) loadingElement.style.display = 'block';
+                if (listElement) listElement.innerHTML = '';
+
+                try {
+                    let data = [];
+                    switch (tabName) {
+                        case 'friends':
+                            data = await this.fetchFriends();
+                            this.renderFriends(data);
+                            break;
+                        case 'sent-requests':
+                            data = await this.fetchSentRequests();
+                            this.renderSentRequests(data);
+                            break;
+                        case 'received-requests':
+                            data = await this.fetchReceivedRequests();
+                            this.renderReceivedRequests(data);
+                            break;
+                        case 'blocked-users':
+                            data = await this.fetchBlockedUsers();
+                            this.renderBlockedUsers(data);
+                            break;
+                    }
+                } catch (error) {
+                    console.error('データ読み込みエラー:', error);
+                    this.showNotification('データの読み込みに失敗しました', 'error');
+                } finally {
+                    if (loadingElement) loadingElement.style.display = 'none';
+                }
+            }
+
+            // API呼び出しメソッド
+            async fetchFriends() {
+                const response = await fetch('/friends/api/list');
+                if (!response.ok) throw new Error('フレンド一覧の取得に失敗');
+                return await response.json();
+            }
+
+            async fetchSentRequests() {
+                const response = await fetch('/friends/api/sent-requests');
+                if (!response.ok) throw new Error('送信済み申請の取得に失敗');
+                return await response.json();
+            }
+
+            async fetchReceivedRequests() {
+                const response = await fetch('/friends/api/received-requests');
+                if (!response.ok) throw new Error('受信申請の取得に失敗');
+                return await response.json();
+            }
+
+            async fetchBlockedUsers() {
+                const response = await fetch('/friends/api/blocked');
+                if (!response.ok) throw new Error('ブロック一覧の取得に失敗');
+                return await response.json();
+            }
+
+            // レンダリングメソッド
+            renderFriends(friends) {
+                const container = document.getElementById('friends-list');
+                
+                if (friends.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-user-friends"></i>
+                            <h5>まだフレンドがいません</h5>
+                            <p>ユーザー検索からフレンドを探してみましょう！</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = friends.map(friend => `
+                    <div class="friend-card d-flex align-items-center">
+                        <div class="friend-avatar">
+                            ${friend.username.charAt(0).toUpperCase()}
+                        </div>
+                        <div class="friend-info">
+                            <div class="friend-name">${this.escapeHtml(friend.username)}</div>
+                            <div class="friend-status ${friend.online ? 'status-online' : 'status-offline'}">
+                                <i class="fas fa-circle"></i> ${friend.online ? 'オンライン' : 'オフライン'}
+                            </div>
+                        </div>
+                        <div class="friend-actions">
+                            <button class="btn btn-custom btn-primary-custom" onclick="friendManager.startPrivateChat(${friend.id})">
+                                <i class="fas fa-comments"></i> チャット
+                            </button>
+                            <button class="btn btn-custom btn-warning-custom" onclick="friendManager.removeFriend(${friend.id})">
+                                <i class="fas fa-user-minus"></i> 削除
+                            </button>
+                            <button class="btn btn-custom btn-danger-custom" onclick="friendManager.blockUser(${friend.id})">
+                                <i class="fas fa-ban"></i> ブロック
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            renderSentRequests(requests) {
+                const container = document.getElementById('sent-requests-list');
+                
+                if (requests.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-paper-plane"></i>
+                            <h5>送信済みの申請はありません</h5>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = requests.map(request => `
+                    <div class="friend-card d-flex align-items-center">
+                        <div class="friend-avatar">
+                            ${request.addressee.username.charAt(0).toUpperCase()}
+                        </div>
+                        <div class="friend-info">
+                            <div class="friend-name">${this.escapeHtml(request.addressee.username)}</div>
+                            <div class="friend-status">申請中</div>
+                        </div>
+                        <div class="friend-actions">
+                            <span class="badge bg-warning">申請中</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            renderReceivedRequests(requests) {
+                const container = document.getElementById('received-requests-list');
+                
+                if (requests.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <h5>受信した申請はありません</h5>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = requests.map(request => `
+                    <div class="friend-card d-flex align-items-center">
+                        <div class="friend-avatar">
+                            ${request.requester.username.charAt(0).toUpperCase()}
+                        </div>
+                        <div class="friend-info">
+                            <div class="friend-name">${this.escapeHtml(request.requester.username)}</div>
+                            <div class="friend-status">フレンド申請</div>
+                        </div>
+                        <div class="friend-actions">
+                            <button class="btn btn-custom btn-success-custom" onclick="friendManager.acceptRequest(${request.requester.id})">
+                                <i class="fas fa-check"></i> 承認
+                            </button>
+                            <button class="btn btn-custom btn-danger-custom" onclick="friendManager.declineRequest(${request.requester.id})">
+                                <i class="fas fa-times"></i> 拒否
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            renderBlockedUsers(users) {
+                const container = document.getElementById('blocked-users-list');
+                
+                if (users.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-ban"></i>
+                            <h5>ブロックしたユーザーはいません</h5>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = users.map(user => `
+                    <div class="friend-card d-flex align-items-center">
+                        <div class="friend-avatar">
+                            ${user.username.charAt(0).toUpperCase()}
+                        </div>
+                        <div class="friend-info">
+                            <div class="friend-name">${this.escapeHtml(user.username)}</div>
+                            <div class="friend-status">ブロック中</div>
+                        </div>
+                        <div class="friend-actions">
+                            <button class="btn btn-custom btn-warning-custom" onclick="friendManager.unblockUser(${user.id})">
+                                <i class="fas fa-unlock"></i> ブロック解除
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // アクションメソッド
+            async acceptRequest(requesterId) {
+                try {
+                    const response = await fetch('/friends/accept', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ requesterId })
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        this.showNotification('フレンド申請を承認しました', 'success');
+                        this.loadTabData(this.currentTab);
+                    } else {
+                        this.showNotification(result.message || '承認に失敗しました', 'error');
+                    }
+                } catch (error) {
+                    console.error('承認エラー:', error);
+                    this.showNotification('承認中にエラーが発生しました', 'error');
+                }
+            }
+
+            async declineRequest(requesterId) {
+                try {
+                    const response = await fetch('/friends/decline', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ requesterId })
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        this.showNotification('フレンド申請を拒否しました', 'success');
+                        this.loadTabData(this.currentTab);
+                    } else {
+                        this.showNotification(result.message || '拒否に失敗しました', 'error');
+                    }
+                } catch (error) {
+                    console.error('拒否エラー:', error);
+                    this.showNotification('拒否中にエラーが発生しました', 'error');
+                }
+            }
+
+            async removeFriend(friendId) {
+                if (!confirm('このフレンドを削除しますか？')) return;
+
+                try {
+                    const response = await fetch('/friends/remove', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ friendId })
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        this.showNotification('フレンドを削除しました', 'success');
+                        this.loadTabData(this.currentTab);
+                    } else {
+                        this.showNotification(result.message || '削除に失敗しました', 'error');
+                    }
+                } catch (error) {
+                    console.error('削除エラー:', error);
+                    this.showNotification('削除中にエラーが発生しました', 'error');
+                }
+            }
+
+            async blockUser(targetUserId) {
+                if (!confirm('このユーザーをブロックしますか？')) return;
+
+                try {
+                    const response = await fetch('/friends/block', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ targetUserId })
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        this.showNotification('ユーザーをブロックしました', 'success');
+                        this.loadTabData(this.currentTab);
+                    } else {
+                        this.showNotification(result.message || 'ブロックに失敗しました', 'error');
+                    }
+                } catch (error) {
+                    console.error('ブロックエラー:', error);
+                    this.showNotification('ブロック中にエラーが発生しました', 'error');
+                }
+            }
+
+            async unblockUser(targetUserId) {
+                if (!confirm('このユーザーのブロックを解除しますか？')) return;
+
+                try {
+                    const response = await fetch('/friends/unblock', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ targetUserId })
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        this.showNotification('ブロックを解除しました', 'success');
+                        this.loadTabData(this.currentTab);
+                    } else {
+                        this.showNotification(result.message || 'ブロック解除に失敗しました', 'error');
+                    }
+                } catch (error) {
+                    console.error('ブロック解除エラー:', error);
+                    this.showNotification('ブロック解除中にエラーが発生しました', 'error');
+                }
+            }
+
+            async startPrivateChat(friendId) {
+                try {
+                    const response = await fetch('/friends/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ friendId })
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        // メインチャット画面にリダイレクトまたは部屋を切り替え
+                        window.location.href = `/chat?room=${result.roomId}`;
+                    } else {
+                        this.showNotification(result.message || 'プライベートチャットの開始に失敗しました', 'error');
+                    }
+                } catch (error) {
+                    console.error('プライベートチャットエラー:', error);
+                    this.showNotification('プライベートチャットの開始中にエラーが発生しました', 'error');
+                }
+            }
+
+            // ユーティリティメソッド
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            showNotification(message, type = 'success') {
+                const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+                const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+                
+                const notification = document.createElement('div');
+                notification.className = `alert ${alertClass} notification`;
+                notification.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="fas ${iconClass} me-2"></i>
+                        <span>${message}</span>
+                        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                // 自動削除
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 5000);
+            }
+        }
+
+        // フレンドマネージャーの初期化
+        const friendManager = new FriendManager();
+    </script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 package com.example.chatapp.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import java.time.LocalDateTime;
 
 public class MessageDto {
     
@@ -9,6 +10,7 @@ public class MessageDto {
     
     private Long chatRoomId;
     private String senderUsername;
+    private Long userId; // ユーザーID追加
     private String timestamp;
     private String type; // JOIN, LEAVE, CHAT
     
@@ -48,12 +50,36 @@ public class MessageDto {
         this.senderUsername = senderUsername;
     }
     
+    public Long getUserId() {
+        return userId;
+    }
+    
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+    
+    // senderの別名メソッドを追加
+    public String getSender() {
+        return senderUsername;
+    }
+    
+    public void setSender(String sender) {
+        this.senderUsername = sender;
+    }
+    
     public String getTimestamp() {
         return timestamp;
     }
     
     public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
+    }
+    
+    // LocalDateTimeを受け取るsetTimestampメソッドを追加
+    public void setTimestamp(LocalDateTime timestamp) {
+        if (timestamp != null) {
+            this.timestamp = timestamp.toString();
+        }
     }
     
     public String getType() {

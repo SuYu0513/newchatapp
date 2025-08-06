@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ユーザー検索 - チャットアプリ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/chat-style.css" rel="stylesheet">
+    <style>
+        .user-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .user-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .search-filters {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .search-stats {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+    <!-- ナビゲーションバー -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/chat">
+                <i class="fas fa-comments me-2"></i>チャットアプリ
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" th:href="@{/chat}">
+                    <i class="fas fa-comment me-1"></i>チャット
+                </a>
+                <a class="nav-link" th:href="@{/rooms}">
+                    <i class="fas fa-list me-1"></i>ルーム一覧
+                </a>
+                <a class="nav-link" th:href="@{/profile}">
+                    <i class="fas fa-user me-1"></i>プロフィール
+                </a>
+                <a class="nav-link" th:href="@{/logout}">
+                    <i class="fas fa-sign-out-alt me-1"></i>ログアウト
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- ページヘッダー -->
+        <div class="row mb-4">
+            <div class="col">
+                <h2>
+                    <i class="fas fa-search me-2"></i>ユーザー検索
+                </h2>
+                <p class="text-muted">新しい友達を見つけましょう</p>
+            </div>
+        </div>
+
+        <!-- 検索フィルター -->
+        <div class="search-filters">
+            <form id="searchForm" th:action="@{/profile/search}" method="get">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="keyword" class="form-label">
+                                <i class="fas fa-search me-1"></i>キーワード
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="keyword" 
+                                   name="keyword" 
+                                   th:value="${keyword}"
+                                   placeholder="名前、自己紹介、居住地で検索...">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label for="location" class="form-label">
+                                <i class="fas fa-map-marker-alt me-1"></i>居住地
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="location" 
+                                   name="location" 
+                                   th:value="${location}"
+                                   placeholder="例: 東京">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label for="onlineStatus" class="form-label">
+                                <i class="fas fa-circle me-1"></i>ステータス
+                            </label>
+                            <select class="form-select" id="onlineStatus" name="onlineStatus">
+                                <option value="">すべて</option>
+                                <option value="ONLINE" th:selected="${onlineStatus == 'ONLINE'}">オンライン</option>
+                                <option value="AWAY" th:selected="${onlineStatus == 'AWAY'}">離席中</option>
+                                <option value="BUSY" th:selected="${onlineStatus == 'BUSY'}">取り込み中</option>
+                                <option value="OFFLINE" th:selected="${onlineStatus == 'OFFLINE'}">オフライン</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   id="onlineOnly" 
+                                   name="onlineOnly" 
+                                   th:checked="${onlineOnly}">
+                            <label class="form-check-label" for="onlineOnly">
+                                オンラインユーザーのみ
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-search me-1"></i>検索
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="clearSearch()">
+                            <i class="fas fa-times me-1"></i>クリア
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- 検索結果統計 -->
+        <div class="search-stats mb-3" th:if="${searchResults != null}">
+            <span th:text="'検索結果: ' + ${#lists.size(searchResults)} + '件'">検索結果: 0件</span>
+            <span th:if="${keyword != null and !keyword.isEmpty()}" class="ms-3">
+                キーワード: "<span th:text="${keyword}"></span>"
+            </span>
+        </div>
+
+        <!-- ローディングスピナー -->
+        <div class="loading-spinner" id="loadingSpinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">検索中...</span>
+            </div>
+            <p class="mt-2">検索中...</p>
+        </div>
+
+        <!-- 検索結果 -->
+        <div id="searchResults">
+            <div th:if="${searchResults != null and !#lists.isEmpty(searchResults)}">
+                <div class="row">
+                    <div class="col-md-6 col-lg-4 mb-3" th:each="userProfile : ${searchResults}">
+                        <div class="card user-card h-100" 
+                             th:onclick="'location.href=\'/profile/view/' + ${userProfile.user.id} + '\''">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <img th:src="${userProfile.avatarUrlOrDefault}" 
+                                         class="user-avatar me-3" 
+                                         alt="アバター">
+                                    <div class="flex-grow-1">
+                                        <h6 class="card-title mb-1" th:text="${userProfile.displayNameOrUsername}">
+                                            表示名
+                                        </h6>
+                                        <small class="text-muted">
+                                            @<span th:text="${userProfile.user.username}">username</span>
+                                        </small>
+                                    </div>
+                                    <div>
+                                        <span class="badge" 
+                                              th:classappend="${userProfile.onlineStatus.name() == 'ONLINE'} ? 'bg-success' : 
+                                                             (${userProfile.onlineStatus.name() == 'AWAY'} ? 'bg-warning' : 
+                                                             (${userProfile.onlineStatus.name() == 'BUSY'} ? 'bg-danger' : 'bg-secondary'))"
+                                              th:text="${userProfile.onlineStatus.displayName}">
+                                            ステータス
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <!-- 自己紹介（短縮版） -->
+                                <div th:if="${userProfile.bio != null and !userProfile.bio.isEmpty()}" class="mb-2">
+                                    <p class="card-text text-muted" 
+                                       th:text="${#strings.length(userProfile.bio) > 80 ? #strings.substring(userProfile.bio, 0, 80) + '...' : userProfile.bio}">
+                                        自己紹介文
+                                    </p>
+                                </div>
+                                
+                                <!-- 居住地 -->
+                                <div th:if="${userProfile.location != null and !userProfile.location.isEmpty()}" class="mb-2">
+                                    <small class="text-muted">
+                                        <i class="fas fa-map-marker-alt me-1"></i>
+                                        <span th:text="${userProfile.location}">居住地</span>
+                                    </small>
+                                </div>
+                                
+                                <!-- 最終ログイン -->
+                                <div th:if="${userProfile.lastSeen != null}" class="mb-2">
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock me-1"></i>
+                                        最終: <span th:text="${#temporals.format(userProfile.lastSeen, 'MM/dd HH:mm')}">01/01 12:00</span>
+                                    </small>
+                                </div>
+                                
+                                <!-- アクションボタン -->
+                                <div class="d-grid gap-2 d-md-flex mt-3">
+                                    <button class="btn btn-sm btn-outline-primary flex-fill" 
+                                            onclick="event.stopPropagation(); viewProfile(this)"
+                                            th:data-user-id="${userProfile.user.id}">
+                                        <i class="fas fa-eye me-1"></i>プロフィール
+                                    </button>
+                                    <button class="btn btn-sm btn-success flex-fill" 
+                                            onclick="event.stopPropagation(); sendFriendRequest(this)"
+                                            th:data-user-id="${userProfile.user.id}">
+                                        <i class="fas fa-user-plus me-1"></i>フレンド申請
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 検索結果なし -->
+            <div th:if="${searchResults != null and #lists.isEmpty(searchResults)}" class="no-results">
+                <i class="fas fa-search fa-3x mb-3"></i>
+                <h4>検索結果が見つかりませんでした</h4>
+                <p>検索条件を変更して再度お試しください</p>
+                <button class="btn btn-outline-primary" onclick="clearSearch()">
+                    <i class="fas fa-redo me-1"></i>検索条件をクリア
+                </button>
+            </div>
+            
+            <!-- 初期状態（検索前） -->
+            <div th:if="${searchResults == null}" class="no-results">
+                <i class="fas fa-users fa-3x mb-3"></i>
+                <h4>ユーザーを検索しましょう</h4>
+                <p>キーワードや条件を入力して、新しい友達を見つけてください</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // 検索フォーム送信時のローディング表示
+        document.getElementById('searchForm').addEventListener('submit', function() {
+            document.getElementById('loadingSpinner').style.display = 'block';
+            document.getElementById('searchResults').style.display = 'none';
+        });
+        
+        // 検索条件クリア
+        function clearSearch() {
+            document.getElementById('keyword').value = '';
+            document.getElementById('location').value = '';
+            document.getElementById('onlineStatus').value = '';
+            document.getElementById('onlineOnly').checked = false;
+            
+            // URLをクリアして初期状態に戻す
+            window.location.href = '/profile/search';
+        }
+        
+        // プロフィール表示
+        function viewProfile(button) {
+            const userId = button.getAttribute('data-user-id');
+            window.open('/profile/view/' + userId, '_blank');
+        }
+        
+        // フレンド申請送信
+        function sendFriendRequest(button) {
+            const userId = button.getAttribute('data-user-id');
+            const originalText = button.innerHTML;
+            
+            // ボタンを無効化
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>送信中...';
+            
+            fetch('/friends/request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    targetUserId: userId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    button.innerHTML = '<i class="fas fa-check me-1"></i>申請済み';
+                    button.classList.remove('btn-success');
+                    button.classList.add('btn-secondary');
+                    
+                    // 成功メッセージ表示
+                    showMessage('フレンド申請を送信しました', 'success');
+                } else {
+                    button.disabled = false;
+                    button.innerHTML = originalText;
+                    showMessage(data.message || 'エラーが発生しました', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                button.disabled = false;
+                button.innerHTML = originalText;
+                showMessage('通信エラーが発生しました', 'error');
+            });
+        }
+        
+        // メッセージ表示関数
+        function showMessage(message, type) {
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+            
+            const alertHtml = `
+                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                    <i class="fas ${icon} me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            const container = document.querySelector('.container');
+            const firstChild = container.firstElementChild.nextElementSibling;
+            firstChild.insertAdjacentHTML('afterend', alertHtml);
+            
+            // 5秒後に自動削除
+            setTimeout(() => {
+                const alert = container.querySelector('.alert');
+                if (alert) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+        
+        // エンターキーでの検索
+        document.getElementById('keyword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('searchForm').submit();
+            }
+        });
+        
+        // ページロード完了時にローディングを非表示
+        window.addEventListener('load', function() {
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('searchResults').style.display = 'block';
+        });
+    </script>
+</body>
+</html>

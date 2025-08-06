@@ -1,0 +1,496 @@
+/* ======================================
+   チャットアプリ カスタムスタイル
+   ====================================== */
+
+:root {
+  /* カラーパレット */
+  --primary-color: #667eea;
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --secondary-color: #f093fb;
+  --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --success-color: #4ecdc4;
+  --warning-color: #ffe066;
+  --danger-color: #ff6b6b;
+  --dark-color: #2c3e50;
+  --light-color: #f8f9fa;
+  --white-color: #ffffff;
+  
+  /* グラデーション */
+  --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --card-gradient: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+  --message-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  
+  /* 影効果 */
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.15);
+  
+  /* ボーダー半径 */
+  --border-radius-sm: 8px;
+  --border-radius-md: 12px;
+  --border-radius-lg: 20px;
+  --border-radius-xl: 25px;
+  
+  /* トランジション */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+}
+
+/* ======================================
+   ベーススタイル
+   ====================================== */
+
+body {
+  background: var(--bg-gradient);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+.container-fluid {
+  padding: 20px;
+}
+
+/* ======================================
+   ナビゲーションバー
+   ====================================== */
+
+.navbar {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: var(--shadow-md);
+  transition: var(--transition-normal);
+}
+
+.navbar-brand {
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+.navbar-nav .nav-link {
+  color: var(--dark-color) !important;
+  font-weight: 500;
+  transition: var(--transition-fast);
+  border-radius: var(--border-radius-sm);
+  padding: 8px 16px !important;
+  margin: 0 4px;
+}
+
+.navbar-nav .nav-link:hover {
+  background: var(--primary-gradient);
+  color: white !important;
+  transform: translateY(-2px);
+}
+
+/* ======================================
+   カードコンポーネント
+   ====================================== */
+
+.card {
+  background: var(--card-gradient);
+  border: none;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+  transition: var(--transition-normal);
+  overflow: hidden;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-xl);
+}
+
+.card-header {
+  background: var(--primary-gradient) !important;
+  border: none;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.card-header h5,
+.card-header h6 {
+  color: white;
+  margin: 0;
+  font-weight: 600;
+}
+
+.card-body {
+  padding: 20px;
+}
+
+/* ======================================
+   チャットルーム一覧
+   ====================================== */
+
+.room-item {
+  border: none !important;
+  border-radius: var(--border-radius-md);
+  margin-bottom: 8px;
+  transition: all var(--transition-normal);
+  cursor: pointer;
+  background: white;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.room-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: transparent;
+  transition: all var(--transition-fast);
+}
+
+.room-item:hover {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+  transform: translateX(8px);
+  box-shadow: var(--shadow-md);
+}
+
+.room-item:hover::before {
+  background: var(--primary-gradient);
+}
+
+.room-item.active {
+  background: var(--primary-gradient) !important;
+  color: white !important;
+  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3) !important;
+  transform: scale(1.02) !important;
+  border-left: 4px solid rgba(255, 255, 255, 0.5) !important;
+  animation: activeRoomPulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes activeRoomPulse {
+  0% {
+    box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+  }
+  100% {
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
+  }
+}
+
+.room-item.active::before {
+  background: rgba(255, 255, 255, 0.8);
+  width: 6px;
+}
+
+.room-item.active * {
+  color: white !important;
+}
+
+.room-item.active .text-muted {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.room-item.active .badge {
+  background: rgba(255, 255, 255, 0.3) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* ======================================
+   チャットエリア
+   ====================================== */
+
+#chat-container {
+  height: 500px;
+  overflow-y: auto;
+  background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+  border-radius: var(--border-radius-md);
+  padding: 20px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#chat-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+#chat-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: var(--border-radius-sm);
+}
+
+#chat-container::-webkit-scrollbar-thumb {
+  background: var(--primary-gradient);
+  border-radius: var(--border-radius-sm);
+}
+
+#chat-container::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary-gradient);
+}
+
+/* ======================================
+   メッセージバブル
+   ====================================== */
+
+.message {
+  margin-bottom: 16px;
+  animation: messageSlideIn 0.4s ease-out;
+}
+
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-bubble {
+  max-width: 75%;
+  padding: 15px 20px;
+  border-radius: var(--border-radius-lg);
+  position: relative;
+  box-shadow: var(--shadow-md);
+  transition: var(--transition-fast);
+}
+
+.message-bubble:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.message-bubble.own-message {
+  background: var(--message-gradient);
+  color: white;
+  margin-left: auto;
+}
+
+.message-bubble.other-message {
+  background: white;
+  color: var(--dark-color);
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+.message-header {
+  font-size: 0.85rem;
+  opacity: 0.8;
+  margin-bottom: 5px;
+}
+
+.message-content {
+  font-size: 1rem;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+/* ======================================
+   入力エリア
+   ====================================== */
+
+.input-group {
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.form-control {
+  border: none;
+  padding: 15px 20px;
+  font-size: 1rem;
+  background: white;
+  transition: var(--transition-fast);
+}
+
+.form-control:focus {
+  border: none;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.25);
+  background: white;
+}
+
+.btn-primary {
+  background: var(--primary-gradient);
+  border: none;
+  padding: 15px 30px;
+  font-weight: 600;
+  transition: var(--transition-fast);
+}
+
+.btn-primary:hover {
+  background: var(--secondary-gradient);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ======================================
+   ローディングアニメーション
+   ====================================== */
+
+.loading {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(102, 126, 234, 0.3);
+  border-radius: 50%;
+  border-top-color: var(--primary-color);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ======================================
+   アクセントアニメーション
+   ====================================== */
+
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
+  }
+}
+
+/* ======================================
+   レスポンシブデザイン
+   ====================================== */
+
+@media (max-width: 768px) {
+  .container-fluid {
+    padding: 10px;
+  }
+  
+  .card-body {
+    padding: 15px;
+  }
+  
+  #chat-container {
+    height: 400px;
+  }
+  
+  .message-bubble {
+    max-width: 85%;
+    padding: 12px 16px;
+  }
+  
+  .navbar-brand {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .room-item {
+    padding: 10px;
+  }
+  
+  .message-bubble {
+    max-width: 90%;
+    padding: 10px 14px;
+  }
+  
+  .form-control {
+    padding: 12px 16px;
+  }
+  
+  .btn-primary {
+    padding: 12px 20px;
+  }
+}
+
+/* ======================================
+   通知システム
+   ====================================== */
+
+/* 未読バッジ */
+.unread-badge {
+  animation: bounce 0.5s ease-in-out !important;
+}
+
+@keyframes bounce {
+  0%, 20%, 60%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  80% {
+    transform: translateY(-5px);
+  }
+}
+
+/* 通知設定ドロップダウン */
+.dropdown-menu {
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-lg);
+  border: none;
+  padding: 0.5rem 0;
+}
+
+.dropdown-item {
+  transition: var(--transition-fast);
+  border-radius: var(--border-radius-sm);
+  margin: 0 0.5rem;
+}
+
+.dropdown-item:hover {
+  background: var(--primary-gradient);
+  color: white;
+}
+
+/* 通知トースト */
+.toast {
+  backdrop-filter: blur(10px);
+  border-radius: var(--border-radius-md);
+}
+
+/* パルスアニメーション強化 */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
+  }
+}
+
+/* 通知ベルアニメーション */
+@keyframes bellRing {
+  0%, 50%, 100% { transform: rotate(0deg); }
+  10%, 30% { transform: rotate(10deg); }
+  20%, 40% { transform: rotate(-10deg); }
+}
+
+.bell-ring {
+  animation: bellRing 0.5s ease-in-out;
+}

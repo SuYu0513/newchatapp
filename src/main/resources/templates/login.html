@@ -5,44 +5,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ログイン - チャットアプリ</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/chat-style.css" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="card mt-5">
+        <div class="row justify-content-center min-vh-100 align-items-center">
+            <div class="col-md-6 col-lg-4">
+                <div class="text-center mb-4">
+                    <div class="mb-3">
+                        <i class="fas fa-comments fa-3x" style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+                    </div>
+                    <h1 class="fw-bold mb-2" style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">チャットアプリ</h1>
+                    <p class="text-muted">アカウントにログインしてください</p>
+                </div>
+                
+                <div class="card">
                     <div class="card-header">
-                        <h2 class="text-center">ログイン</h2>
+                        <h2 class="text-center mb-0">
+                            <i class="fas fa-sign-in-alt me-2"></i>ログイン
+                        </h2>
                     </div>
                     <div class="card-body">
                         <!-- 成功メッセージ表示 -->
-                        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+                        <div th:if="${success}" class="alert alert-success" th:text="${success}">
+                            <i class="fas fa-check-circle me-1"></i>
+                        </div>
                         
                         <!-- エラーメッセージ表示 -->
-                        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+                        <div th:if="${error}" class="alert alert-danger" th:text="${error}">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                        </div>
                         
                         <!-- ログアウトメッセージ表示 -->
-                        <div th:if="${message}" class="alert alert-info" th:text="${message}"></div>
+                        <div th:if="${message}" class="alert alert-info" th:text="${message}">
+                            <i class="fas fa-info-circle me-1"></i>
+                        </div>
                         
                         <form th:action="@{/login}" method="post">
                             <div class="mb-3">
-                                <label for="username" class="form-label">ユーザー名</label>
+                                <label for="username" class="form-label">
+                                    <i class="fas fa-user me-1"></i>ユーザー名
+                                </label>
                                 <input type="text" class="form-control" id="username" name="username" required>
                             </div>
                             
-                            <div class="mb-3">
-                                <label for="password" class="form-label">パスワード</label>
+                            <div class="mb-4">
+                                <label for="password" class="form-label">
+                                    <i class="fas fa-lock me-1"></i>パスワード
+                                </label>
                                 <input type="password" class="form-control" id="password" name="password" required>
                             </div>
                             
-                            <div class="d-grid gap-2">
-                                <button type="submit" class="btn btn-primary">ログイン</button>
-                                <a th:href="@{/register}" class="btn btn-outline-secondary">新規登録</a>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg pulse">
+                                    <i class="fas fa-sign-in-alt me-2"></i>ログイン
+                                </button>
                             </div>
                         </form>
                         
-                        <div class="text-center mt-3">
-                            <p>アカウントをお持ちでない方は<a th:href="@{/register}">こちら</a>から新規登録してください。</p>
+                        <div class="text-center mt-4">
+                            <hr class="my-3">
+                            <p class="text-muted">アカウントをお持ちでない方</p>
+                            <a th:href="@{/register}" class="btn btn-outline-primary">
+                                <i class="fas fa-user-plus me-2"></i>新規登録
+                            </a>
                         </div>
                     </div>
                 </div>

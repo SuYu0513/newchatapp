@@ -1,0 +1,262 @@
+package com.example.chatapp.service;
+
+import com.example.chatapp.entity.User;
+import com.example.chatapp.entity.UserProfile;
+import com.example.chatapp.repository.UserProfileRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+@Service
+@Transactional
+public class UserProfileService {
+
+    @Autowired
+    private UserProfileRepository userProfileRepository;
+
+    private static final String UPLOAD_DIR = "src/main/resources/static/uploads/avatars/";
+    private static final String[] ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif"};
+    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+    /**
+     * ユーザーのプロフィールを取得または作成
+     */
+    public UserProfile getOrCreateProfile(User user) {
+        Optional<UserProfile> existingProfile = userProfileRepository.findByUser(user);
+        
+        if (existingProfile.isPresent()) {
+            return existingProfile.get();
+        }
+        
+        // 新しいプロフィールを作成
+        UserProfile newProfile = new UserProfile(user);
+        return userProfileRepository.save(newProfile);
+    }
+
+    /**
+     * プロフィールの更新
+     */
+    public UserProfile updateProfile(User user, UserProfile updatedProfile) {
+        UserProfile existingProfile = getOrCreateProfile(user);
+        
+        // 更新可能なフィールドのみコピー
+        existingProfile.setDisplayName(updatedProfile.getDisplayName());
+        existingProfile.setBio(updatedProfile.getBio());
+        existingProfile.setStatus(updatedProfile.getStatus());
+        existingProfile.setLocation(updatedProfile.getLocation());
+        existingProfile.setBirthDate(updatedProfile.getBirthDate());
+        existingProfile.setPrivacyLevel(updatedProfile.getPrivacyLevel());
+        existingProfile.setIsSearchable(updatedProfile.getIsSearchable());
+        existingProfile.setAllowRandomMatching(updatedProfile.getAllowRandomMatching());
+        
+        return userProfileRepository.save(existingProfile);
+    }
+
+    /**
+     * アバター画像のアップロード
+     */
+    public UserProfile uploadAvatar(User user, MultipartFile file) throws IOException {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("ファイルが選択されていません");
+        }
+
+        // ファイルサイズチェック
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new IllegalArgumentException("ファイルサイズが大きすぎます (最大5MB)");
+        }
+
+        // 拡張子チェック
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null) {
+            throw new IllegalArgumentException("ファイル名が不正です");
+        }
+
+        String extension = getFileExtension(originalFilename).toLowerCase();
+        boolean isValidExtension = false;
+        for (String allowedExt : ALLOWED_EXTENSIONS) {
+            if (extension.equals(allowedExt)) {
+                isValidExtension = true;
+                break;
+            }
+        }
+
+        if (!isValidExtension) {
+            throw new IllegalArgumentException("サポートされていないファイル形式です");
+        }
+
+        // アップロードディレクトリの作成
+        Path uploadPath = Paths.get(UPLOAD_DIR);
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+
+        // ユニークなファイル名を生成
+        String filename = user.getId() + "_" + UUID.randomUUID().toString() + extension;
+        Path filePath = uploadPath.resolve(filename);
+
+        // ファイルを保存
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+        // プロフィールのアバターURLを更新
+        UserProfile profile = getOrCreateProfile(user);
+        profile.setAvatarUrl("/uploads/avatars/" + filename);
+        
+        return userProfileRepository.save(profile);
+    }
+
+    /**
+     * オンラインステータスの更新
+     */
+    public void updateOnlineStatus(User user, UserProfile.OnlineStatus status) {
+        UserProfile profile = getOrCreateProfile(user);
+        profile.setOnlineStatus(status);
+        profile.updateLastSeen();
+        userProfileRepository.save(profile);
+    }
+
+    /**
+     * 最終アクセス時間の更新
+     */
+    public void updateLastSeen(User user) {
+        UserProfile profile = getOrCreateProfile(user);
+        profile.updateLastSeen();
+        userProfileRepository.save(profile);
+    }
+
+    /**
+     * キーワードでプロフィールを検索
+     */
+    @Transactional(readOnly = true)
+    public List<UserProfile> searchProfiles(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return List.of();
+        }
+        return userProfileRepository.searchByKeyword(keyword.trim());
+    }
+
+    /**
+     * ランダムマッチング可能なユーザーを取得
+     */
+    @Transactional(readOnly = true)
+    public List<UserProfile> getAvailableForRandomMatching(User excludeUser) {
+        return userProfileRepository.findAvailableForRandomMatching(excludeUser.getId());
+    }
+
+    /**
+     * オンラインユーザー一覧を取得
+     */
+    @Transactional(readOnly = true)
+    public List<UserProfile> getOnlineUsers() {
+        return userProfileRepository.findOnlineUsers();
+    }
+
+    /**
+     * オンラインユーザー数を取得
+     */
+    @Transactional(readOnly = true)
+    public long getOnlineUserCount() {
+        return userProfileRepository.countOnlineUsers();
+    }
+
+    /**
+     * プロフィールをIDで取得
+     */
+    @Transactional(readOnly = true)
+    public Optional<UserProfile> getProfileById(Long profileId) {
+        return userProfileRepository.findById(profileId);
+    }
+
+    /**
+     * ユーザーIDでプロフィールを取得
+     */
+    @Transactional(readOnly = true)
+    public Optional<UserProfile> getProfileByUserId(Long userId) {
+        return userProfileRepository.findByUserId(userId);
+    }
+
+    /**
+     * 複数ユーザーのプロフィールを取得
+     */
+    @Transactional(readOnly = true)
+    public List<UserProfile> getProfilesByUserIds(List<Long> userIds) {
+        return userProfileRepository.findByUserIds(userIds);
+    }
+
+    /**
+     * プロフィールの削除
+     */
+    public void deleteProfile(User user) {
+        Optional<UserProfile> profile = userProfileRepository.findByUser(user);
+        if (profile.isPresent()) {
+            // アバター画像ファイルも削除
+            deleteAvatarFile(profile.get());
+            userProfileRepository.delete(profile.get());
+        }
+    }
+
+    /**
+     * アバター画像ファイルの削除
+     */
+    private void deleteAvatarFile(UserProfile profile) {
+        String avatarUrl = profile.getAvatarUrl();
+        if (avatarUrl != null && avatarUrl.startsWith("/uploads/avatars/")) {
+            try {
+                String filename = avatarUrl.substring("/uploads/avatars/".length());
+                Path filePath = Paths.get(UPLOAD_DIR + filename);
+                Files.deleteIfExists(filePath);
+            } catch (IOException e) {
+                // ログに記録するが、エラーは無視
+                System.err.println("アバター画像の削除に失敗: " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * ファイル拡張子を取得
+     */
+    private String getFileExtension(String filename) {
+        int lastDotIndex = filename.lastIndexOf('.');
+        if (lastDotIndex == -1) {
+            return "";
+        }
+        return filename.substring(lastDotIndex);
+    }
+
+    /**
+     * プロフィールの表示可否チェック
+     */
+    public boolean canViewProfile(UserProfile profile, User viewer) {
+        if (profile == null || viewer == null) {
+            return false;
+        }
+
+        // 自分のプロフィールは常に表示可能
+        if (profile.getUser().equals(viewer)) {
+            return true;
+        }
+
+        // プライバシー設定に基づく判定
+        switch (profile.getPrivacyLevel()) {
+            case PUBLIC:
+                return true;
+            case FRIENDS_ONLY:
+                // フレンド判定は別のサービスで実装
+                return true; // 一時的にtrue
+            case PRIVATE:
+                return false;
+            default:
+                return false;
+        }
+    }
+}

@@ -6,58 +6,241 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>チャット - チャットアプリ</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/chat-style.css" rel="stylesheet">
     <style>
-        #chat-container {
-            height: 500px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            padding: 10px;
-            background-color: #f8f9fa;
+        /* カスタムアニメーション */
+        .switching {
+            opacity: 0.6;
+            pointer-events: none;
         }
-        .message {
-            margin-bottom: 10px;
-            padding: 8px;
-            border-radius: 5px;
-            background-color: white;
+        
+        .message-bubble {
+            animation: slideIn 0.3s ease-out;
         }
-        .message-sender {
-            font-weight: bold;
-            color: #007bff;
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        .message-time {
-            font-size: 0.8em;
-            color: #6c757d;
+        
+        /* 読み込み中のアニメーション */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="#">チャットアプリ</a>
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-comments me-2"></i>チャットアプリ
+            </a>
             <div class="navbar-nav ms-auto">
                 <span class="navbar-text me-3" sec:authorize="isAuthenticated()">
+                    <i class="fas fa-user me-1"></i>
                     ようこそ、<span sec:authentication="name"></span>さん
                 </span>
-                <a class="nav-link" th:href="@{/logout}">ログアウト</a>
+                <!-- フレンド管理ボタン -->
+                <div class="nav-item position-relative me-3">
+                    <a class="nav-link d-flex align-items-center" href="/friends" id="friendsButton" style="padding: 8px 16px; border-radius: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; transition: all 0.3s ease;">
+                        <i class="fas fa-user-friends me-2" style="font-size: 1.1rem;"></i>
+                        <span style="font-weight: 500;">フレンド</span>
+                        <span class="position-absolute translate-middle badge rounded-pill" 
+                              id="friendNotificationBadge" 
+                              style="display: none; top: -5px; left: 100%; background: linear-gradient(135deg, #ff4757, #ff3838); color: white; font-size: 0.7rem; font-weight: bold; min-width: 20px; height: 20px; line-height: 20px; border: 2px solid white; box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4);">
+                            <span id="friendNotificationCount">0</span>
+                        </span>
+                    </a>
+                </div>
+                <!-- ID検索ボタン -->
+                <div class="nav-item me-3">
+                    <button class="nav-link btn btn-link" onclick="showUserSearchModal()" style="border: none; background: none;">
+                        <i class="fas fa-search me-1"></i>ID検索
+                    </button>
+                </div>
+                <a class="nav-link" th:href="@{/rooms}">
+                    <i class="fas fa-list me-1"></i>ルーム一覧
+                </a>
+                <!-- プロフィールメニュー -->
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i>プロフィール
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" th:href="@{/profile}">
+                            <i class="fas fa-user me-2"></i>マイプロフィール
+                        </a></li>
+                        <li><a class="dropdown-item" th:href="@{/profile/edit}">
+                            <i class="fas fa-edit me-2"></i>プロフィール編集
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" th:href="@{/profile/search}">
+                            <i class="fas fa-search me-2"></i>ユーザー検索
+                        </a></li>
+                        <li><a class="dropdown-item" th:href="@{/profile/online}">
+                            <i class="fas fa-circle text-success me-2"></i>オンラインユーザー
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" onclick="toggleOnlineStatus()">
+                            <i class="fas fa-power-off me-2"></i>ステータス変更
+                        </a></li>
+                    </ul>
+                </div>
+                <a class="nav-link" th:href="@{/logout}">
+                    <i class="fas fa-sign-out-alt me-1"></i>ログアウト
+                </a>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <div class="container-fluid mt-4">
         <div class="row">
-            <div class="col-md-8">
+            <!-- サイドバー：チャットルーム一覧 -->
+            <div class="col-md-3">
                 <div class="card">
-                    <div class="card-header">
-                        <h5>チャット</h5>
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="fas fa-list me-1"></i>参加中のルーム
+                        </h6>
+                        <a href="/rooms/create" class="btn btn-sm btn-light">
+                            <i class="fas fa-plus"></i>
+                        </a>
+                    </div>
+                    <div class="card-body p-0">
+                        <div th:if="${userRooms != null and !userRooms.isEmpty()}">
+                            <div th:each="room : ${userRooms}" 
+                                 class="room-item list-group-item list-group-item-action d-flex justify-content-between align-items-center room-clickable"
+                                 th:classappend="${room.id == currentRoom?.id} ? 'active' : ''"
+                                 style="cursor: pointer;" 
+                                 th:data-room-id="${room.id}"
+                                 th:data-room-name="${room.name}">
+                                <div>
+                                    <div class="fw-bold" th:text="${room.name}">ルーム名</div>
+                                    <small class="text-muted">
+                                        <i class="fas fa-users me-1"></i>
+                                        <span th:text="${room.users.size()}">0</span> 人
+                                    </small>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-success me-2" th:if="${room.type.name() == 'GROUP'}">
+                                        <i class="fas fa-users"></i>
+                                    </span>
+                                    <span class="badge bg-info me-2" th:if="${room.type.name() == 'PRIVATE'}">
+                                        <i class="fas fa-lock"></i>
+                                    </span>
+                                    <!-- 現在のルームには特別なアイコン -->
+                                    <i class="fas fa-arrow-right text-primary" th:if="${room.id == currentRoom?.id}"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div th:if="${userRooms == null or userRooms.isEmpty()}" class="p-3 text-center text-muted">
+                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                            <p class="small mb-0">参加中のルームがありません</p>
+                            <a href="/rooms" class="btn btn-sm btn-outline-primary mt-2">
+                                ルームを探す
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- メインチャットエリア -->
+            <div class="col-md-9">
+                <div class="card">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0" th:text="${currentRoom != null ? currentRoom.name : 'チャット'}">チャット</h5>
+                            <small th:if="${currentRoom != null}">
+                                <i class="fas fa-users me-1"></i>
+                                <span th:text="${currentRoom.users.size()}">0</span> 人が参加中
+                            </small>
+                        </div>
+                        <div>
+                            <a th:href="@{/rooms}" class="btn btn-sm btn-light me-2">
+                                <i class="fas fa-cog me-1"></i>設定
+                            </a>
+                        </div>
                     </div>
                     <div class="card-body">
+                        <!-- デバッグ情報（開発時のみ） -->
+                        <div th:if="${debugEnabled}" class="alert alert-info" style="font-size: 12px;">
+                            <strong>デバッグ情報:</strong><br>
+                            chatHistory is null: <span th:text="${chatHistory == null}"></span><br>
+                            chatHistory size: <span th:text="${chatHistory != null ? chatHistory.size() : 'N/A'}"></span><br>
+                            chatRoomId: <span th:text="${chatRoomId}"></span>
+                        </div>
+                        
                         <div id="chat-container">
-                            <!-- メッセージがここに表示されます -->
+                            <!-- 既存のチャット履歴を表示 -->
+                            <div th:if="${chatHistory != null and !chatHistory.isEmpty()}">
+                                <div th:each="msg, iterStat : ${chatHistory}" class="message d-flex">
+                                    <div class="message-bubble" 
+                                         th:classappend="${msg.user.username == #authentication.name} ? 'own-message' : 'other-message'">
+                                        <div class="message-header" th:if="${msg.user.username != #authentication.name}">
+                                            <i class="fas fa-user-circle me-1 user-avatar-clickable" 
+                                               style="cursor: pointer; color: #007bff;" 
+                                               th:data-user-id="${msg.user.id}"
+                                               th:data-username="${msg.user.username}"
+                                               onclick="showUserContextMenu(event, this)"
+                                               title="ユーザーメニューを表示"></i>
+                                            <span th:text="${msg.user.username}" 
+                                                  class="username-clickable" 
+                                                  style="cursor: pointer; color: #007bff;"
+                                                  th:data-user-id="${msg.user.id}"
+                                                  th:data-username="${msg.user.username}"
+                                                  onclick="showUserContextMenu(event, this)"
+                                                  title="ユーザーメニューを表示"></span>
+                                        </div>
+                                        <div class="message-content" th:text="${msg.content}"></div>
+                                        <div class="message-time mt-1" style="font-size: 0.75rem; opacity: 0.7;">
+                                            <i class="fas fa-clock me-1"></i>
+                                            <span th:text="${#temporals.format(msg.sentAt, 'HH:mm')}"></span>
+                                        </div>
+                                        <!-- デバッグ：メッセージの詳細（開発時のみ） -->
+                                        <small th:if="${debugEnabled}" style="color: #666;">
+                                            Debug: index=<span th:text="${iterStat.index}"></span>, 
+                                            msgId=<span th:text="${msg.id}"></span>, 
+                                            userId=<span th:text="${msg.user.id}"></span>
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div th:if="${chatHistory == null or chatHistory.isEmpty()}" class="text-center text-muted py-5">
+                                <div class="mb-4">
+                                    <i class="fas fa-comments fa-3x" style="opacity: 0.3;"></i>
+                                </div>
+                                <h5 class="mb-3">まだメッセージがありません</h5>
+                                <p class="mb-0">最初のメッセージを送信してみましょう！</p>
+                                <!-- デバッグ：実際の値を表示（開発時のみ） -->
+                                <small th:if="${debugEnabled}">
+                                    chatHistory: <span th:text="${chatHistory}"></span>
+                                </small>
+                            </div>
                         </div>
                         <div class="mt-3">
                             <div class="input-group">
-                                <input type="text" id="messageInput" class="form-control" placeholder="メッセージを入力してください...">
-                                <button class="btn btn-primary" type="button" id="sendButton">送信</button>
+                                <input type="text" id="messageInput" class="form-control" placeholder="メッセージを入力してください..." autocomplete="off">
+                                <button class="btn btn-primary pulse" type="button" id="sendButton">
+                                    <i class="fas fa-paper-plane me-1"></i>送信
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -66,7 +249,9 @@
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-header">
-                        <h5>オンラインユーザー</h5>
+                        <h5 class="mb-0">
+                            <i class="fas fa-users me-2"></i>オンラインユーザー
+                        </h5>
                     </div>
                     <div class="card-body">
                         <ul id="users-list" class="list-unstyled">
@@ -81,9 +266,306 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="/js/notifications.js"></script>
     <script>
         let stompClient = null;
-        let currentUser = 'user'; // 一時的に固定値を使用
+        let currentUser = /*[[${username}]]*/ 'user';
+        let currentRoomId = /*[[${currentRoom.id}]]*/ 1;
+        let currentSubscription = null;
+        let debugEnabled = true; // デバッグモードを有効化
+        
+        // グローバル変数を設定（通知システムで使用）
+        window.currentUser = currentUser;
+        window.currentRoomId = currentRoomId;
+
+        function switchRoomFromElement(element) {
+            console.log('switchRoomFromElement called:', element);
+            
+            if (!element || !element.dataset) {
+                console.error('Invalid element passed to switchRoomFromElement:', element);
+                return;
+            }
+            
+            const roomId = parseInt(element.dataset.roomId);
+            const roomName = element.dataset.roomName;
+            
+            console.log('Room data:', { roomId, roomName, dataset: element.dataset });
+            
+            if (!roomId || isNaN(roomId)) {
+                console.error('Invalid room ID:', element.dataset.roomId);
+                return;
+            }
+            
+            if (!roomName) {
+                console.error('Missing room name:', element.dataset.roomName);
+                return;
+            }
+            
+            console.log('Attempting to switch room:', roomId, roomName);
+            
+            // クリック時の視覚的フィードバック
+            element.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                element.style.transform = '';
+            }, 150);
+            
+            // 即座にUIを更新（レスポンシブ感を向上）
+            updateActiveRoomInSidebar(roomId);
+            
+            switchRoomInternal(roomId, roomName);
+        }
+
+        function switchRoomInternal(roomId, roomName) {
+            if (roomId == currentRoomId) {
+                if (debugEnabled) {
+                    console.log('同じルームのため切り替えをスキップ:', roomId);
+                }
+                return; // 同じルームの場合は何もしない
+            }
+            
+            if (debugEnabled) {
+                console.log('ルーム切り替え開始:', currentRoomId, '->', roomId, '(' + roomName + ')');
+            }
+            
+            // 切り替え中のUI表示
+            showSwitchingState(true);
+            
+            // 現在の購読を解除
+            if (stompClient && stompClient.connected && currentSubscription) {
+                currentSubscription.unsubscribe();
+                if (debugEnabled) {
+                    console.log('前のルームの購読を解除しました:', currentRoomId);
+                }
+            }
+            
+            // 新しいルームに切り替え
+            const oldRoomId = currentRoomId;
+            currentRoomId = roomId;
+            
+            // UIを更新
+            updateCurrentRoomDisplay(roomName);
+            updateActiveRoomInSidebar(roomId);
+            clearChatArea();
+            showLoadingInChat();
+            
+            // 新しいルームに購読
+            if (stompClient && stompClient.connected) {
+                currentSubscription = stompClient.subscribe('/topic/chatroom/' + roomId, function(messageOutput) {
+                    if (debugEnabled) {
+                        console.log('新しいメッセージ受信 (room ' + roomId + '):', messageOutput.body);
+                    }
+                    const messageData = JSON.parse(messageOutput.body);
+                    showMessage(messageData);
+                    
+                    // 通知システムと統合
+                    if (window.notificationManager && messageData.type === 'CHAT') {
+                        window.notificationManager.notifyNewMessage(messageData, roomName, roomId);
+                    } else if (window.notificationManager && messageData.type === 'JOIN') {
+                        window.notificationManager.notifyUserJoined(messageData.senderUsername, roomName, currentRoomId, roomId);
+                    } else if (window.notificationManager && messageData.type === 'LEAVE') {
+                        window.notificationManager.notifyUserLeft(messageData.senderUsername, roomName, currentRoomId, roomId);
+                    }
+                });
+                
+                if (debugEnabled) {
+                    console.log('新しいルームに購読しました:', roomId);
+                }
+                
+                // 参加メッセージを送信
+                stompClient.send("/app/chat.addUser", {}, JSON.stringify({
+                    senderUsername: currentUser,
+                    chatRoomId: roomId,
+                    type: 'JOIN'
+                }));
+            }
+            
+            // チャット履歴を読み込み
+            loadRoomHistory(roomId);
+            
+            // 未読数をクリア
+            if (window.notificationManager) {
+                window.notificationManager.clearUnreadCount(roomId);
+            }
+            
+            // グローバル変数を更新
+            window.currentRoomId = roomId;
+        }
+
+        function showSwitchingState(switching) {
+            const chatContainer = document.getElementById('chat-container');
+            if (switching) {
+                chatContainer.classList.add('switching');
+            } else {
+                chatContainer.classList.remove('switching');
+            }
+        }
+
+        function showLoadingInChat() {
+            const chatContainer = document.getElementById('chat-container');
+            chatContainer.innerHTML = `
+                <div class="text-center p-4">
+                    <div class="loading"></div>
+                    <p class="mt-2">チャット履歴を読み込み中...</p>
+                </div>
+            `;
+        }
+
+        function updateCurrentRoomDisplay(roomName) {
+            const currentRoomElement = document.querySelector('h5.mb-0');
+            if (currentRoomElement) {
+                currentRoomElement.textContent = roomName;
+            }
+        }
+
+        function updateActiveRoomInSidebar(roomId) {
+            console.log('ルームサイドバー更新:', roomId);
+            
+            // すべてのルームアイテムからactiveクラスを削除
+            document.querySelectorAll('.room-item').forEach(item => {
+                item.classList.remove('active');
+                // 矢印アイコンも削除
+                const arrow = item.querySelector('.fas.fa-arrow-right');
+                if (arrow) {
+                    arrow.remove();
+                }
+                // 元の色に戻す
+                item.style.removeProperty('background');
+                item.style.removeProperty('color');
+            });
+            
+            // 新しいアクティブルームを data-room-id で検索
+            const activeRoomElement = document.querySelector(`[data-room-id="${roomId}"]`);
+            console.log('アクティブルーム要素:', activeRoomElement);
+            
+            if (activeRoomElement) {
+                // activeクラスを追加
+                activeRoomElement.classList.add('active');
+                
+                // 明確な色変更を適用
+                activeRoomElement.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                activeRoomElement.style.color = 'white';
+                activeRoomElement.style.transform = 'scale(1.02)';
+                activeRoomElement.style.boxShadow = '0 8px 16px rgba(102, 126, 234, 0.3)';
+                
+                // 矢印アイコンを追加
+                const badgeContainer = activeRoomElement.querySelector('.d-flex.align-items-center');
+                if (badgeContainer && !badgeContainer.querySelector('.fa-arrow-right')) {
+                    const arrow = document.createElement('i');
+                    arrow.className = 'fas fa-arrow-right text-white ms-2';
+                    arrow.style.animation = 'pulse 2s infinite';
+                    badgeContainer.appendChild(arrow);
+                }
+                
+                // 内部のテキスト色も白に変更
+                const textElements = activeRoomElement.querySelectorAll('*');
+                textElements.forEach(el => {
+                    if (el.classList.contains('text-muted')) {
+                        el.style.color = 'rgba(255, 255, 255, 0.8)';
+                    } else if (!el.classList.contains('badge')) {
+                        el.style.color = 'white';
+                    }
+                });
+                
+                console.log('アクティブルーム設定完了:', roomId);
+            } else {
+                console.warn('ルーム要素が見つかりません:', roomId);
+            }
+        }
+
+        function clearChatArea() {
+            const chatContainer = document.getElementById('chat-container');
+            if (chatContainer) {
+                chatContainer.innerHTML = '';
+            }
+        }
+
+        function loadRoomHistory(roomId) {
+            if (debugEnabled) {
+                console.log('履歴読み込み開始 - ルームID:', roomId);
+            }
+            
+            fetch(`/api/messages/${roomId}`)
+                .then(response => {
+                    if (debugEnabled) {
+                        console.log('API応答ステータス:', response.status);
+                    }
+                    return response.json();
+                })
+                .then(messages => {
+                    if (debugEnabled) {
+                        console.log('受信したメッセージ:', messages);
+                        console.log('メッセージ数:', messages.length);
+                    }
+                    
+                    const messageArea = document.getElementById('chat-container');
+                    messageArea.innerHTML = '';
+                    
+                    if (messages.length === 0) {
+                        messageArea.innerHTML = `
+                            <div class="text-center p-4 text-muted">
+                                <i class="fas fa-comment fa-3x mb-3"></i>
+                                <p>まだメッセージがありません</p>
+                                <p class="small">最初のメッセージを送信してみましょう！</p>
+                            </div>
+                        `;
+                    } else {
+                        messages.forEach(message => {
+                            if (debugEnabled) {
+                                console.log('表示するメッセージ:', message);
+                            }
+                            showMessage(message);
+                        });
+                    }
+                    
+                    // 読み込み完了後に状態をリセット
+                    showSwitchingState(false);
+                    
+                    if (debugEnabled) {
+                        console.log('履歴読み込み完了 - ルームID:', roomId);
+                    }
+                })
+                .catch(error => {
+                    console.error('履歴読み込みエラー:', error);
+                    const messageArea = document.getElementById('chat-container');
+                    messageArea.innerHTML = `
+                        <div class="text-center p-4 text-danger">
+                            <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                            <p>履歴の読み込みに失敗しました</p>
+                            <button class="btn btn-sm btn-outline-primary" onclick="loadRoomHistory(${roomId})">
+                                再読み込み
+                            </button>
+                        </div>
+                    `;
+                    showSwitchingState(false);
+                    
+                    if (debugEnabled) {
+                        console.error('詳細エラー:', error);
+                    }
+                });
+        }
+
+        function leaveRoom(roomId) {
+            if (confirm('このチャットルームから退出しますか？')) {
+                fetch(`/rooms/${roomId}/leave`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('退出に失敗しました: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('エラーが発生しました');
+                });
+            }
+        }
 
         function connect() {
             const socket = new SockJS('/ws');
@@ -92,14 +574,29 @@
             stompClient.connect({}, function (frame) {
                 console.log('Connected: ' + frame);
                 
-                // デフォルトチャットルームに参加
-                stompClient.subscribe('/topic/chatroom/1', function (message) {
-                    showMessage(JSON.parse(message.body));
+                // 現在のチャットルームに参加
+                currentSubscription = stompClient.subscribe(`/topic/chatroom/${currentRoomId}`, function (message) {
+                    if (debugEnabled) {
+                        console.log('メッセージ受信 (room ' + currentRoomId + '):', message.body);
+                    }
+                    const messageData = JSON.parse(message.body);
+                    showMessage(messageData);
+                    
+                    // 通知システムと統合
+                    if (window.notificationManager && messageData.type === 'CHAT') {
+                        const roomName = getCurrentRoomName();
+                        window.notificationManager.notifyNewMessage(messageData, roomName, currentRoomId);
+                    }
                 });
+                
+                if (debugEnabled) {
+                    console.log('初期ルームに購読しました:', currentRoomId);
+                }
                 
                 // ユーザー参加通知
                 stompClient.send("/app/chat.addUser", {}, JSON.stringify({
                     senderUsername: currentUser,
+                    chatRoomId: currentRoomId,
                     type: 'JOIN'
                 }));
             });
@@ -114,37 +611,156 @@
 
         function sendMessage() {
             const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
             const messageContent = messageInput.value.trim();
             
             if (messageContent && stompClient) {
+                // 送信ボタンを無効化してローディング状態にする
+                sendButton.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>送信中...';
+                sendButton.disabled = true;
+                
                 const message = {
                     content: messageContent,
-                    chatRoomId: 1,
+                    chatRoomId: currentRoomId,
                     senderUsername: currentUser,
-                    timestamp: new Date().toISOString()
+                    timestamp: new Date().toISOString(),
+                    type: 'CHAT'
                 };
+                
+                if (debugEnabled) {
+                    console.log('メッセージ送信:', message);
+                }
                 
                 stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(message));
                 messageInput.value = '';
+                
+                // 1秒後に送信ボタンを元に戻す
+                setTimeout(() => {
+                    sendButton.innerHTML = '<i class="fas fa-paper-plane me-1"></i>送信';
+                    sendButton.disabled = false;
+                    sendButton.classList.add('pulse'); // アニメーション効果を再開
+                }, 1000);
             }
         }
 
         function showMessage(message) {
             const chatContainer = document.getElementById('chat-container');
             const messageElement = document.createElement('div');
-            messageElement.className = 'message';
             
-            const time = new Date(message.timestamp).toLocaleTimeString();
-            
-            messageElement.innerHTML = `
-                <div class="message-sender">${message.senderUsername}</div>
-                <div>${message.content}</div>
-                <div class="message-time">${time}</div>
-            `;
+            if (message.type === 'JOIN' || message.type === 'LEAVE') {
+                messageElement.innerHTML = `
+                    <div class="alert alert-info small text-center mb-2" style="border: none; background: linear-gradient(135deg, #17a2b8, #138496); color: white;">
+                        <i class="fas fa-info-circle me-1"></i>
+                        ${message.content}
+                    </div>
+                `;
+            } else {
+                const isCurrentUser = message.senderUsername === currentUser;
+                const time = new Date(message.timestamp).toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'});
+                const username = message.senderUsername || message.sender;
+                const userId = message.userId || message.senderId;
+                
+                messageElement.className = `message d-flex ${isCurrentUser ? 'justify-content-end' : 'justify-content-start'}`;
+                
+                messageElement.innerHTML = `
+                    <div class="message-bubble ${isCurrentUser ? 'own-message' : 'other-message'}">
+                        ${!isCurrentUser ? `
+                            <div class="message-header">
+                                <i class="fas fa-user-circle me-1 user-avatar-clickable" 
+                                   style="cursor: pointer; color: #007bff;" 
+                                   data-user-id="${userId}"
+                                   data-username="${username}"
+                                   onclick="showUserContextMenu(event, this)"
+                                   title="ユーザーメニューを表示"></i>
+                                <span class="username-clickable" 
+                                      style="cursor: pointer; color: #007bff;"
+                                      data-user-id="${userId}"
+                                      data-username="${username}"
+                                      onclick="showUserContextMenu(event, this)"
+                                      title="ユーザーメニューを表示">${username}</span>
+                            </div>
+                        ` : ''}
+                        <div class="message-content">
+                            ${message.content}
+                        </div>
+                        <div class="message-time mt-1" style="font-size: 0.75rem; opacity: 0.7;">
+                            <i class="fas fa-clock me-1"></i>
+                            <span>${time}</span>
+                        </div>
+                    </div>
+                `;
+            }
             
             chatContainer.appendChild(messageElement);
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
+
+        // ヘルパー関数
+        function getCurrentRoomName() {
+            const activeRoomElement = document.querySelector('.room-item.active .fw-bold');
+            return activeRoomElement ? activeRoomElement.textContent.trim() : 'チャットルーム';
+        }
+        
+        // グローバル関数として設定（通知システムで使用）
+        window.switchRoom = function(roomId, roomName) {
+            switchRoomInternal(roomId, roomName);
+        };
+
+        // ページロード時にチャット履歴の一番下までスクロール
+        window.addEventListener('load', function () {
+            const chatContainer = document.getElementById('chat-container');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            // 現在のルームをハイライト
+            console.log('ページロード完了 - 現在のルームID:', currentRoomId);
+            updateActiveRoomInSidebar(currentRoomId);
+            
+            // ルームアイテムにクリックイベントを追加（より確実な方法）
+            addRoomClickListeners();
+            
+            connect();
+            loadRoomHistory(currentRoomId);
+        });
+        
+        // ルームクリックリスナーを追加する関数
+        function addRoomClickListeners() {
+            console.log('Adding room click listeners...');
+            const roomElements = document.querySelectorAll('.room-clickable');
+            console.log('Found room elements:', roomElements.length);
+            
+            roomElements.forEach((roomElement, index) => {
+                console.log(`Setting up listener for room ${index}:`, roomElement.dataset);
+                
+                // 既存のリスナーを削除（重複を防ぐ）
+                roomElement.removeEventListener('click', handleRoomClick);
+                
+                // 新しいリスナーを追加
+                roomElement.addEventListener('click', handleRoomClick);
+            });
+        }
+        
+        // ルームクリックハンドラー
+        function handleRoomClick(event) {
+            console.log('Room clicked:', this);
+            switchRoomFromElement(this);
+        }
+        
+        // DOMが読み込まれた時点でもイベントリスナーを設定
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded');
+            setTimeout(addRoomClickListeners, 100); // 少し遅延を入れる
+            
+            // イベント委譲でルームクリックを処理（より確実）
+            document.addEventListener('click', function(event) {
+                const roomElement = event.target.closest('.room-clickable');
+                if (roomElement) {
+                    console.log('Room clicked via delegation:', roomElement);
+                    event.preventDefault();
+                    event.stopPropagation();
+                    switchRoomFromElement(roomElement);
+                }
+            });
+        });
 
         // イベントリスナー
         document.getElementById('sendButton').addEventListener('click', sendMessage);
@@ -154,14 +770,451 @@
             }
         });
 
-        // ページロード時に接続
-        window.addEventListener('load', function () {
-            connect();
-        });
-
         // ページアンロード時に切断
         window.addEventListener('beforeunload', function () {
             disconnect();
+        });
+        
+        // ステータス変更機能
+        function toggleOnlineStatus() {
+            const statuses = [
+                { value: 'ONLINE', label: 'オンライン', icon: 'fas fa-circle text-success' },
+                { value: 'AWAY', label: '離席中', icon: 'fas fa-circle text-warning' },
+                { value: 'BUSY', label: '取り込み中', icon: 'fas fa-circle text-danger' },
+                { value: 'OFFLINE', label: 'オフライン', icon: 'fas fa-circle text-secondary' }
+            ];
+            
+            // モーダルHTML作成
+            const modalHtml = `
+                <div class="modal fade" id="statusModal" tabindex="-1">
+                    <div class="modal-dialog modal-sm">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h6 class="modal-title">
+                                    <i class="fas fa-power-off me-2"></i>ステータス変更
+                                </h6>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="list-group">
+                                    ${statuses.map(status => `
+                                        <button type="button" class="list-group-item list-group-item-action" 
+                                                onclick="changeStatus('${status.value}')">
+                                            <i class="${status.icon} me-2"></i>
+                                            ${status.label}
+                                        </button>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 既存のモーダルを削除
+            const existingModal = document.getElementById('statusModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // 新しいモーダルを追加
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // モーダルを表示
+            const modal = new bootstrap.Modal(document.getElementById('statusModal'));
+            modal.show();
+        }
+        
+        function changeStatus(status) {
+            fetch('/profile/status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ status: status })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // モーダルを閉じる
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('statusModal'));
+                    modal.hide();
+                    
+                    // 成功メッセージ表示（任意）
+                    console.log('ステータスが更新されました:', status);
+                } else {
+                    alert('ステータスの更新に失敗しました');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('エラーが発生しました');
+            });
+        }
+    </script>
+
+    <!-- ユーザーコンテキストメニュー -->
+    <div class="dropdown-menu" id="userContextMenu" style="display: none; position: absolute; z-index: 1050;">
+        <a class="dropdown-item" href="#" onclick="viewUserProfile()">
+            <i class="fas fa-user me-2"></i>プロフィール表示
+        </a>
+        <a class="dropdown-item" href="#" onclick="sendFriendRequest()">
+            <i class="fas fa-user-plus me-2"></i>フレンド申請
+        </a>
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item text-warning" href="#" onclick="blockUser()">
+            <i class="fas fa-ban me-2"></i>ブロック
+        </a>
+        <a class="dropdown-item text-danger" href="#" onclick="reportUser()">
+            <i class="fas fa-exclamation-triangle me-2"></i>通報
+        </a>
+    </div>
+
+    <!-- ID検索モーダル -->
+    <div class="modal fade" id="userSearchModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-search me-2"></i>ユーザー検索
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="searchInput" class="form-label">ユーザー名・フレンドコード・IDで検索</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="searchInput" placeholder="ユーザー名、8桁のフレンドコード、またはIDを入力...">
+                            <button class="btn btn-primary" onclick="searchUsers()">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            フレンドコードは8桁の英数字です（例：AB12CD34）
+                        </div>
+                    </div>
+                    <div id="searchResults"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通報モーダル -->
+    <div class="modal fade" id="reportModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exclamation-triangle me-2"></i>ユーザー通報
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>ユーザー「<span id="reportTargetUsername"></span>」を通報します。</p>
+                    <div class="mb-3">
+                        <label for="reportReason" class="form-label">通報理由</label>
+                        <select class="form-select" id="reportReason" required>
+                            <option value="">理由を選択してください</option>
+                            <option value="SPAM">スパム・迷惑行為</option>
+                            <option value="HARASSMENT">ハラスメント・嫌がらせ</option>
+                            <option value="INAPPROPRIATE_CONTENT">不適切なコンテンツ</option>
+                            <option value="HATE_SPEECH">ヘイトスピーチ</option>
+                            <option value="IMPERSONATION">なりすまし</option>
+                            <option value="VIOLENCE_THREAT">暴力的な脅迫</option>
+                            <option value="PRIVACY_VIOLATION">プライバシー侵害</option>
+                            <option value="FRAUD">詐欺・不正行為</option>
+                            <option value="OTHER">その他</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reportDescription" class="form-label">詳細説明（任意）</label>
+                        <textarea class="form-control" id="reportDescription" rows="3" placeholder="詳細な説明があれば入力してください..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <button type="button" class="btn btn-danger" onclick="submitReport()">通報する</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ユーザーコンテキストメニュー関連の変数
+        let contextMenuTargetUserId = null;
+        let contextMenuTargetUsername = null;
+
+        // フレンド申請通知をチェック
+        function checkFriendNotifications() {
+            fetch('/friends/api/notification-count')
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.getElementById('friendNotificationBadge');
+                    const count = document.getElementById('friendNotificationCount');
+                    
+                    if (data.count > 0) {
+                        badge.style.display = 'block';
+                        count.textContent = data.count;
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                })
+                .catch(error => console.error('通知チェックエラー:', error));
+        }
+
+        // ユーザーコンテキストメニューの表示
+        function showUserContextMenu(event, element) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            contextMenuTargetUserId = element.dataset.userId;
+            contextMenuTargetUsername = element.dataset.username;
+            
+            const menu = document.getElementById('userContextMenu');
+            const rect = element.getBoundingClientRect();
+            
+            menu.style.display = 'block';
+            menu.style.left = (rect.left + window.scrollX) + 'px';
+            menu.style.top = (rect.bottom + window.scrollY + 5) + 'px';
+            
+            // クリック外しで閉じる
+            document.addEventListener('click', hideUserContextMenu, { once: true });
+        }
+
+        function hideUserContextMenu() {
+            document.getElementById('userContextMenu').style.display = 'none';
+        }
+
+        // プロフィール表示
+        function viewUserProfile() {
+            if (contextMenuTargetUserId) {
+                window.open(`/profile/view/${contextMenuTargetUserId}`, '_blank');
+            }
+            hideUserContextMenu();
+        }
+
+        // フレンド申請送信
+        function sendFriendRequest() {
+            if (!contextMenuTargetUserId) return;
+            
+            fetch('/friends/request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ targetUserId: contextMenuTargetUserId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`${contextMenuTargetUsername}にフレンド申請を送信しました`);
+                } else {
+                    alert(data.message || 'フレンド申請の送信に失敗しました');
+                }
+            })
+            .catch(error => {
+                console.error('フレンド申請エラー:', error);
+                alert('エラーが発生しました');
+            });
+            
+            hideUserContextMenu();
+        }
+
+        // ユーザーブロック
+        function blockUser() {
+            if (!contextMenuTargetUserId || !confirm(`${contextMenuTargetUsername}をブロックしますか？`)) return;
+            
+            fetch('/friends/block', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ targetUserId: contextMenuTargetUserId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`${contextMenuTargetUsername}をブロックしました`);
+                } else {
+                    alert(data.message || 'ブロックに失敗しました');
+                }
+            })
+            .catch(error => {
+                console.error('ブロックエラー:', error);
+                alert('エラーが発生しました');
+            });
+            
+            hideUserContextMenu();
+        }
+
+        // 通報モーダル表示
+        function reportUser() {
+            if (!contextMenuTargetUserId) return;
+            
+            document.getElementById('reportTargetUsername').textContent = contextMenuTargetUsername;
+            const modal = new bootstrap.Modal(document.getElementById('reportModal'));
+            modal.show();
+            
+            hideUserContextMenu();
+        }
+
+        // 通報送信
+        function submitReport() {
+            const reason = document.getElementById('reportReason').value;
+            const description = document.getElementById('reportDescription').value;
+            
+            if (!reason) {
+                alert('通報理由を選択してください');
+                return;
+            }
+            
+            fetch('/api/reports', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    reportedUserId: contextMenuTargetUserId,
+                    reason: reason,
+                    description: description
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('通報を送信しました。ご協力ありがとうございます。');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('reportModal'));
+                    modal.hide();
+                    
+                    // フォームをリセット
+                    document.getElementById('reportReason').value = '';
+                    document.getElementById('reportDescription').value = '';
+                } else {
+                    alert(data.message || '通報の送信に失敗しました');
+                }
+            })
+            .catch(error => {
+                console.error('通報エラー:', error);
+                alert('エラーが発生しました');
+            });
+        }
+
+        // ユーザー検索モーダル表示
+        function showUserSearchModal() {
+            const modal = new bootstrap.Modal(document.getElementById('userSearchModal'));
+            modal.show();
+        }
+
+        // ユーザー検索実行
+        function searchUsers() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) {
+                alert('検索キーワードを入力してください');
+                return;
+            }
+            
+            fetch(`/api/users/search?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(users => {
+                    displaySearchResults(users);
+                })
+                .catch(error => {
+                    console.error('検索エラー:', error);
+                    alert('検索中にエラーが発生しました');
+                });
+        }
+
+        // 検索結果表示
+        function displaySearchResults(users) {
+            const resultsContainer = document.getElementById('searchResults');
+            
+            if (users.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div class="text-center text-muted p-3">
+                        <i class="fas fa-search fa-2x mb-2"></i>
+                        <p>該当するユーザーが見つかりませんでした</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            resultsContainer.innerHTML = users.map(user => `
+                <div class="d-flex align-items-center p-3 border rounded mb-2" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" 
+                         style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;">
+                        ${user.username.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold" style="color: #2d3748;">${escapeHtml(user.username)}</div>
+                        <small class="text-muted d-block">
+                            <i class="fas fa-hashtag me-1"></i>ID: ${user.id}
+                        </small>
+                        <small class="text-muted d-block">
+                            <i class="fas fa-code me-1"></i>フレンドコード: ${user.friendCode || 'なし'}
+                        </small>
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="viewUserProfileById(${user.id})" title="プロフィール表示">
+                            <i class="fas fa-user"></i>
+                        </button>
+                        <button class="btn btn-sm btn-primary" onclick="sendFriendRequestById(${user.id}, '${escapeHtml(user.username)}')" title="フレンド申請">
+                            <i class="fas fa-user-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 検索結果からプロフィール表示
+        function viewUserProfileById(userId) {
+            window.open(`/profile/view/${userId}`, '_blank');
+        }
+
+        // 検索結果からフレンド申請
+        function sendFriendRequestById(userId, username) {
+            fetch('/friends/request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ targetUserId: userId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`${username}にフレンド申請を送信しました`);
+                } else {
+                    alert(data.message || 'フレンド申請の送信に失敗しました');
+                }
+            })
+            .catch(error => {
+                console.error('フレンド申請エラー:', error);
+                alert('エラーが発生しました');
+            });
+        }
+
+        // HTMLエスケープ
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Enterキーでの検索
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        searchUsers();
+                    }
+                });
+            }
+            
+            // フレンド通知を定期的にチェック
+            checkFriendNotifications();
+            setInterval(checkFriendNotifications, 30000); // 30秒ごと
         });
     </script>
 </body>

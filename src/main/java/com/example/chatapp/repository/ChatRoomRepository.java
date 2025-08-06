@@ -17,5 +17,11 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     @Query("SELECT cr FROM ChatRoom cr JOIN cr.users u WHERE u.id = :userId")
     List<ChatRoom> findByUserId(@Param("userId") Long userId);
     
+    // ユーザーが参加しているチャットルームを取得
+    List<ChatRoom> findByUsersContaining(User user);
+    
     List<ChatRoom> findByType(ChatRoom.ChatRoomType type);
+    
+    // チャットルーム名で検索
+    List<ChatRoom> findByNameContainingIgnoreCase(String name);
 }

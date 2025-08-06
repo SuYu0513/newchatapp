@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>チャットルーム作成 - チャットアプリ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-comments me-2"></i>チャットアプリ
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3" sec:authorize="isAuthenticated()">
+                    <i class="fas fa-user me-1"></i>
+                    ようこそ、<span sec:authentication="name"></span>さん
+                </span>
+                <a class="nav-link" th:href="@{/rooms}">
+                    <i class="fas fa-list me-1"></i>ルーム一覧
+                </a>
+                <a class="nav-link" th:href="@{/chat}">
+                    <i class="fas fa-comment me-1"></i>チャット
+                </a>
+                <a class="nav-link" th:href="@{/logout}">
+                    <i class="fas fa-sign-out-alt me-1"></i>ログアウト
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">
+                            <i class="fas fa-plus me-2"></i>新しいチャットルームを作成
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <form action="/rooms/create" method="post">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">
+                                    <i class="fas fa-tag me-1"></i>ルーム名
+                                </label>
+                                <input type="text" class="form-control" id="name" name="name" 
+                                       placeholder="例: プログラミング雑談" required maxlength="100">
+                                <div class="form-text">最大100文字まで</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="type" class="form-label">
+                                    <i class="fas fa-cog me-1"></i>ルームタイプ
+                                </label>
+                                <select class="form-select" id="type" name="type" required>
+                                    <option value="GROUP" selected>
+                                        <i class="fas fa-users"></i>グループチャット（誰でも参加可能）
+                                    </option>
+                                    <option value="PRIVATE">
+                                        <i class="fas fa-lock"></i>プライベートチャット（招待制）
+                                    </option>
+                                </select>
+                                <div class="form-text">
+                                    <div class="d-flex align-items-center mb-1">
+                                        <i class="fas fa-users text-success me-2"></i>
+                                        <strong>グループチャット:</strong> 誰でも自由に参加できます
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-lock text-info me-2"></i>
+                                        <strong>プライベートチャット:</strong> 作成者が招待したユーザーのみ参加可能
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>注意事項:</strong>
+                                    <ul class="mb-0 mt-2">
+                                        <li>作成したルームの管理者になります</li>
+                                        <li>ルームの削除や設定変更が可能です</li>
+                                        <li>適切なルール設定でみんなが楽しめる環境を作りましょう</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-plus me-2"></i>ルームを作成
+                                </button>
+                                <a href="/rooms" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-1"></i>ルーム一覧に戻る
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 作成のヒント -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-lightbulb me-2"></i>ルーム作成のヒント
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-check-circle text-success me-1"></i>良いルーム名の例</h6>
+                                <ul class="small">
+                                    <li>プログラミング雑談</li>
+                                    <li>ゲーム好き集合</li>
+                                    <li>技術的質問・相談</li>
+                                    <li>今日の出来事</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-users text-info me-1"></i>活発なルームにするコツ</h6>
+                                <ul class="small">
+                                    <li>テーマを明確にする</li>
+                                    <li>歓迎メッセージを送る</li>
+                                    <li>定期的に話題を提供する</li>
+                                    <li>参加者を積極的に巻き込む</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

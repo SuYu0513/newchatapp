@@ -72,6 +72,18 @@
 			<scope>runtime</scope>
 		</dependency>
 		
+		<!-- SQLite Database -->
+		<dependency>
+			<groupId>org.xerial</groupId>
+			<artifactId>sqlite-jdbc</artifactId>
+		</dependency>
+		
+		<!-- Hibernate SQLite Dialect -->
+		<dependency>
+			<groupId>org.hibernate.orm</groupId>
+			<artifactId>hibernate-community-dialects</artifactId>
+		</dependency>
+		
 		<!-- Validation -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
