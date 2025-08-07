@@ -233,6 +233,158 @@
                         </div>
                     </div>
                     
+                    <!-- ランダムマッチング情報 -->
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-dice me-2"></i>ランダムマッチング情報
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-3">
+                                以下の情報を設定すると、より相性の良い人とマッチングできます
+                            </p>
+                            
+                            <!-- 年齢層 -->
+                            <div class="mb-3">
+                                <label for="ageGroup" class="form-label">
+                                    <i class="fas fa-birthday-cake me-1"></i>年齢層
+                                </label>
+                                <select class="form-select" id="ageGroup" name="ageGroup">
+                                    <option value="">選択してください</option>
+                                    <option value="TEENS" th:selected="${profile.ageGroup == T(com.example.chatapp.entity.UserProfile.AgeGroup).TEENS}">10代</option>
+                                    <option value="TWENTIES" th:selected="${profile.ageGroup == T(com.example.chatapp.entity.UserProfile.AgeGroup).TWENTIES}">20代</option>
+                                    <option value="THIRTIES" th:selected="${profile.ageGroup == T(com.example.chatapp.entity.UserProfile.AgeGroup).THIRTIES}">30代</option>
+                                    <option value="FORTIES" th:selected="${profile.ageGroup == T(com.example.chatapp.entity.UserProfile.AgeGroup).FORTIES}">40代</option>
+                                    <option value="FIFTIES_PLUS" th:selected="${profile.ageGroup == T(com.example.chatapp.entity.UserProfile.AgeGroup).FIFTIES_PLUS}">50代以上</option>
+                                    <option value="NOT_SPECIFIED" th:selected="${profile.ageGroup == T(com.example.chatapp.entity.UserProfile.AgeGroup).NOT_SPECIFIED}">未設定</option>
+                                </select>
+                            </div>
+                            
+                            <!-- チャットスタイル -->
+                            <div class="mb-3">
+                                <label for="chatStyle" class="form-label">
+                                    <i class="fas fa-comments me-1"></i>チャットスタイル
+                                </label>
+                                <select class="form-select" id="chatStyle" name="chatStyle">
+                                    <option value="">選択してください</option>
+                                    <option value="CASUAL" th:selected="${profile.chatStyle == T(com.example.chatapp.entity.UserProfile.ChatStyle).CASUAL}">カジュアル</option>
+                                    <option value="SERIOUS" th:selected="${profile.chatStyle == T(com.example.chatapp.entity.UserProfile.ChatStyle).SERIOUS}">真面目</option>
+                                    <option value="FUNNY" th:selected="${profile.chatStyle == T(com.example.chatapp.entity.UserProfile.ChatStyle).FUNNY}">面白い</option>
+                                    <option value="DEEP" th:selected="${profile.chatStyle == T(com.example.chatapp.entity.UserProfile.ChatStyle).DEEP}">深い話</option>
+                                    <option value="LIGHT" th:selected="${profile.chatStyle == T(com.example.chatapp.entity.UserProfile.ChatStyle).LIGHT}">軽い話</option>
+                                    <option value="CREATIVE" th:selected="${profile.chatStyle == T(com.example.chatapp.entity.UserProfile.ChatStyle).CREATIVE}">創造的</option>
+                                    <option value="NOT_SPECIFIED" th:selected="${profile.chatStyle == T(com.example.chatapp.entity.UserProfile.ChatStyle).NOT_SPECIFIED}">未設定</option>
+                                </select>
+                            </div>
+                            
+                            <!-- 興味・関心 -->
+                            <div class="mb-3">
+                                <label for="interests" class="form-label">
+                                    <i class="fas fa-heart me-1"></i>興味・関心
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="interests" 
+                                       name="interests" 
+                                       th:value="${profile.interests}"
+                                       placeholder="例: 読書, 映画鑑賞, 料理, ゲーム, 旅行"
+                                       maxlength="200">
+                                <small class="text-muted">カンマ区切りで入力してください</small>
+                            </div>
+                            
+                            <!-- 趣味 -->
+                            <div class="mb-3">
+                                <label for="hobbies" class="form-label">
+                                    <i class="fas fa-gamepad me-1"></i>趣味
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="hobbies" 
+                                       name="hobbies" 
+                                       th:value="${profile.hobbies}"
+                                       placeholder="例: サッカー, ピアノ, 写真撮影, 絵画"
+                                       maxlength="200">
+                                <small class="text-muted">カンマ区切りで入力してください</small>
+                            </div>
+                            
+                            <!-- 好きなもの -->
+                            <div class="mb-3">
+                                <label for="favoriteThings" class="form-label">
+                                    <i class="fas fa-star me-1"></i>好きなもの
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="favoriteThings" 
+                                       name="favoriteThings" 
+                                       th:value="${profile.favoriteThings}"
+                                       placeholder="例: コーヒー, 猫, アニメ, 海"
+                                       maxlength="200">
+                                <small class="text-muted">カンマ区切りで入力してください</small>
+                            </div>
+                            
+                            <!-- 音楽ジャンル -->
+                            <div class="mb-3">
+                                <label for="musicGenres" class="form-label">
+                                    <i class="fas fa-music me-1"></i>好きな音楽ジャンル
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="musicGenres" 
+                                       name="musicGenres" 
+                                       th:value="${profile.musicGenres}"
+                                       placeholder="例: ポップス, ロック, ジャズ, クラシック"
+                                       maxlength="200">
+                                <small class="text-muted">カンマ区切りで入力してください</small>
+                            </div>
+                            
+                            <!-- 映画ジャンル -->
+                            <div class="mb-3">
+                                <label for="movieGenres" class="form-label">
+                                    <i class="fas fa-film me-1"></i>好きな映画ジャンル
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="movieGenres" 
+                                       name="movieGenres" 
+                                       th:value="${profile.movieGenres}"
+                                       placeholder="例: アクション, コメディ, ドラマ, アニメ"
+                                       maxlength="200">
+                                <small class="text-muted">カンマ区切りで入力してください</small>
+                            </div>
+                            
+                            <!-- 話せる言語 -->
+                            <div class="mb-3">
+                                <label for="languages" class="form-label">
+                                    <i class="fas fa-globe me-1"></i>話せる言語
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="languages" 
+                                       name="languages" 
+                                       th:value="${profile.languages}"
+                                       placeholder="例: 日本語, 英語, 中国語, 韓国語"
+                                       maxlength="100">
+                                <small class="text-muted">カンマ区切りで入力してください</small>
+                            </div>
+                            
+                            <!-- 性格特性 -->
+                            <div class="mb-3">
+                                <label for="personalityTraits" class="form-label">
+                                    <i class="fas fa-user-circle me-1"></i>性格特性
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="personalityTraits" 
+                                       name="personalityTraits" 
+                                       th:value="${profile.personalityTraits}"
+                                       placeholder="例: 明るい, 優しい, 面白い, 真面目"
+                                       maxlength="200">
+                                <small class="text-muted">カンマ区切りで入力してください</small>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <!-- プライバシー設定 -->
                     <div class="card mt-3">
                         <div class="card-header">

@@ -13,10 +13,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(@NonNull MessageBrokerRegistry config) {
-        // メッセージブローカーを有効化
-        config.enableSimpleBroker("/topic");
+        // メッセージブローカーを有効化（/topic for broadcast, /queue for user-specific messages）
+        config.enableSimpleBroker("/topic", "/queue");
         // アプリケーション宛先のプレフィックス
         config.setApplicationDestinationPrefixes("/app");
+        // ユーザー向けメッセージのプレフィックス
+        config.setUserDestinationPrefix("/user");
     }
 
     @Override

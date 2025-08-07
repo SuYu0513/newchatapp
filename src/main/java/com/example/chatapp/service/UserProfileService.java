@@ -1,7 +1,9 @@
 package com.example.chatapp.service;
 
+import com.example.chatapp.entity.Friendship;
 import com.example.chatapp.entity.User;
 import com.example.chatapp.entity.UserProfile;
+import com.example.chatapp.repository.FriendshipRepository;
 import com.example.chatapp.repository.UserProfileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,10 +15,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -24,6 +26,9 @@ public class UserProfileService {
 
     @Autowired
     private UserProfileRepository userProfileRepository;
+
+    @Autowired
+    private FriendshipRepository friendshipRepository;
 
     private static final String UPLOAD_DIR = "src/main/resources/static/uploads/avatars/";
     private static final String[] ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif"};
@@ -59,6 +64,17 @@ public class UserProfileService {
         existingProfile.setPrivacyLevel(updatedProfile.getPrivacyLevel());
         existingProfile.setIsSearchable(updatedProfile.getIsSearchable());
         existingProfile.setAllowRandomMatching(updatedProfile.getAllowRandomMatching());
+        
+        // ランダムマッチング用フィールドを追加
+        existingProfile.setAgeGroup(updatedProfile.getAgeGroup());
+        existingProfile.setChatStyle(updatedProfile.getChatStyle());
+        existingProfile.setInterests(updatedProfile.getInterests());
+        existingProfile.setHobbies(updatedProfile.getHobbies());
+        existingProfile.setFavoriteThings(updatedProfile.getFavoriteThings());
+        existingProfile.setMusicGenres(updatedProfile.getMusicGenres());
+        existingProfile.setMovieGenres(updatedProfile.getMovieGenres());
+        existingProfile.setLanguages(updatedProfile.getLanguages());
+        existingProfile.setPersonalityTraits(updatedProfile.getPersonalityTraits());
         
         return userProfileRepository.save(existingProfile);
     }
@@ -146,11 +162,65 @@ public class UserProfileService {
     }
 
     /**
-     * ランダムマッチング可能なユーザーを取得
+     * ランダムマッチング可能なユーザーを取得（フレンド、ブロックユーザー、申請中ユーザーを除外）
      */
     @Transactional(readOnly = true)
     public List<UserProfile> getAvailableForRandomMatching(User excludeUser) {
-        return userProfileRepository.findAvailableForRandomMatching(excludeUser.getId());
+        // 基本的なランダムマッチング可能ユーザーを取得
+        List<UserProfile> candidates = userProfileRepository.findAvailableForRandomMatching(excludeUser.getId());
+        
+        // フレンドリストを取得
+        List<Friendship> friendships = friendshipRepository.findAcceptedFriendships(excludeUser);
+        List<Long> friendIds = friendships.stream()
+            .map(friendship -> {
+                // 自分がrequesterの場合はaddresseeを、addresseeの場合はrequesterを取得
+                if (friendship.getRequester().getId().equals(excludeUser.getId())) {
+                    return friendship.getAddressee().getId();
+                } else {
+                    return friendship.getRequester().getId();
+                }
+            })
+            .collect(Collectors.toList());
+        
+        // ブロックしたユーザーリストを取得
+        List<Friendship> blockedFriendships = friendshipRepository.findByRequesterAndStatus(
+            excludeUser, Friendship.FriendshipStatus.BLOCKED);
+        List<Long> blockedUserIds = blockedFriendships.stream()
+            .map(friendship -> friendship.getAddressee().getId())
+            .collect(Collectors.toList());
+        
+        // 送信済み申請のユーザーIDを取得
+        List<Friendship> sentRequests = friendshipRepository.findSentRequests(excludeUser);
+        List<Long> sentRequestUserIds = sentRequests.stream()
+            .map(friendship -> friendship.getAddressee().getId())
+            .collect(Collectors.toList());
+        
+        // 受信申請のユーザーIDを取得
+        List<Friendship> receivedRequests = friendshipRepository.findPendingRequests(excludeUser);
+        List<Long> receivedRequestUserIds = receivedRequests.stream()
+            .map(friendship -> friendship.getRequester().getId())
+            .collect(Collectors.toList());
+        
+        // デバッグ情報出力
+        System.out.println("=== ランダムマッチング候補者フィルタリング ===");
+        System.out.println("基本候補者数: " + candidates.size());
+        System.out.println("除外 - フレンド: " + friendIds.size() + " 人");
+        System.out.println("除外 - ブロック: " + blockedUserIds.size() + " 人");
+        System.out.println("除外 - 送信申請: " + sentRequestUserIds.size() + " 人");
+        System.out.println("除外 - 受信申請: " + receivedRequestUserIds.size() + " 人");
+        
+        // フレンド、ブロックユーザー、申請中ユーザーを除外
+        List<UserProfile> filteredCandidates = candidates.stream()
+            .filter(profile -> !friendIds.contains(profile.getUser().getId()))
+            .filter(profile -> !blockedUserIds.contains(profile.getUser().getId()))
+            .filter(profile -> !sentRequestUserIds.contains(profile.getUser().getId()))
+            .filter(profile -> !receivedRequestUserIds.contains(profile.getUser().getId()))
+            .collect(Collectors.toList());
+        
+        System.out.println("最終候補者数: " + filteredCandidates.size() + " 人");
+        System.out.println("===========================================");
+        
+        return filteredCandidates;
     }
 
     /**

@@ -5,6 +5,7 @@ import com.example.chatapp.entity.UserProfile;
 import com.example.chatapp.service.UserProfileService;
 import com.example.chatapp.service.UserService;
 import com.example.chatapp.service.FriendshipService;
+import com.example.chatapp.service.OnlineUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -33,6 +34,9 @@ public class ProfileController {
 
     @Autowired
     private FriendshipService friendshipService;
+
+    @Autowired
+    private OnlineUserService onlineUserService;
 
     /**
      * プロフィール表示
@@ -212,12 +216,26 @@ public class ProfileController {
      * オンラインユーザー一覧
      */
     @GetMapping("/online")
-    public String showOnlineUsers(Model model) {
-        List<UserProfile> onlineUsers = userProfileService.getOnlineUsers();
-        long onlineCount = userProfileService.getOnlineUserCount();
+    public String showOnlineUsers(Model model, Authentication auth) {
+        if (auth == null || !auth.isAuthenticated()) {
+            return "redirect:/login";
+        }
         
-        model.addAttribute("onlineUsers", onlineUsers);
+        String username = auth.getName();
+        User currentUser = userService.findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("ユーザーが見つかりません"));
+        
+        // オンラインフレンドを取得
+        List<OnlineUserService.OnlineUserInfo> onlineFriends = onlineUserService.getOnlineFriends(username);
+        
+        // すべてのオンラインユーザーも取得（必要に応じて）
+        List<OnlineUserService.OnlineUserInfo> allOnlineUsers = onlineUserService.getAllOnlineUsers();
+        long onlineCount = onlineUserService.getOnlineUserCount();
+        
+        model.addAttribute("onlineFriends", onlineFriends);
+        model.addAttribute("allOnlineUsers", allOnlineUsers);
         model.addAttribute("onlineCount", onlineCount);
+        model.addAttribute("currentUser", currentUser);
         
         return "profile/online";
     }

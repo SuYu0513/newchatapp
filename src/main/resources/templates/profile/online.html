@@ -140,6 +140,62 @@
             </ul>
         </div>
 
+        <!-- オンラインフレンド専用セクション -->
+        <div class="card mb-4" style="border-radius: 15px; border: none; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);">
+            <div class="card-header text-white" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); border-radius: 15px 15px 0 0;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-friends me-2"></i>オンラインフレンド
+                    </h5>
+                    <span class="badge bg-light text-dark" id="onlineFriendsCount" th:text="${#lists.size(onlineFriends)}">0</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div th:if="${#lists.isEmpty(onlineFriends)}" class="text-center py-4 text-muted">
+                    <i class="fas fa-user-slash fa-3x mb-3" style="color: #dee2e6;"></i>
+                    <h5>オンラインのフレンドはいません</h5>
+                    <p>フレンドがオンラインになると、ここに表示されます</p>
+                </div>
+                
+                <div th:if="${!#lists.isEmpty(onlineFriends)}" class="row" id="onlineFriendsContainer">
+                    <div class="col-md-6 col-lg-4 mb-3" th:each="friend : ${onlineFriends}">
+                        <div class="card friend-card h-100" style="border-radius: 12px; border: 2px solid #e3f2fd; transition: all 0.3s ease;">
+                            <div class="card-body d-flex align-items-center">
+                                <div class="me-3 position-relative">
+                                    <i class="fas fa-user-circle fa-3x text-primary"></i>
+                                    <span class="position-absolute bottom-0 end-0 p-1 bg-white rounded-circle">
+                                        <i th:class="'fas fa-circle fa-sm'" 
+                                           th:style="'color: ' + (${friend.status == 'online'} ? '#28a745' : (${friend.status == 'away'} ? '#ffc107' : '#dc3545'))"></i>
+                                    </span>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="card-title mb-1" th:text="${friend.displayName}">フレンド名</h6>
+                                    <small class="text-muted" th:text="${friend.status == 'online' ? 'オンライン' : (friend.status == 'away' ? '離席中' : '取り込み中')}">オンライン</small>
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item" th:href="@{'/profile/' + ${friend.userId}}">
+                                                <i class="fas fa-user me-2"></i>プロフィール表示
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="#" th:onclick="'startDirectMessage(' + ${friend.userId} + ', \'' + ${friend.displayName} + '\')'">
+                                                <i class="fas fa-comments me-2"></i>メッセージ送信
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- 自動更新情報 -->
         <div class="auto-refresh-info text-center mb-3">
             <i class="fas fa-info-circle me-1"></i>
@@ -476,6 +532,113 @@
             } else if (autoRefreshEnabled) {
                 startAutoRefresh();
             }
+        });
+
+        // オンラインフレンドのリアルタイム更新機能
+        function refreshOnlineFriends() {
+            fetch('/api/online/friends')
+                .then(response => response.json())
+                .then(friends => {
+                    updateOnlineFriendsDisplay(friends);
+                })
+                .catch(error => {
+                    console.error('オンラインフレンド取得エラー:', error);
+                });
+        }
+
+        function updateOnlineFriendsDisplay(friends) {
+            const friendsContainer = document.getElementById('onlineFriendsContainer');
+            const friendsCount = document.getElementById('onlineFriendsCount');
+            
+            if (!friendsContainer && friends.length > 0) {
+                // フレンドがいる場合は、空メッセージを置き換える
+                const emptyMessage = document.querySelector('.card-body .text-center.py-4');
+                if (emptyMessage) {
+                    emptyMessage.parentElement.innerHTML = '<div class="row" id="onlineFriendsContainer"></div>';
+                }
+            }
+            
+            if (friendsCount) {
+                friendsCount.textContent = friends.length;
+            }
+            
+            const container = document.getElementById('onlineFriendsContainer');
+            if (!container) return;
+            
+            if (friends.length === 0) {
+                container.parentElement.innerHTML = `
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-user-slash fa-3x mb-3" style="color: #dee2e6;"></i>
+                        <h5>オンラインのフレンドはいません</h5>
+                        <p>フレンドがオンラインになると、ここに表示されます</p>
+                    </div>
+                `;
+            } else {
+                let friendsHtml = '';
+                friends.forEach(friend => {
+                    const statusColor = friend.status === 'online' ? '#28a745' : 
+                                       friend.status === 'away' ? '#ffc107' : '#dc3545';
+                    const statusText = friend.status === 'online' ? 'オンライン' : 
+                                      friend.status === 'away' ? '離席中' : '取り込み中';
+                    
+                    friendsHtml += `
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card friend-card h-100" style="border-radius: 12px; border: 2px solid #e3f2fd; transition: all 0.3s ease;">
+                                <div class="card-body d-flex align-items-center">
+                                    <div class="me-3 position-relative">
+                                        <i class="fas fa-user-circle fa-3x text-primary"></i>
+                                        <span class="position-absolute bottom-0 end-0 p-1 bg-white rounded-circle">
+                                            <i class="fas fa-circle fa-sm" style="color: ${statusColor}"></i>
+                                        </span>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="card-title mb-1">${friend.displayName}</h6>
+                                        <small class="text-muted">${statusText}</small>
+                                    </div>
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a class="dropdown-item" href="/profile/${friend.userId}">
+                                                    <i class="fas fa-user me-2"></i>プロフィール表示
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="#" onclick="startDirectMessage(${friend.userId}, '${friend.displayName}')">
+                                                    <i class="fas fa-comments me-2"></i>メッセージ送信
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = friendsHtml;
+            }
+        }
+
+        // ダイレクトメッセージ開始機能
+        function startDirectMessage(userId, displayName) {
+            // TODO: ダイレクトメッセージ機能の実装
+            alert(`${displayName}とのダイレクトメッセージ機能は準備中です`);
+        }
+
+        // 定期的にオンラインフレンドを更新
+        setInterval(refreshOnlineFriends, 30000); // 30秒ごと
+
+        // 既存のDOMContentLoadedイベントに追加
+        const originalDOMContentLoaded = document.addEventListener('DOMContentLoaded', function() {
+            refreshUsers();
+            startAutoRefresh();
+        });
+        
+        // オンラインフレンドの更新も追加
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshOnlineFriends();
         });
     </script>
 </body>

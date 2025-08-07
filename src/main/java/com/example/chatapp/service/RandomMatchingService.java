@@ -5,14 +5,14 @@ import com.example.chatapp.entity.RandomMatch;
 import com.example.chatapp.entity.User;
 import com.example.chatapp.entity.UserProfile;
 import com.example.chatapp.repository.RandomMatchRepository;
+import com.example.chatapp.repository.UserProfileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -29,6 +29,173 @@ public class RandomMatchingService {
 
     private final Random random = new Random();
     private static final int MATCH_TIMEOUT_MINUTES = 30;
+
+    /**
+     * 最適なマッチング相手を見つける（相性重視）
+     */
+    public User findBestMatch(User user) {
+        UserProfile userProfile = userProfileService.getOrCreateProfile(user);
+        
+        // ランダムマッチング許可済みで、現在アクティブでないユーザーを取得
+        List<UserProfile> candidates = userProfileService.getAvailableForRandomMatching(user);
+        
+        if (candidates.isEmpty()) {
+            return null;
+        }
+
+        // 相性スコアを計算してソート
+        List<MatchCandidate> scoredCandidates = candidates.stream()
+            .map(profile -> new MatchCandidate(profile.getUser(), calculateCompatibilityScore(userProfile, profile)))
+            .sorted((a, b) -> Double.compare(b.score, a.score))
+            .collect(java.util.stream.Collectors.toList());
+
+        // 上位30%からランダムに選択（完全な相性マッチではなく、適度なランダム性を保つ）
+        int topCandidatesCount = Math.max(1, scoredCandidates.size() / 3);
+        List<MatchCandidate> topCandidates = scoredCandidates.subList(0, topCandidatesCount);
+        
+        return topCandidates.get(random.nextInt(topCandidates.size())).user;
+    }
+
+    /**
+     * 相性スコアを計算
+     */
+    private double calculateCompatibilityScore(UserProfile profile1, UserProfile profile2) {
+        double score = 0.0;
+        int factors = 0;
+
+        // 年齢層の相性
+        if (profile1.getAgeGroup() != null && profile2.getAgeGroup() != null) {
+            if (profile1.getAgeGroup() == profile2.getAgeGroup()) {
+                score += 20.0;
+            } else {
+                // 隣接する年齢層は半分のスコア
+                if (areAdjacentAgeGroups(profile1.getAgeGroup(), profile2.getAgeGroup())) {
+                    score += 10.0;
+                }
+            }
+            factors++;
+        }
+
+        // チャットスタイルの相性
+        if (profile1.getChatStyle() != null && profile2.getChatStyle() != null) {
+            if (profile1.getChatStyle() == profile2.getChatStyle()) {
+                score += 15.0;
+            }
+            factors++;
+        }
+
+        // 興味・関心の一致度
+        score += calculateTextSimilarity(profile1.getInterests(), profile2.getInterests()) * 15.0;
+        factors++;
+
+        // 趣味の一致度
+        score += calculateTextSimilarity(profile1.getHobbies(), profile2.getHobbies()) * 15.0;
+        factors++;
+
+        // 好きなものの一致度
+        score += calculateTextSimilarity(profile1.getFavoriteThings(), profile2.getFavoriteThings()) * 10.0;
+        factors++;
+
+        // 音楽ジャンルの一致度
+        score += calculateTextSimilarity(profile1.getMusicGenres(), profile2.getMusicGenres()) * 10.0;
+        factors++;
+
+        // 映画ジャンルの一致度
+        score += calculateTextSimilarity(profile1.getMovieGenres(), profile2.getMovieGenres()) * 10.0;
+        factors++;
+
+        // 話せる言語の一致度
+        score += calculateTextSimilarity(profile1.getLanguages(), profile2.getLanguages()) * 5.0;
+        factors++;
+
+        return factors > 0 ? score / factors : 0.0;
+    }
+
+    /**
+     * 隣接する年齢層かどうかを判定
+     */
+    private boolean areAdjacentAgeGroups(UserProfile.AgeGroup age1, UserProfile.AgeGroup age2) {
+        List<UserProfile.AgeGroup> ageOrder = Arrays.asList(
+            UserProfile.AgeGroup.TEENS,
+            UserProfile.AgeGroup.TWENTIES,
+            UserProfile.AgeGroup.THIRTIES,
+            UserProfile.AgeGroup.FORTIES,
+            UserProfile.AgeGroup.FIFTIES_PLUS
+        );
+        
+        int index1 = ageOrder.indexOf(age1);
+        int index2 = ageOrder.indexOf(age2);
+        
+        return Math.abs(index1 - index2) == 1;
+    }
+
+    /**
+     * テキストの類似度を計算（カンマ区切りのリスト用）
+     */
+    private double calculateTextSimilarity(String text1, String text2) {
+        if (text1 == null || text2 == null || text1.trim().isEmpty() || text2.trim().isEmpty()) {
+            return 0.0;
+        }
+
+        Set<String> set1 = Arrays.stream(text1.toLowerCase().split(","))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .collect(java.util.stream.Collectors.toSet());
+
+        Set<String> set2 = Arrays.stream(text2.toLowerCase().split(","))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .collect(java.util.stream.Collectors.toSet());
+
+        if (set1.isEmpty() || set2.isEmpty()) {
+            return 0.0;
+        }
+
+        Set<String> intersection = new HashSet<>(set1);
+        intersection.retainAll(set2);
+
+        Set<String> union = new HashSet<>(set1);
+        union.addAll(set2);
+
+        return (double) intersection.size() / union.size();
+    }
+
+    /**
+     * マッチングを作成
+     */
+    public RandomMatch createMatch(User user1, User user2) {
+        // 既存のアクティブマッチをチェック
+        Optional<RandomMatch> existingMatch1 = randomMatchRepository.findActiveMatchForUser(user1);
+        Optional<RandomMatch> existingMatch2 = randomMatchRepository.findActiveMatchForUser(user2);
+
+        if (existingMatch1.isPresent() || existingMatch2.isPresent()) {
+            throw new IllegalStateException("既にアクティブなマッチが存在します");
+        }
+
+        // チャットルームを作成
+        String roomName = "ランダムチャット - " + user1.getUsername() + " & " + user2.getUsername();
+        ChatRoom chatRoom = chatRoomService.createPrivateRoom(roomName, user1);
+        
+        // 相手をルームに追加
+        chatRoomService.addUserToRoom(chatRoom.getId(), user2);
+
+        // ランダムマッチを作成
+        RandomMatch randomMatch = new RandomMatch(user1, user2, chatRoom);
+        return randomMatchRepository.save(randomMatch);
+    }
+
+    /**
+     * マッチング候補のヘルパークラス
+     */
+    private static class MatchCandidate {
+        final User user;
+        final double score;
+
+        MatchCandidate(User user, double score) {
+            this.user = user;
+            this.score = score;
+        }
+    }
 
     /**
      * ランダムマッチングを開始

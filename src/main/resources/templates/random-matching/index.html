@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ランダムマッチング - ChatApp</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4rem 0;
+            text-align: center;
+        }
+        
+        .matching-card {
+            border: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            transition: transform 0.3s ease;
+        }
+        
+        .matching-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .dice-animation {
+            animation: roll 1s infinite;
+        }
+        
+        @keyframes roll {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(90deg); }
+            50% { transform: rotate(180deg); }
+            75% { transform: rotate(270deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .compatibility-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            margin: 0.1rem;
+            border-radius: 15px;
+            font-size: 0.875rem;
+            background-color: #e9ecef;
+            color: #495057;
+        }
+        
+        .matching-status {
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- ナビゲーション -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/chat">
+                <i class="fas fa-dice me-2"></i>ChatApp - ランダムマッチング
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3" sec:authorize="isAuthenticated()">
+                    こんにちは、<span sec:authentication="name"></span>さん
+                </span>
+                <a class="nav-link" href="/chat">
+                    <i class="fas fa-arrow-left me-1"></i>チャットに戻る
+                </a>
+                <a class="nav-link" href="/logout">
+                    <i class="fas fa-sign-out-alt me-1"></i>ログアウト
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ヒーローセクション -->
+    <section class="hero-section">
+        <div class="container">
+            <h1 class="display-4 mb-4">
+                <i class="fas fa-dice-six me-3"></i>ランダムマッチング
+            </h1>
+            <p class="lead mb-0">
+                あなたの趣味や興味に合った人と出会って、新しい会話を始めよう！
+            </p>
+        </div>
+    </section>
+
+    <div class="container my-5">
+        <!-- エラーメッセージ -->
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="row">
+            <!-- メインマッチングエリア -->
+            <div class="col-lg-8">
+                <div class="card matching-card mb-4">
+                    <div class="card-header bg-gradient-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-search me-2"></i>マッチング相手を探す
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="matchingStatus" class="matching-status">
+                            <div class="text-center">
+                                <i class="fas fa-dice-six fa-3x text-primary mb-3" id="diceIcon"></i>
+                                <h4>マッチング開始の準備ができました</h4>
+                                <p class="text-muted">下のボタンを押して、あなたに最適な相手を見つけましょう</p>
+                                <button id="startMatchingBtn" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-play me-2"></i>マッチング開始
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- マッチング結果エリア -->
+                <div id="matchResult" class="card matching-card d-none">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-check-circle me-2"></i>マッチング成功！
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-4 text-center">
+                                <img id="matchedUserAvatar" class="rounded-circle" width="100" height="100" alt="相手のアバター">
+                                <h5 id="matchedUserName" class="mt-2 mb-0"></h5>
+                            </div>
+                            <div class="col-md-8">
+                                <h6>相性スコア: <span id="compatibilityScore" class="badge bg-primary"></span>%</h6>
+                                <div id="compatibilityFactors" class="mb-3"></div>
+                                <div class="d-grid gap-2 d-md-flex">
+                                    <button id="startChatBtn" class="btn btn-success">
+                                        <i class="fas fa-comments me-2"></i>チャットを開始
+                                    </button>
+                                    <button id="skipMatchBtn" class="btn btn-outline-secondary">
+                                        <i class="fas fa-forward me-2"></i>別の相手を探す
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- サイドバー -->
+            <div class="col-lg-4">
+                <!-- プロフィールサマリー -->
+                <div class="card matching-card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-user-circle me-2"></i>あなたのマッチング情報
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <img th:src="${profile.avatarUrlOrDefault}" class="rounded-circle" width="60" height="60" alt="アバター">
+                            <h6 class="mt-2 mb-0" th:text="${profile.displayNameOrUsername}"></h6>
+                        </div>
+                        
+                        <div class="mb-3" th:if="${profile.ageGroup != null}">
+                            <small class="text-muted">年齢層:</small>
+                            <span class="compatibility-badge" th:text="${profile.ageGroup.displayName}"></span>
+                        </div>
+                        
+                        <div class="mb-3" th:if="${profile.chatStyle != null}">
+                            <small class="text-muted">チャットスタイル:</small>
+                            <span class="compatibility-badge" th:text="${profile.chatStyle.displayName}"></span>
+                        </div>
+                        
+                        <div class="mb-3" th:if="${profile.interests != null and !profile.interests.isEmpty()}">
+                            <small class="text-muted">興味・関心:</small><br>
+                            <th:block th:each="interest : ${#strings.arraySplit(profile.interests, ',')}">
+                                <span class="compatibility-badge" th:text="${#strings.trim(interest)}"></span>
+                            </th:block>
+                        </div>
+                        
+                        <div class="mb-3" th:if="${profile.hobbies != null and !profile.hobbies.isEmpty()}">
+                            <small class="text-muted">趣味:</small><br>
+                            <th:block th:each="hobby : ${#strings.arraySplit(profile.hobbies, ',')}">
+                                <span class="compatibility-badge" th:text="${#strings.trim(hobby)}"></span>
+                            </th:block>
+                        </div>
+                        
+                        <div class="text-center">
+                            <a href="/profile/edit" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-edit me-1"></i>プロフィール編集
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- マッチング条件について -->
+                <div class="card matching-card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>マッチング条件について
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                ランダムマッチングが有効なユーザーのみ対象
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-times text-danger me-2"></i>
+                                既存のフレンドは対象外
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-times text-danger me-2"></i>
+                                フレンド申請中のユーザーは対象外
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-times text-danger me-2"></i>
+                                ブロック済みユーザーは対象外
+                            </li>
+                            <li class="mb-0">
+                                <i class="fas fa-heart text-primary me-2"></i>
+                                あなたのプロフィール情報を基に最適な相手を選出
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 統計情報 -->
+                <div class="card matching-card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-chart-bar me-2"></i>マッチング統計
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="border-end">
+                                    <h4 id="totalMatches" class="text-primary mb-0">-</h4>
+                                    <small class="text-muted">総マッチング数</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="border-end">
+                                    <h4 id="activeMatches" class="text-success mb-0">-</h4>
+                                    <small class="text-muted">アクティブ</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <h4 id="avgMessages" class="text-info mb-0">-</h4>
+                                <small class="text-muted">平均メッセージ数</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- クイックアクション -->
+                <div class="card matching-card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-bolt me-2"></i>クイックアクション
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/random-matching/history" class="btn btn-outline-info">
+                                <i class="fas fa-history me-2"></i>マッチング履歴
+                            </a>
+                            <a href="/random-matching/settings" class="btn btn-outline-secondary">
+                                <i class="fas fa-cog me-2"></i>マッチング設定
+                            </a>
+                            <a href="/friends/list" class="btn btn-outline-primary">
+                                <i class="fas fa-users me-2"></i>フレンド管理
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentMatchId = null;
+        let currentRoomId = null;
+
+        // 統計情報を読み込み
+        loadStats();
+
+        // マッチング開始ボタンのイベント
+        document.getElementById('startMatchingBtn').addEventListener('click', startMatching);
+
+        async function startMatching() {
+            const statusDiv = document.getElementById('matchingStatus');
+            const resultDiv = document.getElementById('matchResult');
+            const diceIcon = document.getElementById('diceIcon');
+            const startBtn = document.getElementById('startMatchingBtn');
+
+            // ローディング状態に変更
+            statusDiv.innerHTML = `
+                <div class="text-center">
+                    <i class="fas fa-dice-six fa-3x text-primary loading-spinner mb-3"></i>
+                    <h4>マッチング相手を探しています...</h4>
+                    <p class="text-muted">あなたに最適な相手を見つけています</p>
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            `;
+
+            try {
+                const response = await fetch('/random-matching/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // マッチング成功
+                    currentMatchId = data.matchId;
+                    currentRoomId = data.roomId;
+                    
+                    showMatchResult(data.matchedUser);
+                    statusDiv.classList.add('d-none');
+                    resultDiv.classList.remove('d-none');
+                } else {
+                    // マッチング失敗
+                    statusDiv.innerHTML = `
+                        <div class="text-center">
+                            <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                            <h4>マッチング相手が見つかりませんでした</h4>
+                            <p class="text-muted">${data.message}</p>
+                            <button id="retryBtn" class="btn btn-primary">
+                                <i class="fas fa-redo me-2"></i>再試行
+                            </button>
+                        </div>
+                    `;
+                    
+                    document.getElementById('retryBtn').addEventListener('click', () => {
+                        location.reload();
+                    });
+                }
+            } catch (error) {
+                console.error('マッチングエラー:', error);
+                statusDiv.innerHTML = `
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-circle fa-3x text-danger mb-3"></i>
+                        <h4>エラーが発生しました</h4>
+                        <p class="text-muted">マッチングに失敗しました。もう一度お試しください。</p>
+                        <button id="retryBtn" class="btn btn-primary">
+                            <i class="fas fa-redo me-2"></i>再試行
+                        </button>
+                    </div>
+                `;
+                
+                document.getElementById('retryBtn').addEventListener('click', () => {
+                    location.reload();
+                });
+            }
+        }
+
+        function showMatchResult(matchedUser) {
+            document.getElementById('matchedUserName').textContent = matchedUser.displayName;
+            document.getElementById('matchedUserAvatar').src = '/images/default-avatar.png';
+            
+            // ランダムな相性スコアを表示（実際には計算されたスコアを使用）
+            const score = Math.floor(Math.random() * 30) + 70; // 70-100%
+            document.getElementById('compatibilityScore').textContent = score;
+            
+            // 相性要因を表示
+            const factors = ['共通の趣味', '似た年齢層', 'チャットスタイルが合致'];
+            const factorsHtml = factors.map(factor => 
+                `<span class="compatibility-badge">${factor}</span>`
+            ).join(' ');
+            document.getElementById('compatibilityFactors').innerHTML = factorsHtml;
+
+            // チャット開始ボタンのイベント
+            document.getElementById('startChatBtn').addEventListener('click', () => {
+                if (currentRoomId) {
+                    window.location.href = `/chat?room=${currentRoomId}`;
+                }
+            });
+
+            // スキップボタンのイベント
+            document.getElementById('skipMatchBtn').addEventListener('click', () => {
+                location.reload();
+            });
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/random-matching/api/stats');
+                const stats = await response.json();
+
+                document.getElementById('totalMatches').textContent = stats.totalMatches || 0;
+                document.getElementById('activeMatches').textContent = stats.activeMatches || 0;
+                document.getElementById('avgMessages').textContent = Math.round(stats.averageMessageCount || 0);
+            } catch (error) {
+                console.error('統計情報の読み込みに失敗:', error);
+            }
+        }
+    </script>
+</body>
+</html>

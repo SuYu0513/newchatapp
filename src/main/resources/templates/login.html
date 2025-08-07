@@ -71,6 +71,24 @@
                                 <i class="fas fa-user-plus me-2"></i>新規登録
                             </a>
                         </div>
+                        
+                        <!-- マルチセッション機能 -->
+                        <div class="text-center mt-3">
+                            <hr class="my-3">
+                            <p class="text-muted small">複数タブでのログイン</p>
+                            <div class="row">
+                                <div class="col-6">
+                                    <button class="btn btn-outline-info btn-sm w-100" onclick="openNewTab()">
+                                        <i class="fas fa-external-link-alt me-1"></i>新しいタブ
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <a href="/multi-session/login" class="btn btn-outline-secondary btn-sm w-100">
+                                        <i class="fas fa-cogs me-1"></i>マルチログイン
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -78,5 +96,13 @@
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function openNewTab() {
+            // 新しいタブでマルチセッションログインページを開く
+            const newTabId = 'tab-' + Math.random().toString(36).substr(2, 8);
+            const url = '/multi-session/login?tab=' + newTabId;
+            window.open(url, '_blank');
+        }
+    </script>
 </body>
 </html>

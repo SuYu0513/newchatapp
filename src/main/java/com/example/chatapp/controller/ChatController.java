@@ -3,6 +3,7 @@ package com.example.chatapp.controller;
 import com.example.chatapp.dto.MessageDto;
 import com.example.chatapp.service.MessageService;
 import com.example.chatapp.service.ChatRoomService;
+import com.example.chatapp.service.OnlineUserService;
 import com.example.chatapp.entity.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
@@ -34,12 +37,16 @@ public class ChatController {
 
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
+    
+    @Autowired
+    private OnlineUserService onlineUserService;
 
     @Value("${app.debug.enabled:false}")
     private boolean debugEnabled;
 
     @GetMapping("/chat")
-    public String chat(Model model, Principal principal, @RequestParam(value = "room", required = false) Long room) {
+    public String chat(Model model, Principal principal, HttpServletRequest request, 
+                      @RequestParam(value = "room", required = false) Long room) {
         if (debugEnabled) {
             System.out.println("=== チャットページアクセス ===");
             System.out.println("ユーザー: " + (principal != null ? principal.getName() : "null"));
@@ -49,6 +56,19 @@ public class ChatController {
         if (principal != null) {
             String username = principal.getName();
             model.addAttribute("username", username);
+            
+            // ユーザーをオンライン状態にする（念のため）
+            try {
+                String sessionId = request.getSession().getId();
+                onlineUserService.setUserOnline(username, sessionId);
+                if (debugEnabled) {
+                    System.out.println("ユーザーをオンライン状態に設定: " + username);
+                }
+            } catch (Exception e) {
+                if (debugEnabled) {
+                    System.err.println("オンライン状態設定エラー: " + e.getMessage());
+                }
+            }
             
             // チャットルームIDを決定
             Long chatRoomId = room != null ? room : getDefaultChatRoomId();

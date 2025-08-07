@@ -6,6 +6,7 @@ import com.example.chatapp.entity.ChatRoom;
 import com.example.chatapp.service.UserService;
 import com.example.chatapp.service.FriendshipService;
 import com.example.chatapp.service.ChatRoomService;
+import com.example.chatapp.service.OnlineUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +32,9 @@ public class FriendController {
     
     @Autowired
     private ChatRoomService chatRoomService;
+    
+    @Autowired
+    private OnlineUserService onlineUserService;
 
     // フレンド一覧ページ
     @GetMapping
@@ -80,6 +84,12 @@ public class FriendController {
         }
         
         return "friends/list";
+    }
+
+    // フレンド一覧ページ（/friends/listでも同じページを表示）
+    @GetMapping("/list")
+    public String friendsListAlt(Model model, Principal principal) {
+        return friendsList(model, principal);
     }
 
     // フレンド申請送信 (AJAX API)
@@ -549,7 +559,10 @@ public class FriendController {
                     Map<String, Object> friendData = new HashMap<>();
                     friendData.put("id", friend.getId());
                     friendData.put("username", friend.getUsername());
-                    friendData.put("online", false); // TODO: オンライン状態の実装
+                    // OnlineUserServiceを使用してリアルタイムのオンライン状態を取得
+                    String onlineStatus = onlineUserService.getUserStatusById(friend.getId());
+                    friendData.put("online", "online".equals(onlineStatus));
+                    friendData.put("status", onlineStatus);
                     
                     return friendData;
                 })

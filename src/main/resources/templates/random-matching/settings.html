@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ランダムマッチング設定 - ChatApp</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/chat-style.css" rel="stylesheet">
+    <style>
+        .settings-card {
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: none;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .settings-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .setting-item {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+        
+        .setting-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .setting-description {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .btn-custom {
+            border-radius: 25px;
+            padding: 10px 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+        
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-success-custom {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            border: none;
+            color: white;
+        }
+        
+        .btn-success-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(67, 233, 123, 0.3);
+        }
+        
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .form-check-input:checked {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+        
+        .age-range-display {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 1.1rem;
+        }
+        
+        .preference-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            margin-right: 15px;
+        }
+        
+        .icon-general {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .icon-privacy {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .icon-matching {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        
+        .icon-notification {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- ナビゲーションバー -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="container">
+            <a class="navbar-brand" href="/chat">
+                <i class="fas fa-comments me-2"></i>ChatApp
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/chat">
+                    <i class="fas fa-home me-1"></i>ホーム
+                </a>
+                <a class="nav-link" href="/random-matching">
+                    <i class="fas fa-random me-1"></i>ランダムマッチング
+                </a>
+                <a class="nav-link" href="/rooms">
+                    <i class="fas fa-door-open me-1"></i>ルーム一覧
+                </a>
+                <a class="nav-link" href="/profile">
+                    <i class="fas fa-user me-1"></i>プロフィール
+                </a>
+                <a class="nav-link" href="/logout">
+                    <i class="fas fa-sign-out-alt me-1"></i>ログアウト
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- ページヘッダー -->
+        <div class="page-header">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h2 class="mb-0">
+                        <i class="fas fa-cog me-3"></i>ランダムマッチング設定
+                    </h2>
+                    <p class="mb-0 mt-2 opacity-75">マッチングの条件や動作を設定できます</p>
+                </div>
+                <div class="col-auto">
+                    <a href="/random-matching" class="btn btn-light btn-custom">
+                        <i class="fas fa-arrow-left me-2"></i>マッチングに戻る
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <form th:action="@{/random-matching/settings}" method="post" id="settingsForm">
+            <div class="row">
+                <!-- 基本設定 -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card settings-card">
+                        <div class="card-header bg-transparent border-0 pb-0">
+                            <div class="d-flex align-items-center">
+                                <div class="preference-icon icon-general">
+                                    <i class="fas fa-sliders-h"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0">基本設定</h5>
+                                    <small class="text-muted">ランダムマッチングの基本的な動作設定</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="setting-item">
+                                <div class="setting-label">ランダムマッチングを許可</div>
+                                <div class="setting-description">他のユーザーからのランダムマッチング要求を受け入れるかどうか</div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="allowRandomMatching" 
+                                           name="allowRandomMatching" th:checked="${profile.allowRandomMatching}">
+                                    <label class="form-check-label" for="allowRandomMatching">
+                                        ランダムマッチングを有効にする
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="setting-item">
+                                <div class="setting-label">自動マッチング</div>
+                                <div class="setting-description">条件に合うユーザーが見つかったときに自動的にマッチングする</div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="autoMatching" name="autoMatching">
+                                    <label class="form-check-label" for="autoMatching">
+                                        自動マッチングを有効にする
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- マッチング条件設定 -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card settings-card">
+                        <div class="card-header bg-transparent border-0 pb-0">
+                            <div class="d-flex align-items-center">
+                                <div class="preference-icon icon-matching">
+                                    <i class="fas fa-filter"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0">マッチング条件</h5>
+                                    <small class="text-muted">マッチング相手の条件を設定</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="setting-item">
+                                <div class="setting-label">年齢範囲</div>
+                                <div class="setting-description">マッチング相手の年齢範囲を指定</div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label for="minAge" class="form-label">最小年齢</label>
+                                        <input type="number" class="form-control" id="minAge" name="minAge" 
+                                               min="18" max="100" value="18">
+                                    </div>
+                                    <div class="col-6">
+                                        <label for="maxAge" class="form-label">最大年齢</label>
+                                        <input type="number" class="form-control" id="maxAge" name="maxAge" 
+                                               min="18" max="100" value="50">
+                                    </div>
+                                </div>
+                                <div class="mt-2 age-range-display" id="ageRangeDisplay">
+                                    18歳 〜 50歳
+                                </div>
+                            </div>
+                            
+                            <div class="setting-item">
+                                <div class="setting-label">興味・趣味</div>
+                                <div class="setting-description">共通の興味を持つユーザーとマッチングしやすくする</div>
+                                <select class="form-select" name="preferredInterests" multiple>
+                                    <option value="games">ゲーム</option>
+                                    <option value="music">音楽</option>
+                                    <option value="movies">映画</option>
+                                    <option value="sports">スポーツ</option>
+                                    <option value="reading">読書</option>
+                                    <option value="travel">旅行</option>
+                                    <option value="cooking">料理</option>
+                                    <option value="art">アート</option>
+                                    <option value="technology">テクノロジー</option>
+                                    <option value="anime">アニメ</option>
+                                </select>
+                                <small class="text-muted">複数選択可能（Ctrlキーを押しながらクリック）</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- プライバシー設定 -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card settings-card">
+                        <div class="card-header bg-transparent border-0 pb-0">
+                            <div class="d-flex align-items-center">
+                                <div class="preference-icon icon-privacy">
+                                    <i class="fas fa-shield-alt"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0">プライバシー設定</h5>
+                                    <small class="text-muted">個人情報の公開範囲を設定</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="setting-item">
+                                <div class="setting-label">プロフィール表示レベル</div>
+                                <div class="setting-description">マッチング相手に表示する情報の範囲</div>
+                                <select class="form-select" name="profileVisibilityLevel">
+                                    <option value="basic">基本情報のみ</option>
+                                    <option value="detailed" selected>詳細情報</option>
+                                    <option value="full">すべての情報</option>
+                                </select>
+                            </div>
+                            
+                            <div class="setting-item">
+                                <div class="setting-label">ブロックしたユーザーとのマッチング</div>
+                                <div class="setting-description">過去にブロックしたユーザーとのマッチングを避ける</div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="avoidBlockedUsers" 
+                                           name="avoidBlockedUsers" checked>
+                                    <label class="form-check-label" for="avoidBlockedUsers">
+                                        ブロックしたユーザーを除外
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 通知設定 -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card settings-card">
+                        <div class="card-header bg-transparent border-0 pb-0">
+                            <div class="d-flex align-items-center">
+                                <div class="preference-icon icon-notification">
+                                    <i class="fas fa-bell"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0">通知設定</h5>
+                                    <small class="text-muted">マッチング関連の通知を設定</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="setting-item">
+                                <div class="setting-label">マッチング通知</div>
+                                <div class="setting-description">新しいマッチングが成立したときに通知を受け取る</div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="matchNotification" 
+                                           name="matchNotification" checked>
+                                    <label class="form-check-label" for="matchNotification">
+                                        マッチング通知を有効にする
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="setting-item">
+                                <div class="setting-label">メッセージ通知</div>
+                                <div class="setting-description">ランダムマッチングのチャットでメッセージを受信したときに通知</div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="messageNotification" 
+                                           name="messageNotification" checked>
+                                    <label class="form-check-label" for="messageNotification">
+                                        メッセージ通知を有効にする
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 保存ボタン -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card settings-card">
+                        <div class="card-body text-center">
+                            <button type="submit" class="btn btn-success-custom btn-custom me-3">
+                                <i class="fas fa-save me-2"></i>設定を保存
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-custom" onclick="resetToDefaults()">
+                                <i class="fas fa-undo me-2"></i>デフォルトに戻す
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 年齢範囲の表示を更新
+        function updateAgeRange() {
+            const minAge = document.getElementById('minAge').value;
+            const maxAge = document.getElementById('maxAge').value;
+            document.getElementById('ageRangeDisplay').textContent = `${minAge}歳 〜 ${maxAge}歳`;
+        }
+
+        // 年齢入力フィールドのイベントリスナー
+        document.getElementById('minAge').addEventListener('input', updateAgeRange);
+        document.getElementById('maxAge').addEventListener('input', updateAgeRange);
+
+        // デフォルト設定に戻す
+        function resetToDefaults() {
+            if (confirm('設定をデフォルトに戻しますか？未保存の変更は失われます。')) {
+                // デフォルト値に戻す
+                document.getElementById('allowRandomMatching').checked = true;
+                document.getElementById('autoMatching').checked = false;
+                document.getElementById('minAge').value = 18;
+                document.getElementById('maxAge').value = 50;
+                document.querySelector('[name="profileVisibilityLevel"]').value = 'detailed';
+                document.getElementById('avoidBlockedUsers').checked = true;
+                document.getElementById('matchNotification').checked = true;
+                document.getElementById('messageNotification').checked = true;
+                
+                // 興味の選択をリセット
+                const interestsSelect = document.querySelector('[name="preferredInterests"]');
+                for (let option of interestsSelect.options) {
+                    option.selected = false;
+                }
+                
+                updateAgeRange();
+            }
+        }
+
+        // フォーム送信時の処理
+        document.getElementById('settingsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // FormData を作成
+            const formData = new FormData(this);
+            
+            // fetch で送信
+            fetch('/random-matching/settings', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('設定を保存しました');
+                } else {
+                    alert('エラー: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('設定の保存に失敗しました');
+            });
+        });
+
+        // ページ読み込み時に年齢範囲を更新
+        document.addEventListener('DOMContentLoaded', updateAgeRange);
+    </script>
+</body>
+</html>

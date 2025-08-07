@@ -50,6 +50,36 @@ public class UserProfile {
     @Column(name = "allow_random_matching")
     private Boolean allowRandomMatching = true;
 
+    // ランダムマッチング用の情報
+    @Column(name = "interests", columnDefinition = "TEXT")
+    private String interests; // カンマ区切りの興味・趣味リスト
+
+    @Column(name = "hobbies", columnDefinition = "TEXT")
+    private String hobbies; // カンマ区切りの趣味リスト
+
+    @Column(name = "favorite_things", columnDefinition = "TEXT")
+    private String favoriteThings; // カンマ区切りの好きなものリスト
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "age_group")
+    private AgeGroup ageGroup;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "chat_style")
+    private ChatStyle chatStyle;
+
+    @Column(name = "music_genres", columnDefinition = "TEXT")
+    private String musicGenres; // カンマ区切りの音楽ジャンル
+
+    @Column(name = "movie_genres", columnDefinition = "TEXT")
+    private String movieGenres; // カンマ区切りの映画ジャンル
+
+    @Column(name = "languages", columnDefinition = "TEXT")
+    private String languages; // カンマ区切りの話せる言語
+
+    @Column(name = "personality_traits", columnDefinition = "TEXT")
+    private String personalityTraits; // カンマ区切りの性格特性
+
     @Column(name = "last_seen")
     private LocalDateTime lastSeen;
 
@@ -169,6 +199,78 @@ public class UserProfile {
         this.allowRandomMatching = allowRandomMatching;
     }
 
+    public String getInterests() {
+        return interests;
+    }
+
+    public void setInterests(String interests) {
+        this.interests = interests;
+    }
+
+    public String getHobbies() {
+        return hobbies;
+    }
+
+    public void setHobbies(String hobbies) {
+        this.hobbies = hobbies;
+    }
+
+    public String getFavoriteThings() {
+        return favoriteThings;
+    }
+
+    public void setFavoriteThings(String favoriteThings) {
+        this.favoriteThings = favoriteThings;
+    }
+
+    public AgeGroup getAgeGroup() {
+        return ageGroup;
+    }
+
+    public void setAgeGroup(AgeGroup ageGroup) {
+        this.ageGroup = ageGroup;
+    }
+
+    public ChatStyle getChatStyle() {
+        return chatStyle;
+    }
+
+    public void setChatStyle(ChatStyle chatStyle) {
+        this.chatStyle = chatStyle;
+    }
+
+    public String getMusicGenres() {
+        return musicGenres;
+    }
+
+    public void setMusicGenres(String musicGenres) {
+        this.musicGenres = musicGenres;
+    }
+
+    public String getMovieGenres() {
+        return movieGenres;
+    }
+
+    public void setMovieGenres(String movieGenres) {
+        this.movieGenres = movieGenres;
+    }
+
+    public String getLanguages() {
+        return languages;
+    }
+
+    public void setLanguages(String languages) {
+        this.languages = languages;
+    }
+
+    public String getPersonalityTraits() {
+        return personalityTraits;
+    }
+
+    public void setPersonalityTraits(String personalityTraits) {
+        this.personalityTraits = personalityTraits;
+    }
+
     public LocalDateTime getLastSeen() {
         return lastSeen;
     }
@@ -225,6 +327,47 @@ public class UserProfile {
         private final String displayName;
 
         PrivacyLevel(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+    }
+
+    // 年齢層の列挙型
+    public enum AgeGroup {
+        TEENS("10代"),
+        TWENTIES("20代"),
+        THIRTIES("30代"),
+        FORTIES("40代"),
+        FIFTIES_PLUS("50代以上"),
+        NOT_SPECIFIED("未設定");
+
+        private final String displayName;
+
+        AgeGroup(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+    }
+
+    // チャットスタイルの列挙型
+    public enum ChatStyle {
+        CASUAL("カジュアル"),
+        SERIOUS("真面目"),
+        FUNNY("面白い"),
+        DEEP("深い話"),
+        LIGHT("軽い話"),
+        CREATIVE("創造的"),
+        NOT_SPECIFIED("未設定");
+
+        private final String displayName;
+
+        ChatStyle(String displayName) {
             this.displayName = displayName;
         }
 
