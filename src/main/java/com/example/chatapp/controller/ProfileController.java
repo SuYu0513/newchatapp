@@ -2,8 +2,10 @@ package com.example.chatapp.controller;
 
 import com.example.chatapp.entity.User;
 import com.example.chatapp.entity.UserProfile;
+import com.example.chatapp.entity.Friendship;
 import com.example.chatapp.service.UserProfileService;
 import com.example.chatapp.service.UserService;
+import com.example.chatapp.service.FriendshipService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -29,6 +31,9 @@ public class ProfileController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private FriendshipService friendshipService;
 
     /**
      * プロフィール表示
@@ -61,6 +66,12 @@ public class ProfileController {
         }
         
         UserProfile profile = profileOpt.get();
+        User targetUser = profile.getUser();
+        
+        // 自分のプロフィールの場合はリダイレクト
+        if (targetUser.equals(currentUser)) {
+            return "redirect:/profile";
+        }
         
         // プロフィール表示権限チェック
         if (!userProfileService.canViewProfile(profile, currentUser)) {
@@ -68,11 +79,47 @@ public class ProfileController {
             return "error/403";
         }
         
+        // フレンド関係の状態を取得
+        String friendshipStatus = getFriendshipStatus(currentUser, targetUser);
+        
         model.addAttribute("profile", profile);
-        model.addAttribute("user", profile.getUser());
-        model.addAttribute("isOwnProfile", profile.getUser().equals(currentUser));
+        model.addAttribute("user", targetUser);
+        model.addAttribute("isOwnProfile", false);
+        model.addAttribute("friendshipStatus", friendshipStatus);
         
         return "profile/view";
+    }
+    
+    /**
+     * フレンド関係の状態を取得
+     */
+    private String getFriendshipStatus(User currentUser, User targetUser) {
+        // 既にフレンドかチェック
+        if (friendshipService.areFriends(currentUser, targetUser)) {
+            return "FRIEND";
+        }
+        
+        // 自分が送信済みの申請があるかチェック
+        Optional<Friendship> sentRequest = friendshipService.findFriendshipBetweenUsers(currentUser, targetUser);
+        if (sentRequest.isPresent()) {
+            Friendship friendship = sentRequest.get();
+            if (friendship.getRequester().equals(currentUser) && 
+                friendship.getStatus() == Friendship.FriendshipStatus.PENDING) {
+                return "REQUEST_SENT";
+            }
+            // 相手から申請が来ている場合
+            if (friendship.getAddressee().equals(currentUser) && 
+                friendship.getStatus() == Friendship.FriendshipStatus.PENDING) {
+                return "REQUEST_RECEIVED";
+            }
+            // ブロックされている場合
+            if (friendship.getStatus() == Friendship.FriendshipStatus.BLOCKED) {
+                return "BLOCKED";
+            }
+        }
+        
+        // 何も関係がない場合
+        return "NONE";
     }
 
     /**

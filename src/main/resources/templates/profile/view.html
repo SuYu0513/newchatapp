@@ -97,11 +97,54 @@
                             </a>
                         </div>
                         
+                        <!-- 他のユーザーのプロフィールの場合のアクションボタン -->
                         <div class="d-grid gap-2" th:unless="${isOwnProfile}">
-                            <button class="btn btn-success">
+                            <!-- フレンド関係の状態に応じたボタン表示 -->
+                            
+                            <!-- フレンドでない場合: フレンド申請ボタン -->
+                            <button th:if="${friendshipStatus == 'NONE'}" 
+                                    class="btn btn-success"
+                                    onclick="sendFriendRequest()"
+                                    id="friendActionBtn">
                                 <i class="fas fa-user-plus me-2"></i>フレンド申請
                             </button>
-                            <button class="btn btn-primary">
+                            
+                            <!-- 申請送信済みの場合: 申請済みボタン -->
+                            <button th:if="${friendshipStatus == 'REQUEST_SENT'}" 
+                                    class="btn btn-warning" 
+                                    onclick="cancelFriendRequest()"
+                                    id="friendActionBtn">
+                                <i class="fas fa-clock me-2"></i>申請済み（取り消し）
+                            </button>
+                            
+                            <!-- 申請受信の場合: 承認・拒否ボタン -->
+                            <div th:if="${friendshipStatus == 'REQUEST_RECEIVED'}" class="d-grid gap-1">
+                                <button class="btn btn-success" onclick="acceptFriendRequest()">
+                                    <i class="fas fa-check me-2"></i>申請を承認
+                                </button>
+                                <button class="btn btn-outline-danger" onclick="declineFriendRequest()">
+                                    <i class="fas fa-times me-2"></i>申請を拒否
+                                </button>
+                            </div>
+                            
+                            <!-- 既にフレンドの場合: フレンド表示 -->
+                            <button th:if="${friendshipStatus == 'FRIEND'}" 
+                                    class="btn btn-info" 
+                                    disabled>
+                                <i class="fas fa-user-check me-2"></i>フレンド
+                            </button>
+                            
+                            <!-- ブロックされている場合 -->
+                            <button th:if="${friendshipStatus == 'BLOCKED'}" 
+                                    class="btn btn-secondary" 
+                                    disabled>
+                                <i class="fas fa-ban me-2"></i>ブロック済み
+                            </button>
+                            
+                            <!-- メッセージボタン（フレンドの場合のみ表示） -->
+                            <button th:if="${friendshipStatus == 'FRIEND'}" 
+                                    class="btn btn-primary" 
+                                    onclick="startPrivateChat()">
                                 <i class="fas fa-comment me-2"></i>メッセージ
                             </button>
                         </div>
@@ -262,6 +305,9 @@
     
     <!-- フレンドコードコピー機能 -->
     <script>
+        // 現在表示しているユーザーのID（他のユーザーのプロフィールの場合）
+        const targetUserId = /*[[${!isOwnProfile ? user.id : null}]]*/ null;
+        
         function copyFriendCode() {
             const friendCodeElement = document.querySelector('code');
             const friendCode = friendCodeElement.textContent;
@@ -355,6 +401,161 @@
                     setTimeout(() => toast.parentElement.remove(), 150);
                 }
             }, 3000);
+        }
+        
+        // フレンド申請関連の関数
+        function sendFriendRequest() {
+            if (!targetUserId) return;
+            
+            const button = document.getElementById('friendActionBtn');
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>送信中...';
+            
+            fetch('/friends/request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    targetUserId: targetUserId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    button.className = 'btn btn-warning';
+                    button.innerHTML = '<i class="fas fa-clock me-2"></i>申請済み（取り消し）';
+                    button.onclick = cancelFriendRequest;
+                    showToast('フレンド申請を送信しました！', 'success');
+                } else {
+                    showToast(data.message || 'エラーが発生しました', 'danger');
+                    button.innerHTML = '<i class="fas fa-user-plus me-2"></i>フレンド申請';
+                }
+                button.disabled = false;
+            })
+            .catch(error => {
+                console.error('エラー:', error);
+                showToast('エラーが発生しました', 'danger');
+                button.innerHTML = '<i class="fas fa-user-plus me-2"></i>フレンド申請';
+                button.disabled = false;
+            });
+        }
+        
+        function cancelFriendRequest() {
+            if (!targetUserId) return;
+            
+            const button = document.getElementById('friendActionBtn');
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>取り消し中...';
+            
+            fetch('/friends/remove', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    friendId: targetUserId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    button.className = 'btn btn-success';
+                    button.innerHTML = '<i class="fas fa-user-plus me-2"></i>フレンド申請';
+                    button.onclick = sendFriendRequest;
+                    showToast('申請を取り消しました', 'info');
+                } else {
+                    showToast(data.message || 'エラーが発生しました', 'danger');
+                    button.innerHTML = '<i class="fas fa-clock me-2"></i>申請済み（取り消し）';
+                }
+                button.disabled = false;
+            })
+            .catch(error => {
+                console.error('エラー:', error);
+                showToast('エラーが発生しました', 'danger');
+                button.innerHTML = '<i class="fas fa-clock me-2"></i>申請済み（取り消し）';
+                button.disabled = false;
+            });
+        }
+        
+        function acceptFriendRequest() {
+            if (!targetUserId) return;
+            
+            fetch('/friends/accept', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    requesterId: targetUserId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('フレンド申請を承認しました！', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast(data.message || 'エラーが発生しました', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('エラー:', error);
+                showToast('エラーが発生しました', 'danger');
+            });
+        }
+        
+        function declineFriendRequest() {
+            if (!targetUserId) return;
+            
+            fetch('/friends/decline', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    requesterId: targetUserId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('フレンド申請を拒否しました', 'info');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast(data.message || 'エラーが発生しました', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('エラー:', error);
+                showToast('エラーが発生しました', 'danger');
+            });
+        }
+        
+        function startPrivateChat() {
+            if (!targetUserId) return;
+            
+            fetch('/friends/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    friendId: targetUserId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = `/chat?room=${data.roomId}`;
+                } else {
+                    showToast(data.message || 'エラーが発生しました', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('エラー:', error);
+                showToast('エラーが発生しました', 'danger');
+            });
         }
     </script>
     
