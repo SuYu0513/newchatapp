@@ -342,6 +342,12 @@
             const oldRoomId = currentRoomId;
             currentRoomId = roomId;
             
+            // URLを更新（ブラウザ履歴に追加）
+            const newUrl = `/chat?room=${roomId}`;
+            if (window.location.href !== window.location.origin + newUrl) {
+                window.history.pushState({roomId: roomId, roomName: roomName}, '', newUrl);
+            }
+            
             // UIを更新
             updateCurrentRoomDisplay(roomName);
             updateActiveRoomInSidebar(roomId);
@@ -599,6 +605,9 @@
                     chatRoomId: currentRoomId,
                     type: 'JOIN'
                 }));
+                
+                // URL指定ルームがあれば切り替え
+                initializeRoomFromUrl();
             });
         }
 
@@ -774,6 +783,54 @@
         window.addEventListener('beforeunload', function () {
             disconnect();
         });
+
+        // ブラウザの戻る/進むボタン対応
+        window.addEventListener('popstate', function(event) {
+            if (event.state && event.state.roomId) {
+                console.log('Handling popstate:', event.state);
+                // URLからルーム情報を取得してルーム切り替え
+                const roomId = event.state.roomId;
+                const roomName = event.state.roomName || 'ルーム ' + roomId;
+                switchRoomInternal(roomId, roomName);
+            } else {
+                // URLパラメータからルーム情報を取得
+                const urlParams = new URLSearchParams(window.location.search);
+                const roomParam = urlParams.get('room');
+                if (roomParam) {
+                    const roomId = parseInt(roomParam);
+                    if (!isNaN(roomId) && roomId !== currentRoomId) {
+                        // ルーム要素を探して切り替え
+                        const roomElement = document.querySelector(`[data-room-id="${roomId}"]`);
+                        if (roomElement) {
+                            switchRoomFromElement(roomElement);
+                        }
+                    }
+                }
+            }
+        });
+
+        // ページ読み込み時のルーム選択処理
+        function initializeRoomFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomParam = urlParams.get('room');
+            
+            if (roomParam) {
+                const roomId = parseInt(roomParam);
+                if (!isNaN(roomId)) {
+                    console.log('URL指定ルーム:', roomId);
+                    // 少し遅延してルーム要素が描画されてから実行
+                    setTimeout(() => {
+                        const roomElement = document.querySelector(`[data-room-id="${roomId}"]`);
+                        if (roomElement) {
+                            console.log('URL指定ルームに切り替え:', roomElement);
+                            switchRoomFromElement(roomElement);
+                        } else {
+                            console.warn('指定されたルームが見つかりません:', roomId);
+                        }
+                    }, 500);
+                }
+            }
+        }
         
         // ステータス変更機能
         function toggleOnlineStatus() {
@@ -989,7 +1046,7 @@
         // プロフィール表示
         function viewUserProfile() {
             if (contextMenuTargetUserId) {
-                window.open(`/profile/view/${contextMenuTargetUserId}`, '_blank');
+                window.open(`/profile/${contextMenuTargetUserId}`, '_blank');
             }
             hideUserContextMenu();
         }
@@ -1168,7 +1225,7 @@
 
         // 検索結果からプロフィール表示
         function viewUserProfileById(userId) {
-            window.open(`/profile/view/${userId}`, '_blank');
+            window.open(`/profile/${userId}`, '_blank');
         }
 
         // 検索結果からフレンド申請

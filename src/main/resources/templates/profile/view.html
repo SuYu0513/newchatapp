@@ -127,26 +127,39 @@
                                 </button>
                             </div>
                             
-                            <!-- 既にフレンドの場合: フレンド表示 -->
-                            <button th:if="${friendshipStatus == 'FRIEND'}" 
-                                    class="btn btn-info" 
-                                    disabled>
-                                <i class="fas fa-user-check me-2"></i>フレンド
-                            </button>
+                            <!-- 既にフレンドの場合: フレンド表示とアクション -->
+                            <div th:if="${friendshipStatus == 'FRIEND'}" class="friend-status-container">
+                                <!-- フレンドステータス表示 -->
+                                <div class="alert alert-success d-flex align-items-center mb-3" role="alert">
+                                    <i class="fas fa-user-friends fs-4 me-3"></i>
+                                    <div>
+                                        <strong>フレンド</strong>
+                                        <div class="small">この人とフレンドです</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- フレンド向けアクションボタン -->
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-primary" onclick="startPrivateChat()">
+                                        <i class="fas fa-comment me-2"></i>プライベートチャット
+                                    </button>
+                                    <button class="btn btn-outline-warning" onclick="removeFriend()">
+                                        <i class="fas fa-user-minus me-2"></i>フレンド解除
+                                    </button>
+                                    <button class="btn btn-outline-danger" onclick="blockUser()">
+                                        <i class="fas fa-ban me-2"></i>ブロック
+                                    </button>
+                                </div>
+                            </div>
                             
                             <!-- ブロックされている場合 -->
-                            <button th:if="${friendshipStatus == 'BLOCKED'}" 
-                                    class="btn btn-secondary" 
-                                    disabled>
-                                <i class="fas fa-ban me-2"></i>ブロック済み
-                            </button>
-                            
-                            <!-- メッセージボタン（フレンドの場合のみ表示） -->
-                            <button th:if="${friendshipStatus == 'FRIEND'}" 
-                                    class="btn btn-primary" 
-                                    onclick="startPrivateChat()">
-                                <i class="fas fa-comment me-2"></i>メッセージ
-                            </button>
+                            <div th:if="${friendshipStatus == 'BLOCKED'}" class="alert alert-danger d-flex align-items-center" role="alert">
+                                <i class="fas fa-ban fs-4 me-3"></i>
+                                <div>
+                                    <strong>ブロック済み</strong>
+                                    <div class="small">このユーザーはブロックされています</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -305,8 +318,53 @@
     
     <!-- フレンドコードコピー機能 -->
     <script>
-        // 現在表示しているユーザーのID（他のユーザーのプロフィールの場合）
-        const targetUserId = /*[[${!isOwnProfile ? user.id : null}]]*/ null;
+        // URLからユーザーIDを取得
+        const currentUrl = window.location.pathname; // /profile/4 のような形式
+        const urlUserIdMatch = currentUrl.match(/\/profile\/(\d+)$/);
+        const urlUserId = urlUserIdMatch ? parseInt(urlUserIdMatch[1]) : null;
+        
+        // Thymeleafから値を取得
+        const rawUserId = /*[[${user.id}]]*/ null;
+        const rawIsOwnProfile = /*[[${isOwnProfile}]]*/ true;
+        const currentUserId = /*[[${currentUser.id}]]*/ null;
+        
+        // より確実な判定方法：複数の方法でユーザーIDを取得
+        let targetUserId = null;
+        let isOwnProfile = false;
+        
+        // 使用するユーザーID（URLから取得したものを優先）
+        const displayUserId = urlUserId || rawUserId;
+        
+        // 現在のユーザーIDと表示ユーザーIDが同じ場合は自分のプロフィール
+        if (currentUserId && displayUserId && currentUserId === displayUserId) {
+            isOwnProfile = true;
+            targetUserId = null;
+        } else if (displayUserId) {
+            isOwnProfile = false;
+            targetUserId = displayUserId;
+        } else {
+            // フォールバック：ThymeleafのisOwnProfileを使用
+            isOwnProfile = rawIsOwnProfile;
+            targetUserId = isOwnProfile ? null : (rawUserId || urlUserId);
+        }
+        
+        const userId = displayUserId;
+        const friendshipStatus = /*[[${friendshipStatus}]]*/ 'NONE';
+        
+        // デバッグ情報をコンソールに出力
+        console.log('=== プロフィール画面デバッグ情報 ===');
+        console.log('現在のURL:', currentUrl);
+        console.log('URLから取得したユーザーID:', urlUserId);
+        console.log('currentUserId:', currentUserId, '(type:', typeof currentUserId, ')');
+        console.log('rawUserId:', rawUserId, '(type:', typeof rawUserId, ')');
+        console.log('rawIsOwnProfile:', rawIsOwnProfile, '(type:', typeof rawIsOwnProfile, ')');
+        console.log('使用するdisplayUserId:', displayUserId);
+        console.log('計算後 isOwnProfile:', isOwnProfile);
+        console.log('計算後 targetUserId:', targetUserId);
+        console.log('userId:', userId);
+        console.log('friendshipStatus:', friendshipStatus);
+        console.log('currentUserId === displayUserId:', currentUserId === displayUserId);
+        console.log('====================================');
         
         function copyFriendCode() {
             const friendCodeElement = document.querySelector('code');
@@ -405,11 +463,56 @@
         
         // フレンド申請関連の関数
         function sendFriendRequest() {
-            if (!targetUserId) return;
+            console.log('=== sendFriendRequest関数デバッグ ===');
+            console.log('currentUserId:', currentUserId);
+            console.log('displayUserId:', displayUserId);
+            console.log('urlUserId:', urlUserId);
+            console.log('rawUserId:', rawUserId);
+            console.log('rawIsOwnProfile:', rawIsOwnProfile);
+            console.log('計算後 isOwnProfile:', isOwnProfile);
+            console.log('targetUserId:', targetUserId);
+            console.log('======================================');
+            
+            // まず基本的なチェック：IDベースでの判定
+            if (currentUserId && displayUserId && currentUserId === displayUserId) {
+                console.error('自分自身にフレンド申請はできません（IDベース判定）');
+                showToast('自分自身にフレンド申請はできません', 'danger');
+                return;
+            }
+            
+            // フォールバック判定
+            if (isOwnProfile === true) {
+                console.error('自分自身にフレンド申請はできません（フラグベース判定）');
+                showToast('自分自身にフレンド申請はできません', 'danger');
+                return;
+            }
+            
+            // 送信するユーザーIDを決定（複数のソースから取得）
+            const userIdToSend = targetUserId || displayUserId || rawUserId || urlUserId;
+            
+            if (!userIdToSend) {
+                console.error('ユーザーIDが取得できません');
+                console.log('利用可能な値:', {
+                    targetUserId: targetUserId,
+                    displayUserId: displayUserId,
+                    rawUserId: rawUserId,
+                    urlUserId: urlUserId,
+                    userId: userId
+                });
+                showToast('ユーザーIDが取得できませんでした', 'danger');
+                return;
+            }
             
             const button = document.getElementById('friendActionBtn');
+            if (!button) {
+                console.error('friendActionBtnボタンが見つかりません');
+                return;
+            }
+            
             button.disabled = true;
             button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>送信中...';
+            
+            console.log('フレンド申請APIを呼び出します:', userIdToSend);
             
             fetch('/friends/request', {
                 method: 'POST',
@@ -417,7 +520,7 @@
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    targetUserId: targetUserId
+                    targetUserId: userIdToSend
                 })
             })
             .then(response => response.json())
@@ -442,19 +545,24 @@
         }
         
         function cancelFriendRequest() {
-            if (!targetUserId) return;
+            const userIdToSend = targetUserId || displayUserId || rawUserId || urlUserId;
+            if (!userIdToSend) {
+                console.error('ユーザーIDが取得できません');
+                showToast('ユーザーIDが取得できませんでした', 'danger');
+                return;
+            }
             
             const button = document.getElementById('friendActionBtn');
             button.disabled = true;
             button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>取り消し中...';
             
-            fetch('/friends/remove', {
+            fetch('/friends/cancel', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    friendId: targetUserId
+                    targetUserId: userIdToSend
                 })
             })
             .then(response => response.json())
@@ -479,7 +587,12 @@
         }
         
         function acceptFriendRequest() {
-            if (!targetUserId) return;
+            const userIdToSend = targetUserId || displayUserId || rawUserId || urlUserId;
+            if (!userIdToSend) {
+                console.error('ユーザーIDが取得できません');
+                showToast('ユーザーIDが取得できませんでした', 'danger');
+                return;
+            }
             
             fetch('/friends/accept', {
                 method: 'POST',
@@ -487,7 +600,7 @@
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    requesterId: targetUserId
+                    requesterId: userIdToSend
                 })
             })
             .then(response => response.json())
@@ -506,7 +619,12 @@
         }
         
         function declineFriendRequest() {
-            if (!targetUserId) return;
+            const userIdToSend = targetUserId || displayUserId || rawUserId || urlUserId;
+            if (!userIdToSend) {
+                console.error('ユーザーIDが取得できません');
+                showToast('ユーザーIDが取得できませんでした', 'danger');
+                return;
+            }
             
             fetch('/friends/decline', {
                 method: 'POST',
@@ -514,7 +632,7 @@
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    requesterId: targetUserId
+                    requesterId: userIdToSend
                 })
             })
             .then(response => response.json())
@@ -533,7 +651,47 @@
         }
         
         function startPrivateChat() {
-            if (!targetUserId) return;
+            console.log('=== startPrivateChat関数デバッグ ===');
+            console.log('currentUserId:', currentUserId);
+            console.log('displayUserId:', displayUserId);
+            console.log('urlUserId:', urlUserId);
+            console.log('rawUserId:', rawUserId);
+            console.log('rawIsOwnProfile:', rawIsOwnProfile);
+            console.log('計算後 isOwnProfile:', isOwnProfile);
+            console.log('targetUserId:', targetUserId);
+            console.log('======================================');
+            
+            // まず基本的なチェック：IDベースでの判定
+            if (currentUserId && displayUserId && currentUserId === displayUserId) {
+                console.error('自分自身とのチャットはできません（IDベース判定）');
+                showToast('自分自身とのチャットはできません', 'danger');
+                return;
+            }
+            
+            // フォールバック判定
+            if (isOwnProfile === true) {
+                console.error('自分自身とのチャットはできません（フラグベース判定）');
+                showToast('自分自身とのチャットはできません', 'danger');
+                return;
+            }
+            
+            // 送信するユーザーIDを決定（複数のソースから取得）
+            const userIdToSend = targetUserId || displayUserId || rawUserId || urlUserId;
+            
+            if (!userIdToSend) {
+                console.error('ユーザーIDが取得できません');
+                console.log('利用可能な値:', {
+                    targetUserId: targetUserId,
+                    displayUserId: displayUserId,
+                    rawUserId: rawUserId,
+                    urlUserId: urlUserId,
+                    userId: userId
+                });
+                showToast('ユーザーIDが取得できませんでした', 'danger');
+                return;
+            }
+            
+            console.log('プライベートチャットAPIを呼び出します:', userIdToSend);
             
             fetch('/friends/chat', {
                 method: 'POST',
@@ -541,7 +699,7 @@
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    friendId: targetUserId
+                    friendId: userIdToSend
                 })
             })
             .then(response => response.json())
@@ -555,6 +713,86 @@
             .catch(error => {
                 console.error('エラー:', error);
                 showToast('エラーが発生しました', 'danger');
+            });
+        }
+
+        // フレンド解除機能
+        function removeFriend() {
+            if (!confirm('このユーザーとのフレンド関係を解除しますか？')) {
+                return;
+            }
+
+            const userIdToSend = targetUserId || displayUserId || rawUserId || urlUserId;
+            if (!userIdToSend) {
+                console.error('ユーザーIDが取得できません');
+                showToast('ユーザーIDが取得できませんでした', 'danger');
+                return;
+            }
+            
+            fetch('/friends/remove', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    friendId: userIdToSend
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('フレンド関係を解除しました', 'success');
+                    // ページをリロードして状態を更新
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    showToast(data.message || 'フレンド解除に失敗しました', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('フレンド解除エラー:', error);
+                showToast('フレンド解除中にエラーが発生しました', 'danger');
+            });
+        }
+
+        // ユーザーブロック機能
+        function blockUser() {
+            if (!confirm('このユーザーをブロックしますか？ブロックすると相手からのメッセージやフレンド申請を受け取らなくなります。')) {
+                return;
+            }
+
+            const userIdToSend = targetUserId || displayUserId || rawUserId || urlUserId;
+            if (!userIdToSend) {
+                console.error('ユーザーIDが取得できません');
+                showToast('ユーザーIDが取得できませんでした', 'danger');
+                return;
+            }
+            
+            fetch('/friends/block', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    targetUserId: userIdToSend
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('ユーザーをブロックしました', 'success');
+                    // ページをリロードして状態を更新
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    showToast(data.message || 'ブロックに失敗しました', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('ブロックエラー:', error);
+                showToast('ブロック中にエラーが発生しました', 'danger');
             });
         }
     </script>

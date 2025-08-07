@@ -48,9 +48,15 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
 
     void deleteByRequesterAndAddressee(User requester, User addressee);
 
-    // ステータス別の申請を取得
-    List<Friendship> findByRequesterAndStatus(User requester, Friendship.FriendshipStatus status);
+    // Spring Data JPA の命名規則に基づくメソッド
     List<Friendship> findByAddresseeAndStatus(User addressee, Friendship.FriendshipStatus status);
     
+    List<Friendship> findByRequesterAndStatus(User requester, Friendship.FriendshipStatus status);
+    
+    List<Friendship> findByRequesterAndAddresseeAndStatus(User requester, User addressee, Friendship.FriendshipStatus status);
+    
     boolean existsByRequesterAndAddresseeAndStatus(User requester, User addressee, Friendship.FriendshipStatus status);
+
+    @Query("SELECT f FROM Friendship f WHERE (f.requester = :user OR f.addressee = :user) AND f.status = 'ACCEPTED'")
+    List<Friendship> findAcceptedFriendshipsByUser(@Param("user") User user);
 }

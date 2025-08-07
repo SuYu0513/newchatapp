@@ -159,6 +159,7 @@ public class ChatRoomService {
         ChatRoom chatRoom = new ChatRoom();
         chatRoom.setName(name);
         chatRoom.setType(ChatRoom.ChatRoomType.PRIVATE);
+        chatRoom.setCreatedBy(creator);
         chatRoom.setCreatedAt(LocalDateTime.now());
         chatRoom = chatRoomRepository.save(chatRoom);
         
@@ -211,5 +212,12 @@ public class ChatRoomService {
             chatRoom.getUsers().clear();
             chatRoomRepository.save(chatRoom);
         }
+    }
+
+    /**
+     * ユーザーが参加しているルーム一覧を取得
+     */
+    public List<ChatRoom> getRoomsByUser(User user) {
+        return chatRoomRepository.findByUsersContaining(user);
     }
 }

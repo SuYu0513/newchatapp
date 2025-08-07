@@ -179,7 +179,7 @@
                 <div class="row">
                     <div class="col-md-6 col-lg-4 mb-3" th:each="userProfile : ${searchResults}">
                         <div class="card user-card h-100" 
-                             th:onclick="'location.href=\'/profile/view/' + ${userProfile.user.id} + '\''">
+                             th:onclick="'location.href=\'/profile/' + ${userProfile.user.id} + '\''">
                             <div class="card-body">
                                 <div class="d-flex align-items-center mb-3">
                                     <img th:src="${userProfile.avatarUrlOrDefault}" 
@@ -289,7 +289,7 @@
         // プロフィール表示
         function viewProfile(button) {
             const userId = button.getAttribute('data-user-id');
-            window.open('/profile/view/' + userId, '_blank');
+            window.open('/profile/' + userId, '_blank');
         }
         
         // フレンド申請送信

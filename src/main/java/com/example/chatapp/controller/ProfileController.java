@@ -2,7 +2,6 @@ package com.example.chatapp.controller;
 
 import com.example.chatapp.entity.User;
 import com.example.chatapp.entity.UserProfile;
-import com.example.chatapp.entity.Friendship;
 import com.example.chatapp.service.UserProfileService;
 import com.example.chatapp.service.UserService;
 import com.example.chatapp.service.FriendshipService;
@@ -47,6 +46,7 @@ public class ProfileController {
         UserProfile profile = userProfileService.getOrCreateProfile(user);
         model.addAttribute("profile", profile);
         model.addAttribute("user", user);
+        model.addAttribute("currentUser", user);
         model.addAttribute("isOwnProfile", true);
         
         return "profile/view";
@@ -60,18 +60,22 @@ public class ProfileController {
         User currentUser = userService.findByUsername(auth.getName())
             .orElseThrow(() -> new RuntimeException("ユーザーが見つかりません"));
         
-        Optional<UserProfile> profileOpt = userProfileService.getProfileByUserId(userId);
-        if (profileOpt.isEmpty()) {
-            return "redirect:/profile";
+        // 対象ユーザーを取得
+        Optional<User> targetUserOpt = userService.findById(userId);
+        if (targetUserOpt.isEmpty()) {
+            model.addAttribute("error", "ユーザーが見つかりません");
+            return "error/404";
         }
         
-        UserProfile profile = profileOpt.get();
-        User targetUser = profile.getUser();
+        User targetUser = targetUserOpt.get();
         
         // 自分のプロフィールの場合はリダイレクト
         if (targetUser.equals(currentUser)) {
             return "redirect:/profile";
         }
+        
+        // プロフィールを取得または作成
+        UserProfile profile = userProfileService.getOrCreateProfile(targetUser);
         
         // プロフィール表示権限チェック
         if (!userProfileService.canViewProfile(profile, currentUser)) {
@@ -82,8 +86,16 @@ public class ProfileController {
         // フレンド関係の状態を取得
         String friendshipStatus = getFriendshipStatus(currentUser, targetUser);
         
+        // デバッグログ
+        System.out.println("=== プロフィール表示デバッグ ===");
+        System.out.println("現在のユーザー: " + currentUser.getUsername() + " (ID: " + currentUser.getId() + ")");
+        System.out.println("対象ユーザー: " + targetUser.getUsername() + " (ID: " + targetUser.getId() + ")");
+        System.out.println("フレンド関係ステータス: " + friendshipStatus);
+        System.out.println("===============================");
+        
         model.addAttribute("profile", profile);
         model.addAttribute("user", targetUser);
+        model.addAttribute("currentUser", currentUser);
         model.addAttribute("isOwnProfile", false);
         model.addAttribute("friendshipStatus", friendshipStatus);
         
@@ -94,32 +106,24 @@ public class ProfileController {
      * フレンド関係の状態を取得
      */
     private String getFriendshipStatus(User currentUser, User targetUser) {
-        // 既にフレンドかチェック
-        if (friendshipService.areFriends(currentUser, targetUser)) {
-            return "FRIEND";
-        }
+        String status = friendshipService.getFriendshipStatus(currentUser, targetUser);
         
-        // 自分が送信済みの申請があるかチェック
-        Optional<Friendship> sentRequest = friendshipService.findFriendshipBetweenUsers(currentUser, targetUser);
-        if (sentRequest.isPresent()) {
-            Friendship friendship = sentRequest.get();
-            if (friendship.getRequester().equals(currentUser) && 
-                friendship.getStatus() == Friendship.FriendshipStatus.PENDING) {
+        // FriendshipServiceの戻り値をプロフィール画面用の値に変換
+        switch (status) {
+            case "friends":
+                return "FRIEND";
+            case "sent_request":
                 return "REQUEST_SENT";
-            }
-            // 相手から申請が来ている場合
-            if (friendship.getAddressee().equals(currentUser) && 
-                friendship.getStatus() == Friendship.FriendshipStatus.PENDING) {
+            case "received_request":
                 return "REQUEST_RECEIVED";
-            }
-            // ブロックされている場合
-            if (friendship.getStatus() == Friendship.FriendshipStatus.BLOCKED) {
+            case "blocked_by_you":
+            case "blocked_by_them":
                 return "BLOCKED";
-            }
+            case "none":
+            case "declined":
+            default:
+                return "NONE";
         }
-        
-        // 何も関係がない場合
-        return "NONE";
     }
 
     /**

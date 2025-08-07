@@ -178,10 +178,63 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            font-size: 2.5rem;
+            font-size: 2.2rem;
             font-weight: 700;
-            text-align: center;
-            margin-bottom: 30px;
+            text-align: left;
+            margin-bottom: 0;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-custom {
+            border: none;
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary-custom {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .btn-success-custom {
+            background: var(--success-gradient);
+            color: white;
+        }
+
+        .btn-info-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .nav-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .nav-buttons .btn-custom {
+                width: 100%;
+                margin-bottom: 8px;
+            }
+            
+            .d-flex.justify-content-between {
+                flex-direction: column;
+                gap: 15px;
+            }
         }
 
         .notification {
@@ -246,9 +299,23 @@
 <body>
     <div class="container">
         <div class="main-container">
-            <h1 class="page-title">
-                <i class="fas fa-users"></i> フレンド管理
-            </h1>
+            <!-- ナビゲーションメニュー -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="page-title mb-0">
+                    <i class="fas fa-users"></i> フレンド管理
+                </h1>
+                <div class="nav-buttons">
+                    <a href="/chat" class="btn btn-custom btn-primary-custom me-2">
+                        <i class="fas fa-comments"></i> チャット
+                    </a>
+                    <a href="/profile" class="btn btn-custom btn-success-custom me-2">
+                        <i class="fas fa-user"></i> マイプロフィール
+                    </a>
+                    <a href="/profile/search" class="btn btn-custom btn-info-custom">
+                        <i class="fas fa-search"></i> ユーザー検索
+                    </a>
+                </div>
+            </div>
 
             <!-- タブナビゲーション -->
             <ul class="nav nav-tabs" id="friendTabs" role="tablist">
@@ -345,7 +412,23 @@
             }
 
             async loadTabData(tabName) {
-                const loadingElement = document.getElementById(`${tabName.replace('-', '')}-loading`);
+                let loadingId;
+                switch(tabName) {
+                    case 'friends':
+                        loadingId = 'friends-loading';
+                        break;
+                    case 'sent-requests':
+                        loadingId = 'sent-loading';
+                        break;
+                    case 'received-requests':
+                        loadingId = 'received-loading';
+                        break;
+                    case 'blocked-users':
+                        loadingId = 'blocked-loading';
+                        break;
+                }
+
+                const loadingElement = document.getElementById(loadingId);
                 const listElement = document.getElementById(`${tabName}-list`);
 
                 if (loadingElement) loadingElement.style.display = 'block';
@@ -508,10 +591,10 @@
                 `).join('');
             }
 
-            renderBlockedUsers(users) {
+            renderBlockedUsers(blockedFriendships) {
                 const container = document.getElementById('blocked-users-list');
                 
-                if (users.length === 0) {
+                if (blockedFriendships.length === 0) {
                     container.innerHTML = `
                         <div class="empty-state">
                             <i class="fas fa-ban"></i>
@@ -521,17 +604,17 @@
                     return;
                 }
 
-                container.innerHTML = users.map(user => `
+                container.innerHTML = blockedFriendships.map(friendship => `
                     <div class="friend-card d-flex align-items-center">
                         <div class="friend-avatar">
-                            ${user.username.charAt(0).toUpperCase()}
+                            ${friendship.username.charAt(0).toUpperCase()}
                         </div>
                         <div class="friend-info">
-                            <div class="friend-name">${this.escapeHtml(user.username)}</div>
+                            <div class="friend-name">${this.escapeHtml(friendship.username)}</div>
                             <div class="friend-status">ブロック中</div>
                         </div>
                         <div class="friend-actions">
-                            <button class="btn btn-custom btn-warning-custom" onclick="friendManager.unblockUser(${user.id})">
+                            <button class="btn btn-custom btn-warning-custom" onclick="friendManager.unblockUser(${friendship.id})">
                                 <i class="fas fa-unlock"></i> ブロック解除
                             </button>
                         </div>

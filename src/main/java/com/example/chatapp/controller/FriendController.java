@@ -18,9 +18,6 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.HashMap;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/friends")
@@ -94,7 +91,11 @@ public class FriendController {
         
         Map<String, Object> response = new HashMap<>();
         
+        System.out.println("=== フレンド申請API呼び出し ===");
+        System.out.println("ペイロード: " + payload);
+        
         if (principal == null) {
+            System.out.println("エラー: ログインが必要");
             response.put("success", false);
             response.put("message", "ログインが必要です");
             return ResponseEntity.badRequest().body(response);
@@ -167,7 +168,7 @@ public class FriendController {
                 return ResponseEntity.badRequest().body(response);
             }
             
-            Friendship friendship = friendshipService.acceptFriendRequest(requesterOpt.get(), currentUserOpt.get().getId());
+            Friendship friendship = friendshipService.acceptFriendRequest(requesterOpt.get(), currentUserOpt.get());
             
             if (friendship != null) {
                 response.put("success", true);
@@ -217,7 +218,7 @@ public class FriendController {
                 return ResponseEntity.badRequest().body(response);
             }
             
-            Friendship friendship = friendshipService.declineFriendRequest(requesterOpt.get(), currentUserOpt.get().getId());
+            Friendship friendship = friendshipService.declineFriendRequest(requesterOpt.get(), currentUserOpt.get());
             
             if (friendship != null) {
                 response.put("success", true);
@@ -267,12 +268,92 @@ public class FriendController {
                 return ResponseEntity.badRequest().body(response);
             }
             
-            friendshipService.removeFriend(currentUserOpt.get(), friendId);
+            friendshipService.removeFriendByUsers(currentUserOpt.get(), friendOpt.get());
             
             response.put("success", true);
             response.put("message", "フレンドを削除しました");
             
         } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "エラーが発生しました: " + e.getMessage());
+        }
+        
+        return ResponseEntity.ok(response);
+    }
+
+    // フレンド申請取り消し (AJAX API)
+    @PostMapping("/cancel")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> cancelFriendRequest(
+            @RequestBody Map<String, Object> payload,
+            Principal principal) {
+        
+        Map<String, Object> response = new HashMap<>();
+        
+        System.out.println("=== フレンド申請取り消しAPI呼び出し ===");
+        System.out.println("ペイロード: " + payload);
+        
+        if (principal == null) {
+            System.out.println("エラー: ログインが必要");
+            response.put("success", false);
+            response.put("message", "ログインが必要です");
+            return ResponseEntity.badRequest().body(response);
+        }
+        
+        try {
+            String username = principal.getName();
+            Optional<User> currentUserOpt = userService.findByUsername(username);
+            if (!currentUserOpt.isPresent()) {
+                response.put("success", false);
+                response.put("message", "ユーザーが見つかりません");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            Long targetUserId = Long.valueOf(payload.get("targetUserId").toString());
+            Optional<User> targetUserOpt = userService.findById(targetUserId);
+            if (!targetUserOpt.isPresent()) {
+                response.put("success", false);
+                response.put("message", "対象ユーザーが見つかりません");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            User currentUser = currentUserOpt.get();
+            User targetUser = targetUserOpt.get();
+            
+            System.out.println("現在のユーザー: " + currentUser.getUsername() + " (ID: " + currentUser.getId() + ")");
+            System.out.println("対象ユーザー: " + targetUser.getUsername() + " (ID: " + targetUser.getId() + ")");
+            
+            // 自分が送信したPENDING状態の申請を検索して削除
+            Optional<Friendship> pendingRequest = friendshipService.getFriendshipBetween(currentUser, targetUser);
+            
+            if (pendingRequest.isPresent()) {
+                Friendship friendship = pendingRequest.get();
+                
+                // 自分が送信者で、状態がPENDINGであることを確認
+                if (friendship.getRequester().equals(currentUser) && 
+                    friendship.getStatus() == Friendship.FriendshipStatus.PENDING) {
+                    
+                    // 専用メソッドで申請を取り消し
+                    friendshipService.cancelFriendRequest(currentUser, targetUser);
+                    
+                    response.put("success", true);
+                    response.put("message", "フレンド申請を取り消しました");
+                    System.out.println("申請取り消し成功");
+                } else {
+                    response.put("success", false);
+                    response.put("message", "取り消せる申請が見つかりません");
+                    System.out.println("取り消せる申請なし - Requester: " + friendship.getRequester().getUsername() + 
+                                     ", Status: " + friendship.getStatus());
+                }
+            } else {
+                response.put("success", false);
+                response.put("message", "申請が見つかりません");
+                System.out.println("申請が見つかりません");
+            }
+            
+        } catch (Exception e) {
+            System.out.println("エラー: " + e.getMessage());
+            e.printStackTrace();
             response.put("success", false);
             response.put("message", "エラーが発生しました: " + e.getMessage());
         }
@@ -339,7 +420,11 @@ public class FriendController {
         
         Map<String, Object> response = new HashMap<>();
         
+        System.out.println("=== プライベートチャットAPI呼び出し ===");
+        System.out.println("ペイロード: " + payload);
+        
         if (principal == null) {
+            System.out.println("エラー: ログインが必要");
             response.put("success", false);
             response.put("message", "ログインが必要です");
             return ResponseEntity.badRequest().body(response);
@@ -362,19 +447,46 @@ public class FriendController {
                 return ResponseEntity.badRequest().body(response);
             }
             
-            // プライベートチャットルームを作成または取得
-            String roomName = "Private: " + currentUserOpt.get().getUsername() + " - " + friendOpt.get().getUsername();
-            ChatRoom chatRoom = chatRoomService.createPrivateRoom(roomName, currentUserOpt.get());
+            User currentUser = currentUserOpt.get();
+            User friend = friendOpt.get();
             
-            if (chatRoom != null) {
-                response.put("success", true);
-                response.put("roomId", chatRoom.getId());
-                response.put("roomName", chatRoom.getName());
-                response.put("message", "プライベートチャットを開始しました");
-            } else {
+            // フレンド関係を確認
+            if (!friendshipService.areFriends(currentUser, friend)) {
                 response.put("success", false);
-                response.put("message", "チャットルームの作成に失敗しました");
+                response.put("message", "フレンド関係にないユーザーとはチャットできません");
+                return ResponseEntity.badRequest().body(response);
             }
+            
+            // 既存のプライベートチャットルームを検索
+            List<ChatRoom> userRooms = chatRoomService.getRoomsByUser(currentUser);
+            ChatRoom existingRoom = null;
+            
+            for (ChatRoom room : userRooms) {
+                if (room.getType() == ChatRoom.ChatRoomType.PRIVATE && 
+                    room.getUsers().contains(friend) && 
+                    room.getUsers().size() == 2) {
+                    existingRoom = room;
+                    break;
+                }
+            }
+            
+            ChatRoom chatRoom;
+            if (existingRoom != null) {
+                // 既存のルームを使用
+                chatRoom = existingRoom;
+            } else {
+                // 新しいプライベートチャットルームを作成
+                String roomName = "Private: " + currentUser.getUsername() + " - " + friend.getUsername();
+                chatRoom = chatRoomService.createPrivateRoom(roomName, currentUser);
+                
+                // 友達もルームに追加
+                chatRoomService.addUserToRoom(chatRoom.getId(), friend);
+            }
+            
+            response.put("success", true);
+            response.put("roomId", chatRoom.getId());
+            response.put("roomName", chatRoom.getName());
+            response.put("message", "プライベートチャットを開始しました");
             
         } catch (Exception e) {
             response.put("success", false);
@@ -413,6 +525,116 @@ public class FriendController {
         return ResponseEntity.ok(response);
     }
 
+    // フレンド一覧取得 (AJAX API)
+    @GetMapping("/api/list")
+    @ResponseBody
+    public ResponseEntity<List<Map<String, Object>>> getFriendsList(Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        
+        try {
+            String username = principal.getName();
+            Optional<User> currentUserOpt = userService.findByUsername(username);
+            if (!currentUserOpt.isPresent()) {
+                return ResponseEntity.badRequest().build();
+            }
+            
+            List<Friendship> friendships = friendshipService.getFriendshipsByUser(currentUserOpt.get());
+            List<Map<String, Object>> result = friendships.stream()
+                .map(friendship -> {
+                    User friend = friendship.getRequester().equals(currentUserOpt.get()) 
+                        ? friendship.getAddressee() : friendship.getRequester();
+                    
+                    Map<String, Object> friendData = new HashMap<>();
+                    friendData.put("id", friend.getId());
+                    friendData.put("username", friend.getUsername());
+                    friendData.put("online", false); // TODO: オンライン状態の実装
+                    
+                    return friendData;
+                })
+                .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(result);
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    // 送信済み申請一覧取得 (AJAX API)
+    @GetMapping("/api/sent-requests")
+    @ResponseBody
+    public ResponseEntity<List<Map<String, Object>>> getSentRequests(Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        
+        try {
+            String username = principal.getName();
+            Optional<User> currentUserOpt = userService.findByUsername(username);
+            if (!currentUserOpt.isPresent()) {
+                return ResponseEntity.badRequest().build();
+            }
+            
+            List<Friendship> sentRequests = friendshipService.getPendingRequestsByRequester(currentUserOpt.get());
+            List<Map<String, Object>> result = sentRequests.stream()
+                .map(friendship -> {
+                    Map<String, Object> requestData = new HashMap<>();
+                    requestData.put("id", friendship.getId());
+                    
+                    Map<String, Object> addresseeData = new HashMap<>();
+                    addresseeData.put("id", friendship.getAddressee().getId());
+                    addresseeData.put("username", friendship.getAddressee().getUsername());
+                    requestData.put("addressee", addresseeData);
+                    
+                    return requestData;
+                })
+                .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(result);
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    // ブロック一覧取得 (AJAX API)
+    @GetMapping("/api/blocked")
+    @ResponseBody
+    public ResponseEntity<List<Map<String, Object>>> getBlockedUsers(Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        
+        try {
+            String username = principal.getName();
+            Optional<User> currentUserOpt = userService.findByUsername(username);
+            if (!currentUserOpt.isPresent()) {
+                return ResponseEntity.badRequest().build();
+            }
+            
+            List<Friendship> blockedFriendships = friendshipService.getBlockedUsersByUser(currentUserOpt.get());
+            List<Map<String, Object>> result = blockedFriendships.stream()
+                .map(friendship -> {
+                    User blockedUser = friendship.getRequester().equals(currentUserOpt.get()) 
+                        ? friendship.getAddressee() : friendship.getRequester();
+                    
+                    Map<String, Object> blockedData = new HashMap<>();
+                    blockedData.put("id", blockedUser.getId());
+                    blockedData.put("username", blockedUser.getUsername());
+                    
+                    return blockedData;
+                })
+                .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(result);
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
     // 受信申請一覧取得 (AJAX API)
     @GetMapping("/api/received-requests")
     @ResponseBody
@@ -448,5 +670,50 @@ public class FriendController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    // ユーザーブロック解除 (AJAX API)
+    @PostMapping("/unblock")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> unblockUser(
+            @RequestBody Map<String, Object> payload,
+            Principal principal) {
+        
+        Map<String, Object> response = new HashMap<>();
+        
+        if (principal == null) {
+            response.put("success", false);
+            response.put("message", "ログインが必要です");
+            return ResponseEntity.badRequest().body(response);
+        }
+        
+        try {
+            String username = principal.getName();
+            Optional<User> currentUserOpt = userService.findByUsername(username);
+            if (!currentUserOpt.isPresent()) {
+                response.put("success", false);
+                response.put("message", "ユーザーが見つかりません");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            Long targetUserId = Long.valueOf(payload.get("targetUserId").toString());
+            Optional<User> targetUserOpt = userService.findById(targetUserId);
+            if (!targetUserOpt.isPresent()) {
+                response.put("success", false);
+                response.put("message", "対象ユーザーが見つかりません");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            friendshipService.unblockUser(currentUserOpt.get(), targetUserOpt.get());
+            
+            response.put("success", true);
+            response.put("message", "ブロックを解除しました");
+            
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "エラーが発生しました: " + e.getMessage());
+        }
+        
+        return ResponseEntity.ok(response);
     }
 }

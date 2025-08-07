@@ -57,9 +57,34 @@ public class FriendshipService {
     }
 
     /**
-     * フレンド申請を承認
+     * フレンド申請を承認（リクエスターのIDから検索）
      */
-    public Friendship acceptFriendRequest(User addressee, Long friendshipId) {
+    public Friendship acceptFriendRequest(User requester, User addressee) {
+        Optional<Friendship> friendshipOpt = friendshipRepository.findBetweenUsers(requester, addressee);
+        if (!friendshipOpt.isPresent()) {
+            throw new IllegalArgumentException("フレンド申請が見つかりません");
+        }
+        
+        Friendship friendship = friendshipOpt.get();
+        
+        // 申請の受取人であることを確認
+        if (!friendship.getAddressee().equals(addressee)) {
+            throw new IllegalArgumentException("この申請を承認する権限がありません");
+        }
+
+        // ステータスが PENDING であることを確認
+        if (friendship.getStatus() != Friendship.FriendshipStatus.PENDING) {
+            throw new IllegalArgumentException("この申請は既に処理済みです");
+        }
+
+        friendship.setStatus(Friendship.FriendshipStatus.ACCEPTED);
+        return friendshipRepository.save(friendship);
+    }
+
+    /**
+     * フレンド申請を承認（フレンドシップIDから検索）
+     */
+    public Friendship acceptFriendRequestById(User addressee, Long friendshipId) {
         Friendship friendship = friendshipRepository.findById(friendshipId)
             .orElseThrow(() -> new IllegalArgumentException("フレンド申請が見つかりません"));
 
@@ -78,9 +103,34 @@ public class FriendshipService {
     }
 
     /**
-     * フレンド申請を拒否
+     * フレンド申請を拒否（リクエスターのIDから検索）
      */
-    public Friendship declineFriendRequest(User addressee, Long friendshipId) {
+    public Friendship declineFriendRequest(User requester, User addressee) {
+        Optional<Friendship> friendshipOpt = friendshipRepository.findBetweenUsers(requester, addressee);
+        if (!friendshipOpt.isPresent()) {
+            throw new IllegalArgumentException("フレンド申請が見つかりません");
+        }
+        
+        Friendship friendship = friendshipOpt.get();
+        
+        // 申請の受取人であることを確認
+        if (!friendship.getAddressee().equals(addressee)) {
+            throw new IllegalArgumentException("この申請を拒否する権限がありません");
+        }
+
+        // ステータスが PENDING であることを確認
+        if (friendship.getStatus() != Friendship.FriendshipStatus.PENDING) {
+            throw new IllegalArgumentException("この申請は既に処理済みです");
+        }
+
+        friendship.setStatus(Friendship.FriendshipStatus.DECLINED);
+        return friendshipRepository.save(friendship);
+    }
+
+    /**
+     * フレンド申請を拒否（フレンドシップIDから検索）
+     */
+    public Friendship declineFriendRequestById(User addressee, Long friendshipId) {
         Friendship friendship = friendshipRepository.findById(friendshipId)
             .orElseThrow(() -> new IllegalArgumentException("フレンド申請が見つかりません"));
 
@@ -96,6 +146,48 @@ public class FriendshipService {
 
         friendship.setStatus(Friendship.FriendshipStatus.DECLINED);
         return friendshipRepository.save(friendship);
+    }
+
+    /**
+     * フレンド関係を削除（ユーザー間の関係を削除）
+     */
+    public void removeFriendByUsers(User currentUser, User friendUser) {
+        Optional<Friendship> friendship = friendshipRepository.findBetweenUsers(currentUser, friendUser);
+        
+        if (!friendship.isPresent()) {
+            throw new IllegalArgumentException("フレンド関係が見つかりません");
+        }
+        
+        Friendship friendshipEntity = friendship.get();
+        if (friendshipEntity.getStatus() != Friendship.FriendshipStatus.ACCEPTED) {
+            throw new IllegalArgumentException("フレンド関係ではありません");
+        }
+        
+        friendshipRepository.delete(friendshipEntity);
+    }
+
+    /**
+     * フレンド申請を取り消し（PENDING状態の関係を削除）
+     */
+    public void cancelFriendRequest(User requester, User addressee) {
+        Optional<Friendship> friendship = friendshipRepository.findBetweenUsers(requester, addressee);
+        
+        if (!friendship.isPresent()) {
+            throw new IllegalArgumentException("フレンド申請が見つかりません");
+        }
+        
+        Friendship friendshipEntity = friendship.get();
+        
+        // 申請者が自分で、状態がPENDINGであることを確認
+        if (!friendshipEntity.getRequester().equals(requester)) {
+            throw new IllegalArgumentException("この申請を取り消す権限がありません");
+        }
+        
+        if (friendshipEntity.getStatus() != Friendship.FriendshipStatus.PENDING) {
+            throw new IllegalArgumentException("取り消せる申請ではありません（状態: " + friendshipEntity.getStatus() + "）");
+        }
+        
+        friendshipRepository.delete(friendshipEntity);
     }
 
     /**
@@ -135,6 +227,25 @@ public class FriendshipService {
             blockRelation.setStatus(Friendship.FriendshipStatus.BLOCKED);
             return friendshipRepository.save(blockRelation);
         }
+    }
+
+    /**
+     * ユーザーのブロックを解除
+     */
+    public void unblockUser(User unblocker, User unblockedUser) {
+        Optional<Friendship> existingFriendship = friendshipRepository.findBetweenUsers(unblocker, unblockedUser);
+        
+        if (!existingFriendship.isPresent()) {
+            throw new IllegalArgumentException("ブロック関係が見つかりません");
+        }
+        
+        Friendship friendship = existingFriendship.get();
+        if (friendship.getStatus() != Friendship.FriendshipStatus.BLOCKED) {
+            throw new IllegalArgumentException("この関係はブロック状態ではありません");
+        }
+        
+        // ブロック関係を削除
+        friendshipRepository.delete(friendship);
     }
 
     /**
@@ -271,6 +382,32 @@ public class FriendshipService {
 
         Friendship friendship = existing.get();
         return friendship.getStatus() == Friendship.FriendshipStatus.DECLINED;
+    }
+
+    /**
+     * ユーザーのフレンド一覧を取得（ACCEPTED状態）
+     */
+    @Transactional(readOnly = true)
+    public List<Friendship> getFriendshipsByUser(User user) {
+        return friendshipRepository.findAcceptedFriendshipsByUser(user);
+    }
+
+    /**
+     * 送信した申請一覧を取得（PENDING状態）
+     */
+    @Transactional(readOnly = true)
+    public List<Friendship> getPendingRequestsByRequester(User requester) {
+        return friendshipRepository.findByRequesterAndStatus(requester, Friendship.FriendshipStatus.PENDING);
+    }
+
+    /**
+     * ブロック済みユーザーとの関係一覧を取得
+     */
+    @Transactional(readOnly = true)
+    public List<Friendship> getBlockedUsersByUser(User user) {
+        List<Friendship> result = friendshipRepository.findByRequesterAndStatus(user, Friendship.FriendshipStatus.BLOCKED);
+        result.addAll(friendshipRepository.findByAddresseeAndStatus(user, Friendship.FriendshipStatus.BLOCKED));
+        return result;
     }
 
     /**
