@@ -220,4 +220,18 @@ public class ChatRoomService {
     public List<ChatRoom> getRoomsByUser(User user) {
         return chatRoomRepository.findByUsersContaining(user);
     }
+
+    /**
+     * 2人のユーザー間の既存プライベートルームを検索
+     */
+    public Optional<ChatRoom> findExistingPrivateRoom(User user1, User user2) {
+        List<ChatRoom> user1Rooms = chatRoomRepository.findByUsersContaining(user1);
+        
+        return user1Rooms.stream()
+                .filter(room -> room.getType() == ChatRoom.ChatRoomType.PRIVATE || 
+                               room.getType() == ChatRoom.ChatRoomType.RANDOM)
+                .filter(room -> room.getUsers().contains(user2))
+                .filter(room -> room.getUsers().size() == 2) // 2人だけのルーム
+                .findFirst();
+    }
 }

@@ -1,5 +1,6 @@
 package com.example.chatapp.controller;
 
+import com.example.chatapp.entity.ChatRoom;
 import com.example.chatapp.entity.RandomMatch;
 import com.example.chatapp.entity.User;
 import com.example.chatapp.entity.UserProfile;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * ランダムマッチング機能のコントローラー
@@ -91,11 +93,8 @@ public class RandomMatchingController {
                 return ResponseEntity.ok(response);
             }
 
-            // ランダムマッチを作成
+            // ランダムマッチを作成（ルームは作成しない）
             RandomMatch match = randomMatchingService.createMatch(user, matchedUser);
-            
-            // プライベートチャットルームを作成
-            Long roomId = match.getChatRoom().getId();
 
             response.put("success", true);
             response.put("matchedUser", Map.of(
@@ -103,12 +102,52 @@ public class RandomMatchingController {
                 "username", matchedUser.getUsername(),
                 "displayName", userProfileService.getOrCreateProfile(matchedUser).getDisplayNameOrUsername()
             ));
-            response.put("roomId", roomId);
             response.put("matchId", match.getId());
+            // roomIdは返さない（チャット開始時に作成）
 
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", "マッチングに失敗しました: " + e.getMessage());
+        }
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * チャット開始（ルーム作成または既存ルーム使用）
+     */
+    @PostMapping("/start-chat/{matchId}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> startChat(@PathVariable Long matchId, 
+                                                        Authentication auth) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            String username = auth.getName();
+            User user = userService.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("ユーザーが見つかりません"));
+
+            // マッチ情報を取得
+            RandomMatch match = randomMatchingService.getMatch(matchId)
+                .orElseThrow(() -> new RuntimeException("マッチが見つかりません"));
+
+            // ユーザーがこのマッチに参加しているかチェック
+            if (!match.involvesUser(user)) {
+                response.put("success", false);
+                response.put("message", "このマッチにアクセスする権限がありません");
+                return ResponseEntity.ok(response);
+            }
+
+            // ルームを作成または既存ルームを取得
+            ChatRoom chatRoom = randomMatchingService.getOrCreateChatRoom(match);
+
+            response.put("success", true);
+            response.put("roomId", chatRoom.getId());
+            response.put("roomName", chatRoom.getName());
+
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "チャット開始に失敗しました: " + e.getMessage());
         }
 
         return ResponseEntity.ok(response);
@@ -123,8 +162,9 @@ public class RandomMatchingController {
         User user = userService.findByUsername(username)
             .orElseThrow(() -> new RuntimeException("ユーザーが見つかりません"));
 
-        List<RandomMatch> matchHistory = randomMatchingService.getMatchHistory(user);
-        model.addAttribute("matchHistory", matchHistory);
+        List<RandomMatchingService.GroupedMatchHistory> groupedHistory = 
+            randomMatchingService.getGroupedMatchHistory(user);
+        model.addAttribute("groupedHistory", groupedHistory);
 
         return "random-matching/history";
     }
@@ -142,11 +182,19 @@ public class RandomMatchingController {
             User user = userService.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("ユーザーが見つかりません"));
 
-            List<RandomMatch> completedMatches = randomMatchingService.getCompletedMatches(user);
-            long activeMatchCount = randomMatchingService.getActiveMatchCount();
+            // ユーザーのマッチング履歴を取得
+            List<RandomMatch> allMatches = randomMatchingService.getMatchHistory(user);
+            List<RandomMatch> completedMatches = allMatches.stream()
+                .filter(match -> match.getStatus() != RandomMatch.MatchStatus.ACTIVE)
+                .collect(Collectors.toList());
+            
+            // ユーザーのアクティブマッチ数を取得
+            long userActiveMatchCount = allMatches.stream()
+                .filter(match -> match.getStatus() == RandomMatch.MatchStatus.ACTIVE)
+                .count();
 
-            stats.put("totalMatches", completedMatches.size());
-            stats.put("activeMatches", activeMatchCount);
+            stats.put("totalMatches", completedMatches.size()); // 完了したマッチのみカウント
+            stats.put("activeMatches", userActiveMatchCount);  // ユーザー固有のアクティブマッチ数
             stats.put("averageMessageCount", completedMatches.stream()
                 .mapToInt(match -> match.getMessageCount() != null ? match.getMessageCount() : 0)
                 .average()

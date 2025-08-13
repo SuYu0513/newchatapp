@@ -4,6 +4,7 @@ import com.example.chatapp.entity.ChatRoom;
 import com.example.chatapp.entity.RandomMatch;
 import com.example.chatapp.entity.User;
 import com.example.chatapp.entity.UserProfile;
+import com.example.chatapp.repository.ChatRoomRepository;
 import com.example.chatapp.repository.RandomMatchRepository;
 import com.example.chatapp.repository.UserProfileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,9 @@ public class RandomMatchingService {
 
     @Autowired
     private ChatRoomService chatRoomService;
+    
+    @Autowired
+    private ChatRoomRepository chatRoomRepository;
 
     private final Random random = new Random();
     private static final int MATCH_TIMEOUT_MINUTES = 30;
@@ -161,27 +165,48 @@ public class RandomMatchingService {
     }
 
     /**
-     * マッチングを作成
+     * マッチングを作成（ルームは作成しない）
      */
     public RandomMatch createMatch(User user1, User user2) {
-        // 既存のアクティブマッチをチェック
-        Optional<RandomMatch> existingMatch1 = randomMatchRepository.findActiveMatchForUser(user1);
-        Optional<RandomMatch> existingMatch2 = randomMatchRepository.findActiveMatchForUser(user2);
-
-        if (existingMatch1.isPresent() || existingMatch2.isPresent()) {
-            throw new IllegalStateException("既にアクティブなマッチが存在します");
-        }
-
-        // チャットルームを作成
-        String roomName = "ランダムチャット - " + user1.getUsername() + " & " + user2.getUsername();
-        ChatRoom chatRoom = chatRoomService.createPrivateRoom(roomName, user1);
-        
-        // 相手をルームに追加
-        chatRoomService.addUserToRoom(chatRoom.getId(), user2);
-
-        // ランダムマッチを作成
-        RandomMatch randomMatch = new RandomMatch(user1, user2, chatRoom);
+        // ランダムマッチを作成（ルームは後で作成）
+        RandomMatch randomMatch = new RandomMatch(user1, user2);
         return randomMatchRepository.save(randomMatch);
+    }
+
+    /**
+     * チャット開始時にルームを作成または既存ルームを取得
+     */
+    public ChatRoom getOrCreateChatRoom(RandomMatch match) {
+        User user1 = match.getUser1();
+        User user2 = match.getUser2();
+        
+        // 既存のプライベートルームを検索
+        Optional<ChatRoom> existingRoom = chatRoomService.findExistingPrivateRoom(user1, user2);
+        
+        if (existingRoom.isPresent()) {
+            // 既存ルームがある場合はそれを使用
+            ChatRoom room = existingRoom.get();
+            match.setChatRoom(room);
+            randomMatchRepository.save(match);
+            return room;
+        } else {
+            // 新しいルームを作成
+            String roomName = "ランダムチャット - " + user1.getUsername() + " & " + user2.getUsername();
+            ChatRoom chatRoom = chatRoomService.createPrivateRoom(roomName, user1);
+            
+            // 相手をルームに追加
+            chatRoomService.addUserToRoom(chatRoom.getId(), user2);
+            
+            // ルームタイプをRANDOMに設定
+            chatRoom.setType(ChatRoom.ChatRoomType.RANDOM);
+            chatRoom = chatRoomRepository.save(chatRoom);
+            
+            // マッチにルームを設定
+            match.setChatRoom(chatRoom);
+            randomMatchRepository.save(match);
+            
+            return chatRoom;
+        }
     }
 
     /**
@@ -201,13 +226,7 @@ public class RandomMatchingService {
      * ランダムマッチングを開始
      */
     public Optional<RandomMatch> findRandomMatch(User user) {
-        // 既にアクティブなマッチがないかチェック
-        Optional<RandomMatch> existingMatch = randomMatchRepository.findActiveMatchForUser(user);
-        if (existingMatch.isPresent()) {
-            return existingMatch;
-        }
-
-        // マッチング可能なユーザーを取得
+        // マッチング可能なユーザーを取得（複数マッチングを許可するため、アクティブマッチチェックを削除）
         List<UserProfile> availableProfiles = userProfileService.getAvailableForRandomMatching(user);
         
         if (availableProfiles.isEmpty()) {
@@ -218,27 +237,17 @@ public class RandomMatchingService {
         UserProfile matchedProfile = availableProfiles.get(random.nextInt(availableProfiles.size()));
         User matchedUser = matchedProfile.getUser();
 
-        // 相手が既にマッチング中でないかチェック
-        Optional<RandomMatch> partnerMatch = randomMatchRepository.findActiveMatchForUser(matchedUser);
-        if (partnerMatch.isPresent()) {
-            // 相手が既にマッチング中の場合、再帰的に他の相手を探す
-            availableProfiles.remove(matchedProfile);
-            if (availableProfiles.isEmpty()) {
-                return Optional.empty();
-            }
-            return findRandomMatch(user);
-        }
-
-        // チャットルームを作成
-        String roomName = "ランダムチャット - " + user.getUsername() + " & " + matchedUser.getUsername();
-        ChatRoom chatRoom = chatRoomService.createPrivateRoom(roomName, user);
-        
-        // 相手をルームに追加
-        chatRoomService.addUserToRoom(chatRoom.getId(), matchedUser);
-
-        // ランダムマッチを作成
-        RandomMatch randomMatch = new RandomMatch(user, matchedUser, chatRoom);
+        // ランダムマッチを作成（ルームは後で作成）
+        RandomMatch randomMatch = new RandomMatch(user, matchedUser);
         return Optional.of(randomMatchRepository.save(randomMatch));
+    }
+
+    /**
+     * マッチを取得
+     */
+    @Transactional(readOnly = true)
+    public Optional<RandomMatch> getMatch(Long matchId) {
+        return randomMatchRepository.findById(matchId);
     }
 
     /**
@@ -310,6 +319,40 @@ public class RandomMatchingService {
     }
 
     /**
+     * ユーザーの全マッチ履歴を取得（同じ相手をまとめて）
+     */
+    @Transactional(readOnly = true)
+    public List<GroupedMatchHistory> getGroupedMatchHistory(User user) {
+        List<RandomMatch> allMatches = randomMatchRepository.findAllMatchesForUser(user);
+        
+        // ユーザーごとにグループ化
+        Map<User, List<RandomMatch>> groupedMatches = allMatches.stream()
+            .collect(Collectors.groupingBy(match -> match.getOtherUser(user)));
+        
+        // GroupedMatchHistoryに変換
+        return groupedMatches.entrySet().stream()
+            .map(entry -> {
+                User otherUser = entry.getKey();
+                List<RandomMatch> matches = entry.getValue();
+                
+                // 最新のマッチを代表として使用
+                RandomMatch latestMatch = matches.stream()
+                    .max(Comparator.comparing(RandomMatch::getCreatedAt))
+                    .orElse(matches.get(0));
+                
+                return new GroupedMatchHistory(
+                    otherUser,
+                    matches.size(),
+                    latestMatch,
+                    matches.stream().mapToInt(m -> m.getMessageCount() != null ? m.getMessageCount() : 0).sum(),
+                    matches.stream().filter(m -> m.getStatus() == RandomMatch.MatchStatus.ACTIVE).count()
+                );
+            })
+            .sorted(Comparator.comparing((GroupedMatchHistory gh) -> gh.getLatestMatch().getCreatedAt()).reversed())
+            .collect(Collectors.toList());
+    }
+
+    /**
      * 完了したマッチ履歴を取得
      */
     @Transactional(readOnly = true)
@@ -375,13 +418,7 @@ public class RandomMatchingService {
      */
     @Transactional(readOnly = true)
     public boolean canStartRandomMatch(User user) {
-        // 既にアクティブなマッチがないかチェック
-        Optional<RandomMatch> existingMatch = randomMatchRepository.findActiveMatchForUser(user);
-        if (existingMatch.isPresent()) {
-            return false;
-        }
-
-        // プロフィール設定をチェック
+        // プロフィール設定をチェック（複数マッチング許可のため、アクティブマッチの存在チェックは削除）
         UserProfile profile = userProfileService.getOrCreateProfile(user);
         return profile.getAllowRandomMatching();
     }
@@ -426,6 +463,80 @@ public class RandomMatchingService {
 
         public void setTodayMatches(long todayMatches) {
             this.todayMatches = todayMatches;
+        }
+    }
+
+    /**
+     * グループ化されたマッチ履歴クラス
+     */
+    public static class GroupedMatchHistory {
+        private User otherUser;
+        private int totalMatches;
+        private RandomMatch latestMatch;
+        private int totalMessages;
+        private long activeMatches;
+
+        public GroupedMatchHistory(User otherUser, int totalMatches, RandomMatch latestMatch, 
+                                 int totalMessages, long activeMatches) {
+            this.otherUser = otherUser;
+            this.totalMatches = totalMatches;
+            this.latestMatch = latestMatch;
+            this.totalMessages = totalMessages;
+            this.activeMatches = activeMatches;
+        }
+
+        // ゲッター・セッター
+        public User getOtherUser() {
+            return otherUser;
+        }
+
+        public void setOtherUser(User otherUser) {
+            this.otherUser = otherUser;
+        }
+
+        public int getTotalMatches() {
+            return totalMatches;
+        }
+
+        public void setTotalMatches(int totalMatches) {
+            this.totalMatches = totalMatches;
+        }
+
+        public RandomMatch getLatestMatch() {
+            return latestMatch;
+        }
+
+        public void setLatestMatch(RandomMatch latestMatch) {
+            this.latestMatch = latestMatch;
+        }
+
+        public int getTotalMessages() {
+            return totalMessages;
+        }
+
+        public void setTotalMessages(int totalMessages) {
+            this.totalMessages = totalMessages;
+        }
+
+        public long getActiveMatches() {
+            return activeMatches;
+        }
+
+        public void setActiveMatches(long activeMatches) {
+            this.activeMatches = activeMatches;
+        }
+
+        // 表示用のヘルパーメソッド
+        public String getDisplayName() {
+            return otherUser.getUsername(); // シンプルにusernameを使用
+        }
+
+        public String getStatusDisplay() {
+            if (activeMatches > 0) {
+                return "アクティブ (" + activeMatches + ")";
+            } else {
+                return latestMatch.getStatus().getDisplayName();
+            }
         }
     }
 }

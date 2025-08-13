@@ -65,6 +65,14 @@ public class RandomMatch {
         this.user2 = user2;
         this.chatRoom = chatRoom;
     }
+    
+    // ルームなしでマッチングを作成（後でルームを設定）
+    public RandomMatch(User user1, User user2) {
+        this();
+        this.user1 = user1;
+        this.user2 = user2;
+        // chatRoomは後で設定
+    }
 
     // ゲッター・セッター
     public Long getId() {

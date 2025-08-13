@@ -231,6 +231,10 @@
                                 <i class="fas fa-times text-danger me-2"></i>
                                 ブロック済みユーザーは対象外
                             </li>
+                            <li class="mb-2">
+                                <i class="fas fa-plus text-info me-2"></i>
+                                複数のマッチングが同時に可能
+                            </li>
                             <li class="mb-0">
                                 <i class="fas fa-heart text-primary me-2"></i>
                                 あなたのプロフィール情報を基に最適な相手を選出
@@ -251,19 +255,25 @@
                             <div class="col-4">
                                 <div class="border-end">
                                     <h4 id="totalMatches" class="text-primary mb-0">-</h4>
-                                    <small class="text-muted">総マッチング数</small>
+                                    <small class="text-muted">完了済みマッチ</small>
                                 </div>
                             </div>
                             <div class="col-4">
                                 <div class="border-end">
                                     <h4 id="activeMatches" class="text-success mb-0">-</h4>
-                                    <small class="text-muted">アクティブ</small>
+                                    <small class="text-muted">あなたのアクティブ</small>
                                 </div>
                             </div>
                             <div class="col-4">
                                 <h4 id="avgMessages" class="text-info mb-0">-</h4>
                                 <small class="text-muted">平均メッセージ数</small>
                             </div>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                マッチ時はルーム未作成、チャット開始で作成または既存ルームに移動
+                            </small>
                         </div>
                     </div>
                 </div>
@@ -296,7 +306,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let currentMatchId = null;
-        let currentRoomId = null;
 
         // 統計情報を読み込み
         loadStats();
@@ -335,7 +344,6 @@
                 if (data.success) {
                     // マッチング成功
                     currentMatchId = data.matchId;
-                    currentRoomId = data.roomId;
                     
                     showMatchResult(data.matchedUser);
                     statusDiv.classList.add('d-none');
@@ -392,9 +400,29 @@
             document.getElementById('compatibilityFactors').innerHTML = factorsHtml;
 
             // チャット開始ボタンのイベント
-            document.getElementById('startChatBtn').addEventListener('click', () => {
-                if (currentRoomId) {
-                    window.location.href = `/chat?room=${currentRoomId}`;
+            document.getElementById('startChatBtn').addEventListener('click', async () => {
+                if (currentMatchId) {
+                    try {
+                        // チャット開始用のエンドポイントを呼び出し
+                        const response = await fetch(`/random-matching/start-chat/${currentMatchId}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            // ルームIDを取得してチャットページに移動
+                            window.location.href = `/chat?room=${data.roomId}`;
+                        } else {
+                            alert('チャット開始に失敗しました: ' + data.message);
+                        }
+                    } catch (error) {
+                        console.error('チャット開始エラー:', error);
+                        alert('チャット開始に失敗しました');
+                    }
                 }
             });
 

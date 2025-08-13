@@ -129,7 +129,7 @@
                     <h2 class="mb-0">
                         <i class="fas fa-history me-3"></i>ランダムマッチング履歴
                     </h2>
-                    <p class="mb-0 mt-2 opacity-75">過去のマッチングとチャット履歴を確認できます</p>
+                    <p class="mb-0 mt-2 opacity-75">過去のマッチングとチャット履歴を確認できます（複数同時マッチング対応）</p>
                 </div>
                 <div class="col-auto">
                     <a href="/random-matching" class="btn btn-light btn-custom">
@@ -142,58 +142,71 @@
         <!-- マッチング履歴 -->
         <div class="row">
             <div class="col-12">
-                <div th:if="${#lists.isEmpty(matchHistory)}" class="empty-state">
+                <div th:if="${#lists.isEmpty(groupedHistory)}" class="empty-state">
                     <i class="fas fa-search"></i>
                     <h4>まだマッチング履歴がありません</h4>
-                    <p>ランダムマッチングを開始して、新しい出会いを見つけましょう！</p>
+                    <p>ランダムマッチングを開始して、新しい出会いを見つけましょう！<br>複数のマッチングを同時に楽しむことができます。</p>
                     <a href="/random-matching" class="btn btn-primary-custom btn-custom mt-3">
                         <i class="fas fa-random me-2"></i>マッチングを開始
                     </a>
                 </div>
 
-                <div th:if="${!#lists.isEmpty(matchHistory)}">
+                <div th:if="${!#lists.isEmpty(groupedHistory)}">
                     <div class="row">
-                        <div class="col-lg-4 col-md-6 mb-4" th:each="match : ${matchHistory}">
+                        <div class="col-lg-4 col-md-6 mb-4" th:each="grouped : ${groupedHistory}">
                             <div class="card match-card">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start mb-3">
                                         <h6 class="card-title mb-0">
                                             <i class="fas fa-user-circle me-2"></i>
-                                            <span th:text="${match.user1.username == #authentication.name ? match.user2.username : match.user1.username}">マッチング相手</span>
+                                            <span th:text="${grouped.displayName}">マッチング相手</span>
                                         </h6>
-                                        <span th:class="'match-status ' + (${match.status == 'COMPLETED'} ? 'status-completed' : (${match.status == 'ACTIVE'} ? 'status-active' : 'status-ended'))"
-                                              th:text="${match.status == 'COMPLETED' ? '完了' : (match.status == 'ACTIVE' ? 'アクティブ' : '終了')}">
+                                        <span th:class="'match-status ' + (${grouped.activeMatches > 0} ? 'status-active' : 'status-completed')"
+                                              th:text="${grouped.statusDisplay}">
                                             完了
                                         </span>
                                     </div>
                                     
-                                    <div class="match-date mb-3">
-                                        <i class="fas fa-clock me-1"></i>
-                                        <span th:text="${#temporals.format(match.createdAt, 'yyyy年MM月dd日 HH:mm')}">2024年01月01日 12:00</span>
+                                    <div class="match-info mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="text-muted">
+                                                <i class="fas fa-clock me-1"></i>最新マッチ
+                                            </span>
+                                            <span th:text="${#temporals.format(grouped.latestMatch.createdAt, 'yyyy年MM月dd日')}">2024年01月01日</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="text-muted">
+                                                <i class="fas fa-repeat me-1"></i>総マッチ数
+                                            </span>
+                                            <span class="badge bg-primary" th:text="${grouped.totalMatches}">1</span>
+                                        </div>
                                     </div>
                                     
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <span class="message-count">
                                             <i class="fas fa-comments me-1"></i>
-                                            <span th:text="${match.messageCount != null ? match.messageCount : 0}">0</span> メッセージ
+                                            <span th:text="${grouped.totalMessages}">0</span> メッセージ
                                         </span>
-                                        <span th:if="${match.endedAt != null}" class="text-muted small">
-                                            <i class="fas fa-flag-checkered me-1"></i>
-                                            <span th:text="${#temporals.format(match.endedAt, 'MM/dd HH:mm')}">01/01 12:00</span> 終了
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <span class="message-count">
+                                            <i class="fas fa-comments me-1"></i>
+                                            <span th:text="${grouped.totalMessages}">0</span> メッセージ
                                         </span>
                                     </div>
                                     
                                     <div class="d-grid gap-2">
-                                        <a th:if="${match.chatRoom != null}" 
-                                           th:href="@{'/chat?room=' + ${match.chatRoom.id}}" 
+                                        <a th:if="${grouped.latestMatch.chatRoom != null}" 
+                                           th:href="@{'/chat?room=' + ${grouped.latestMatch.chatRoom.id}}" 
                                            class="btn btn-outline-primary btn-sm">
                                             <i class="fas fa-eye me-1"></i>チャットを見る
                                         </a>
-                                        <button th:if="${match.status == 'ACTIVE'}" 
-                                                class="btn btn-outline-danger btn-sm"
-                                                th:onclick="'endMatch(' + ${match.id} + ')'">
-                                            <i class="fas fa-stop me-1"></i>マッチング終了
-                                        </button>
+                                        <a th:if="${grouped.activeMatches > 0}" 
+                                           th:href="@{'/random-matching/start-chat/' + ${grouped.latestMatch.id}}" 
+                                           class="btn btn-primary-custom btn-sm">
+                                            <i class="fas fa-play me-1"></i>チャット開始
+                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -204,7 +217,7 @@
         </div>
 
         <!-- 統計情報 -->
-        <div th:if="${!#lists.isEmpty(matchHistory)}" class="row mt-5">
+        <div th:if="${!#lists.isEmpty(groupedHistory)}" class="row mt-5">
             <div class="col-12">
                 <div class="card match-card">
                     <div class="card-body">
@@ -215,28 +228,28 @@
                             <div class="col-md-3 col-6 mb-3">
                                 <div class="text-primary">
                                     <i class="fas fa-handshake fa-2x mb-2"></i>
-                                    <h4 th:text="${#lists.size(matchHistory)}">0</h4>
+                                    <h4 th:text="${#aggregates.sum(groupedHistory.![totalMatches])}">0</h4>
                                     <small class="text-muted">総マッチング数</small>
                                 </div>
                             </div>
                             <div class="col-md-3 col-6 mb-3">
                                 <div class="text-success">
-                                    <i class="fas fa-check-circle fa-2x mb-2"></i>
-                                    <h4 th:text="${#lists.size(matchHistory.?[status == 'COMPLETED'])}">0</h4>
-                                    <small class="text-muted">完了したマッチ</small>
+                                    <i class="fas fa-users fa-2x mb-2"></i>
+                                    <h4 th:text="${#lists.size(groupedHistory)}">0</h4>
+                                    <small class="text-muted">マッチしたユーザー</small>
                                 </div>
                             </div>
                             <div class="col-md-3 col-6 mb-3">
                                 <div class="text-info">
                                     <i class="fas fa-comments fa-2x mb-2"></i>
-                                    <h4 th:text="${#aggregates.sum(matchHistory.![messageCount != null ? messageCount : 0])}">0</h4>
+                                    <h4 th:text="${#aggregates.sum(groupedHistory.![totalMessages])}">0</h4>
                                     <small class="text-muted">総メッセージ数</small>
                                 </div>
                             </div>
                             <div class="col-md-3 col-6 mb-3">
                                 <div class="text-warning">
                                     <i class="fas fa-clock fa-2x mb-2"></i>
-                                    <h4 th:text="${#lists.size(matchHistory.?[status == 'ACTIVE'])}">0</h4>
+                                    <h4 th:text="${#aggregates.sum(groupedHistory.![activeMatches])}">0</h4>
                                     <small class="text-muted">アクティブなマッチ</small>
                                 </div>
                             </div>
@@ -248,33 +261,5 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function endMatch(matchId) {
-            if (!confirm('本当にこのマッチングを終了しますか？')) {
-                return;
-            }
-            
-            fetch(`/random-matching/end/${matchId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('マッチングを終了しました');
-                    location.reload();
-                } else {
-                    alert('エラー: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('マッチング終了に失敗しました');
-            });
-        }
-    </script>
 </body>
 </html>
