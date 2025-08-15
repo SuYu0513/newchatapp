@@ -26,15 +26,25 @@ public class ChatRoomController {
      * チャットルーム一覧ページ
      */
     @GetMapping
-    public String roomList(Model model, Principal principal) {
+    public String roomList(Model model, Principal principal, 
+                          @RequestParam(value = "search", required = false) String searchKeyword) {
         if (principal != null) {
             // ユーザーが参加しているルーム
             List<ChatRoom> userRooms = chatRoomService.getUserChatRooms(principal.getName());
-            // 全てのパブリックルーム
-            List<ChatRoom> allRooms = chatRoomService.getAllChatRooms();
+            
+            // 参加可能なパブリックルーム（検索キーワードがあれば検索結果、なければ全て）
+            List<ChatRoom> availableRooms;
+            if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
+                availableRooms = chatRoomService.searchAvailablePublicRooms(principal.getName(), searchKeyword);
+                model.addAttribute("searchKeyword", searchKeyword);
+                model.addAttribute("searchResult", true);
+            } else {
+                availableRooms = chatRoomService.getAvailablePublicRooms(principal.getName());
+                model.addAttribute("searchResult", false);
+            }
             
             model.addAttribute("userRooms", userRooms);
-            model.addAttribute("allRooms", allRooms);
+            model.addAttribute("availableRooms", availableRooms);
             model.addAttribute("username", principal.getName());
         }
         return "room-list";
@@ -80,6 +90,7 @@ public class ChatRoomController {
                 chatRoomService.joinChatRoom(roomId, authentication.getName());
                 response.put("success", true);
                 response.put("message", "チャットルームに参加しました");
+                response.put("redirectUrl", "/chat?room=" + roomId);
             } catch (Exception e) {
                 response.put("success", false);
                 response.put("message", "参加に失敗しました: " + e.getMessage());

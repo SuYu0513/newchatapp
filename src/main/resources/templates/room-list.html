@@ -209,6 +209,38 @@
             </a>
         </div>
 
+        <!-- パブリックルーム検索フォーム -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <form th:action="@{/rooms}" method="get" class="d-flex gap-2">
+                            <div class="flex-grow-1">
+                                <input type="text" 
+                                       name="search" 
+                                       class="form-control" 
+                                       placeholder="参加可能なパブリックルームを検索..." 
+                                       th:value="${searchKeyword}">
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-1"></i>検索
+                            </button>
+                            <a th:href="@{/rooms}" class="btn btn-outline-secondary" th:if="${searchResult}">
+                                <i class="fas fa-times me-1"></i>クリア
+                            </a>
+                        </form>
+                        
+                        <div th:if="${searchResult}" class="mt-2">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                「<span th:text="${searchKeyword}"></span>」の検索結果
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- 参加中のルーム -->
         <div class="row mb-4" th:if="${userRooms != null and !userRooms.isEmpty()}">
             <div class="col-12">
@@ -261,19 +293,37 @@
             </div>
         </div>
 
-        <!-- 全てのパブリックルーム -->
+        <!-- 参加可能なパブリックルーム -->
         <div class="row">
             <div class="col-12">
                 <h4 class="text-secondary mb-3">
-                    <i class="fas fa-globe me-2"></i>パブリックルーム
+                    <i class="fas fa-globe me-2"></i>
+                    <span th:if="${searchResult}">検索結果</span>
+                    <span th:unless="${searchResult}">参加可能なパブリックルーム</span>
                 </h4>
-                <div class="row">
-                    <div class="col-md-4 mb-3" th:each="room : ${allRooms}" 
-                         th:if="${room.type.name() == 'GROUP'}">
+                
+                <!-- 参加可能なルームがない場合 -->
+                <div th:if="${availableRooms == null or availableRooms.isEmpty()}" class="text-center mt-4 mb-4">
+                    <div class="card">
+                        <div class="card-body py-5">
+                            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted" th:if="${searchResult}">検索条件に一致するルームが見つかりませんでした</h5>
+                            <h5 class="text-muted" th:unless="${searchResult}">参加可能なパブリックルームはありません</h5>
+                            <p class="text-muted" th:if="${searchResult}">別のキーワードで検索してみてください。</p>
+                            <p class="text-muted" th:unless="${searchResult}">新しいルームを作成してみましょう！</p>
+                            <a href="/rooms/create" class="btn btn-primary mt-2" th:unless="${searchResult}">
+                                <i class="fas fa-plus me-1"></i>新しいルームを作成
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row" th:if="${availableRooms != null and !availableRooms.isEmpty()}">
+                    <div class="col-md-4 mb-3" th:each="room : ${availableRooms}">
                         <div class="card room-card h-100 position-relative">
                             <div class="room-type-badge">
                                 <span class="badge bg-success">
-                                    <i class="fas fa-users me-1"></i>グループ
+                                    <i class="fas fa-users me-1"></i>参加可能
                                 </span>
                             </div>
                             <div class="card-body">
@@ -290,9 +340,10 @@
                                 </p>
                             </div>
                             <div class="card-footer bg-transparent">
-                                <button class="btn btn-outline-primary w-100" 
-                                        onclick="joinAndGoToChat(this)" th:data-room-id="${room.id}">
-                                    <i class="fas fa-plus me-1"></i>参加してチャット
+                                <button class="btn btn-success w-100" 
+                                        onclick="joinAndGoToChat(this)" 
+                                        th:data-room-id="${room.id}">
+                                    <i class="fas fa-plus me-1"></i>参加してチャット開始
                                 </button>
                             </div>
                         </div>
@@ -323,6 +374,11 @@
         function joinAndGoToChat(button) {
             const roomId = button.dataset.roomId;
             
+            // ボタンを無効化してローディング状態にする
+            const originalText = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>参加中...';
+            
             // ルームに参加
             fetch(`/rooms/${roomId}/join`, {
                 method: 'POST',
@@ -333,13 +389,23 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // 参加成功後、チャット画面へ
-                    window.location.href = `/chat?room=${roomId}`;
+                    // 成功時はチャット画面にリダイレクト
+                    if (data.redirectUrl) {
+                        window.location.href = data.redirectUrl;
+                    } else {
+                        window.location.href = `/chat?room=${roomId}`;
+                    }
                 } else {
+                    // エラー時はボタンを元に戻す
+                    button.disabled = false;
+                    button.innerHTML = originalText;
                     alert('参加に失敗しました: ' + data.message);
                 }
             })
             .catch(error => {
+                // エラー時はボタンを元に戻す
+                button.disabled = false;
+                button.innerHTML = originalText;
                 alert('エラーが発生しました: ' + error.message);
             });
         }

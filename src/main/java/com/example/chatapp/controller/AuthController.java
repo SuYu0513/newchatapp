@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 
 @Controller
@@ -28,6 +29,7 @@ public class AuthController {
     public String loginPage(@RequestParam(value = "error", required = false) String error,
                            @RequestParam(value = "logout", required = false) String logout,
                            @RequestParam(value = "success", required = false) String success,
+                           HttpSession session,
                            Model model) {
         if (error != null) {
             model.addAttribute("error", "ユーザー名またはパスワードが正しくありません");
@@ -38,6 +40,12 @@ public class AuthController {
         if (success != null) {
             model.addAttribute("success", "登録が完了しました。ログインしてください。");
         }
+        
+        // デバッグモード情報を取得してテンプレートに渡す
+        Boolean debugMode = (Boolean) session.getAttribute("debugMode");
+        boolean isDebugMode = debugMode != null && debugMode;
+        model.addAttribute("debugMode", isDebugMode);
+        
         return "login";
     }
 

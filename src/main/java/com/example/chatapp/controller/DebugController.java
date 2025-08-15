@@ -8,8 +8,11 @@ import com.example.chatapp.repository.ChatRoomRepository;
 import com.example.chatapp.repository.UserRepository;
 import com.example.chatapp.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
 import java.util.HashMap;
@@ -31,6 +34,7 @@ public class DebugController {
     private MessageService messageService;
 
     @GetMapping("/debug/data")
+    @ResponseBody
     public Map<String, Object> debugData() {
         Map<String, Object> debug = new HashMap<>();
         
@@ -53,6 +57,7 @@ public class DebugController {
     }
 
     @GetMapping("/debug/history")
+    @ResponseBody
     public Map<String, Object> debugHistory() {
         Map<String, Object> debug = new HashMap<>();
         

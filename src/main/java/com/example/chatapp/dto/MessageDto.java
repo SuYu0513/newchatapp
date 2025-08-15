@@ -11,6 +11,8 @@ public class MessageDto {
     private Long chatRoomId;
     private String senderUsername;
     private Long userId; // ユーザーID追加
+    private String senderAvatarUrl; // 送信者のアバターURL
+    private String senderDisplayName; // 送信者の表示名
     private String timestamp;
     private String type; // JOIN, LEAVE, CHAT
     
@@ -88,5 +90,21 @@ public class MessageDto {
     
     public void setType(String type) {
         this.type = type;
+    }
+    
+    public String getSenderAvatarUrl() {
+        return senderAvatarUrl;
+    }
+    
+    public void setSenderAvatarUrl(String senderAvatarUrl) {
+        this.senderAvatarUrl = senderAvatarUrl;
+    }
+    
+    public String getSenderDisplayName() {
+        return senderDisplayName;
+    }
+    
+    public void setSenderDisplayName(String senderDisplayName) {
+        this.senderDisplayName = senderDisplayName;
     }
 }

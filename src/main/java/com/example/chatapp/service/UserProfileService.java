@@ -83,6 +83,11 @@ public class UserProfileService {
      * アバター画像のアップロード
      */
     public UserProfile uploadAvatar(User user, MultipartFile file) throws IOException {
+        System.out.println("=== アバターアップロード開始 ===");
+        System.out.println("ファイル名: " + file.getOriginalFilename());
+        System.out.println("ファイルサイズ: " + file.getSize());
+        System.out.println("コンテンツタイプ: " + file.getContentType());
+        
         if (file.isEmpty()) {
             throw new IllegalArgumentException("ファイルが選択されていません");
         }
@@ -99,6 +104,8 @@ public class UserProfileService {
         }
 
         String extension = getFileExtension(originalFilename).toLowerCase();
+        System.out.println("ファイル拡張子: " + extension);
+        
         boolean isValidExtension = false;
         for (String allowedExt : ALLOWED_EXTENSIONS) {
             if (extension.equals(allowedExt)) {
@@ -113,22 +120,33 @@ public class UserProfileService {
 
         // アップロードディレクトリの作成
         Path uploadPath = Paths.get(UPLOAD_DIR);
+        System.out.println("アップロードディレクトリ: " + uploadPath.toAbsolutePath());
+        
         if (!Files.exists(uploadPath)) {
+            System.out.println("ディレクトリを作成中...");
             Files.createDirectories(uploadPath);
         }
 
         // ユニークなファイル名を生成
         String filename = user.getId() + "_" + UUID.randomUUID().toString() + extension;
         Path filePath = uploadPath.resolve(filename);
+        System.out.println("保存先ファイルパス: " + filePath.toAbsolutePath());
 
         // ファイルを保存
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+        System.out.println("ファイル保存完了");
 
         // プロフィールのアバターURLを更新
         UserProfile profile = getOrCreateProfile(user);
-        profile.setAvatarUrl("/uploads/avatars/" + filename);
+        String avatarUrl = "/uploads/avatars/" + filename;
+        profile.setAvatarUrl(avatarUrl);
+        System.out.println("アバターURL設定: " + avatarUrl);
         
-        return userProfileRepository.save(profile);
+        UserProfile savedProfile = userProfileRepository.save(profile);
+        System.out.println("プロフィール保存完了");
+        System.out.println("=== アバターアップロード終了 ===");
+        
+        return savedProfile;
     }
 
     /**

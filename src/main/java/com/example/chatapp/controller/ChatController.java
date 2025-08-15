@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
@@ -45,13 +46,17 @@ public class ChatController {
     private boolean debugEnabled;
 
     @GetMapping("/chat")
-    public String chat(Model model, Principal principal, HttpServletRequest request, 
+    public String chat(Model model, Principal principal, HttpServletRequest request, HttpSession session,
                       @RequestParam(value = "room", required = false) Long room) {
         if (debugEnabled) {
             System.out.println("=== チャットページアクセス ===");
             System.out.println("ユーザー: " + (principal != null ? principal.getName() : "null"));
             System.out.println("要求されたルーム: " + room);
         }
+        
+        // セッションからデバッグモードを取得
+        Boolean debugMode = (Boolean) session.getAttribute("debugMode");
+        boolean isDebugMode = debugMode != null && debugMode;
         
         if (principal != null) {
             String username = principal.getName();
@@ -67,6 +72,18 @@ public class ChatController {
             } catch (Exception e) {
                 if (debugEnabled) {
                     System.err.println("オンライン状態設定エラー: " + e.getMessage());
+                }
+            }
+            
+            // ユーザーをメインルームに自動参加させる
+            try {
+                chatRoomService.ensureUserInMainRoom(username);
+                if (debugEnabled) {
+                    System.out.println("メインルーム自動参加を確認: " + username);
+                }
+            } catch (Exception e) {
+                if (debugEnabled) {
+                    System.err.println("メインルーム自動参加エラー: " + e.getMessage());
                 }
             }
             
@@ -97,6 +114,7 @@ public class ChatController {
             model.addAttribute("currentRoom", currentRoom);
             model.addAttribute("userRooms", userRooms);
             model.addAttribute("debugEnabled", debugEnabled);
+            model.addAttribute("debugMode", isDebugMode);
         } else {
             if (debugEnabled) {
                 System.out.println("未ログインユーザー");
@@ -107,6 +125,7 @@ public class ChatController {
             model.addAttribute("currentRoom", null);
             model.addAttribute("userRooms", List.of());
             model.addAttribute("debugEnabled", debugEnabled);
+            model.addAttribute("debugMode", isDebugMode);
         }
         
         return "chat";
@@ -190,20 +209,7 @@ public class ChatController {
     }
 
     private Long getDefaultChatRoomId() {
-        try {
-            // 最初のチャットルームのIDを返す（簡易実装）
-            List<com.example.chatapp.entity.ChatRoom> allRooms = chatRoomService.getAllChatRooms();
-            if (!allRooms.isEmpty()) {
-                return allRooms.get(0).getId();
-            } else {
-                // ルームが存在しない場合は1を返す
-                return 1L;
-            }
-        } catch (Exception e) {
-            if (debugEnabled) {
-                System.err.println("デフォルトルームID取得エラー: " + e.getMessage());
-            }
-            return 1L;
-        }
+        // メインルームのIDは固定で1
+        return 1L;
     }
 }

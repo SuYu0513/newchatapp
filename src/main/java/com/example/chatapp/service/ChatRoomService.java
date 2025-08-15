@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ChatRoomService {
@@ -40,6 +41,99 @@ public class ChatRoomService {
             return chatRoomRepository.findByUsersContaining(user.get());
         }
         return List.of();
+    }
+
+    /**
+     * ユーザーが参加していないパブリックルームを取得
+     */
+    public List<ChatRoom> getAvailablePublicRooms(String username) {
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (!userOpt.isPresent()) {
+            return List.of();
+        }
+        
+        User user = userOpt.get();
+        List<ChatRoom> allRooms = chatRoomRepository.findAll();
+        List<ChatRoom> userRooms = chatRoomRepository.findByUsersContaining(user);
+        
+        // パブリック（GROUP）ルームかつユーザーが参加していないもの
+        return allRooms.stream()
+                .filter(room -> room.getType() == ChatRoom.ChatRoomType.GROUP)
+                .filter(room -> !userRooms.contains(room))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * ルーム名で検索（パブリックルームのみ、未参加のもの）
+     */
+    public List<ChatRoom> searchAvailablePublicRooms(String username, String keyword) {
+        List<ChatRoom> availableRooms = getAvailablePublicRooms(username);
+        
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return availableRooms;
+        }
+        
+        String lowerKeyword = keyword.toLowerCase();
+        return availableRooms.stream()
+                .filter(room -> room.getName().toLowerCase().contains(lowerKeyword))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * メインルームを取得（なければ作成）
+     * メインルームのIDは1を目指すが、名前でも検索する
+     */
+    public ChatRoom getOrCreateMainRoom() {
+        // まずID=1のルームを探す
+        Optional<ChatRoom> mainRoomById = chatRoomRepository.findById(1L);
+        if (mainRoomById.isPresent()) {
+            return mainRoomById.get();
+        }
+        
+        // ID=1がない場合は名前で検索
+        List<ChatRoom> allRooms = chatRoomRepository.findAll();
+        Optional<ChatRoom> mainRoomByName = allRooms.stream()
+                .filter(room -> "メインルーム".equals(room.getName()))
+                .findFirst();
+        
+        if (mainRoomByName.isPresent()) {
+            return mainRoomByName.get();
+        }
+        
+        // メインルームが存在しない場合は作成
+        ChatRoom newMainRoom = new ChatRoom();
+        newMainRoom.setName("メインルーム");
+        newMainRoom.setType(ChatRoom.ChatRoomType.GROUP);
+        // システム管理者として作成（最初のユーザーまたは固定の管理者）
+        Optional<User> firstUser = userRepository.findAll().stream().findFirst();
+        if (firstUser.isPresent()) {
+            newMainRoom.setCreatedBy(firstUser.get());
+        }
+        
+        return chatRoomRepository.save(newMainRoom);
+    }
+
+    /**
+     * ユーザーをメインルームに自動参加させる
+     */
+    public void ensureUserInMainRoom(String username) {
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (!userOpt.isPresent()) {
+            return;
+        }
+        
+        User user = userOpt.get();
+        ChatRoom mainRoom = getOrCreateMainRoom();
+        
+        // ユーザーがメインルームに参加していない場合は参加させる
+        if (!mainRoom.getUsers().contains(user)) {
+            mainRoom.getUsers().add(user);
+            chatRoomRepository.save(mainRoom);
+            
+            if (debugEnabled) {
+                System.out.println("ユーザー " + username + " をメインルームに自動参加させました");
+            }
+        }
     }
 
     /**

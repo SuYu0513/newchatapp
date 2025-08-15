@@ -9,8 +9,14 @@
     <link href="/css/kawaii-theme.css" rel="stylesheet">
     <style>
         /* フレンド管理専用スタイル */
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #2d3748;
+        }
+        
         .main-container {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(10px);
             border-radius: 20px;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
@@ -107,12 +113,12 @@
         .friend-name {
             font-size: 1.2rem;
             font-weight: 600;
-            color: #2d3748;
+            color: #2d3748 !important;
             margin-bottom: 5px;
         }
 
         .friend-status {
-            color: #718096;
+            color: #718096 !important;
             font-size: 0.9rem;
         }
 
@@ -134,7 +140,7 @@
         }
 
         .btn-primary-custom {
-            background: var(--primary-gradient);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
 
@@ -144,33 +150,33 @@
         }
 
         .btn-success-custom {
-            background: var(--success-gradient);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
 
         .btn-success-custom:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
 
         .btn-danger-custom {
-            background: var(--danger-gradient);
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
             color: white;
         }
 
         .btn-danger-custom:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(250, 112, 154, 0.4);
+            box-shadow: 0 5px 15px rgba(238, 90, 82, 0.4);
         }
 
         .btn-warning-custom {
-            background: var(--warning-gradient);
-            color: #2d3748;
+            background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
+            color: white;
         }
 
         .btn-warning-custom:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(168, 237, 234, 0.4);
+            box-shadow: 0 5px 15px rgba(251, 140, 0, 0.4);
         }
 
         .empty-state {
@@ -212,12 +218,12 @@
         }
 
         .btn-primary-custom {
-            background: var(--primary-gradient);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
 
         .btn-success-custom {
-            background: var(--success-gradient);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
 
@@ -574,10 +580,13 @@
                 container.innerHTML = friends.map(friend => `
                     <div class="friend-card d-flex align-items-center" data-friend-id="${friend.id}">
                         <div class="friend-avatar">
-                            ${friend.username.charAt(0).toUpperCase()}
+                            ${friend.avatarUrl ? 
+                                `<img src="${friend.avatarUrl}" alt="アバター" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">` :
+                                `<div style="width: 50px; height: 50px; border-radius: 50%; background: var(--primary-gradient); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem; font-weight: bold;">${friend.username.charAt(0).toUpperCase()}</div>`
+                            }
                         </div>
                         <div class="friend-info">
-                            <div class="friend-name">${this.escapeHtml(friend.username)}</div>
+                            <div class="friend-name" style="color: #2d3748 !important; font-weight: 600;">${this.escapeHtml(friend.displayName || friend.username)}</div>
                             <div class="friend-status d-flex align-items-center" id="status-${friend.id}">
                                 <span class="status-indicator me-2" style="
                                     width: 12px; 
@@ -587,7 +596,7 @@
                                     background-color: ${this.getStatusColor(friend.status)};
                                     box-shadow: 0 0 6px ${this.getStatusColor(friend.status)}aa;
                                 "></span>
-                                <span class="status-text">${this.getStatusText(friend.status)}</span>
+                                <span class="status-text" style="color: #718096 !important;">${this.getStatusText(friend.status)}</span>
                             </div>
                         </div>
                         <div class="friend-actions">
@@ -624,11 +633,14 @@
                 container.innerHTML = requests.map(request => `
                     <div class="friend-card d-flex align-items-center">
                         <div class="friend-avatar">
-                            ${request.addressee.username.charAt(0).toUpperCase()}
+                            ${request.addressee.avatarUrl ? 
+                                `<img src="${request.addressee.avatarUrl}" alt="アバター" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">` :
+                                `<div style="width: 50px; height: 50px; border-radius: 50%; background: var(--primary-gradient); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem; font-weight: bold;">${request.addressee.username.charAt(0).toUpperCase()}</div>`
+                            }
                         </div>
                         <div class="friend-info">
-                            <div class="friend-name">${this.escapeHtml(request.addressee.username)}</div>
-                            <div class="friend-status">申請中</div>
+                            <div class="friend-name" style="color: #2d3748 !important; font-weight: 600;">${this.escapeHtml(request.addressee.displayName || request.addressee.username)}</div>
+                            <div class="friend-status" style="color: #718096 !important;">申請中</div>
                         </div>
                         <div class="friend-actions">
                             <button class="btn btn-custom btn-info-custom btn-sm" onclick="friendManager.viewProfile(${request.addressee.id})">
@@ -656,11 +668,14 @@
                 container.innerHTML = requests.map(request => `
                     <div class="friend-card d-flex align-items-center">
                         <div class="friend-avatar">
-                            ${request.requester.username.charAt(0).toUpperCase()}
+                            ${request.requester.avatarUrl ? 
+                                `<img src="${request.requester.avatarUrl}" alt="アバター" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">` :
+                                `<div style="width: 50px; height: 50px; border-radius: 50%; background: var(--primary-gradient); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem; font-weight: bold;">${request.requester.username.charAt(0).toUpperCase()}</div>`
+                            }
                         </div>
                         <div class="friend-info">
-                            <div class="friend-name">${this.escapeHtml(request.requester.username)}</div>
-                            <div class="friend-status">フレンド申請</div>
+                            <div class="friend-name" style="color: #2d3748 !important; font-weight: 600;">${this.escapeHtml(request.requester.displayName || request.requester.username)}</div>
+                            <div class="friend-status" style="color: #718096 !important;">フレンド申請</div>
                         </div>
                         <div class="friend-actions">
                             <button class="btn btn-custom btn-info-custom btn-sm" onclick="friendManager.viewProfile(${request.requester.id})">

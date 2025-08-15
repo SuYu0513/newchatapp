@@ -380,7 +380,7 @@ public class UserProfile {
     public String getAvatarUrlOrDefault() {
         return avatarUrl != null && !avatarUrl.isEmpty() 
             ? avatarUrl 
-            : "/images/default-avatar.png";
+            : "/images/default-avatar.svg";
     }
 
     public String getDisplayNameOrUsername() {

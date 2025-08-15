@@ -3,10 +3,12 @@ package com.example.chatapp.controller;
 import com.example.chatapp.entity.User;
 import com.example.chatapp.entity.Friendship;
 import com.example.chatapp.entity.ChatRoom;
+import com.example.chatapp.entity.UserProfile;
 import com.example.chatapp.service.UserService;
 import com.example.chatapp.service.FriendshipService;
 import com.example.chatapp.service.ChatRoomService;
 import com.example.chatapp.service.OnlineUserService;
+import com.example.chatapp.service.UserProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +37,9 @@ public class FriendController {
     
     @Autowired
     private OnlineUserService onlineUserService;
+    
+    @Autowired
+    private UserProfileService userProfileService;
 
     // フレンド一覧ページ
     @GetMapping
@@ -556,9 +561,15 @@ public class FriendController {
                     User friend = friendship.getRequester().equals(currentUserOpt.get()) 
                         ? friendship.getAddressee() : friendship.getRequester();
                     
+                    // UserProfileを取得してアバター情報を含める
+                    UserProfile friendProfile = userProfileService.getOrCreateProfile(friend);
+                    
                     Map<String, Object> friendData = new HashMap<>();
                     friendData.put("id", friend.getId());
                     friendData.put("username", friend.getUsername());
+                    friendData.put("displayName", friendProfile.getDisplayName());
+                    friendData.put("avatarUrl", friendProfile.getAvatarUrlOrDefault());
+                    
                     // OnlineUserServiceを使用してリアルタイムのオンライン状態を取得
                     String onlineStatus = onlineUserService.getUserStatusById(friend.getId());
                     friendData.put("online", "online".equals(onlineStatus));
@@ -593,12 +604,16 @@ public class FriendController {
             List<Friendship> sentRequests = friendshipService.getPendingRequestsByRequester(currentUserOpt.get());
             List<Map<String, Object>> result = sentRequests.stream()
                 .map(friendship -> {
+                    UserProfile addresseeProfile = userProfileService.getOrCreateProfile(friendship.getAddressee());
+                    
                     Map<String, Object> requestData = new HashMap<>();
                     requestData.put("id", friendship.getId());
                     
                     Map<String, Object> addresseeData = new HashMap<>();
                     addresseeData.put("id", friendship.getAddressee().getId());
                     addresseeData.put("username", friendship.getAddressee().getUsername());
+                    addresseeData.put("displayName", addresseeProfile.getDisplayName());
+                    addresseeData.put("avatarUrl", addresseeProfile.getAvatarUrlOrDefault());
                     requestData.put("addressee", addresseeData);
                     
                     return requestData;
@@ -666,12 +681,16 @@ public class FriendController {
             List<Friendship> requests = friendshipService.getPendingRequestsByAddressee(currentUserOpt.get());
             List<Map<String, Object>> result = requests.stream()
                 .map(friendship -> {
+                    UserProfile requesterProfile = userProfileService.getOrCreateProfile(friendship.getRequester());
+                    
                     Map<String, Object> requestData = new HashMap<>();
                     requestData.put("id", friendship.getId());
                     
                     Map<String, Object> requesterData = new HashMap<>();
                     requesterData.put("id", friendship.getRequester().getId());
                     requesterData.put("username", friendship.getRequester().getUsername());
+                    requesterData.put("displayName", requesterProfile.getDisplayName());
+                    requesterData.put("avatarUrl", requesterProfile.getAvatarUrlOrDefault());
                     requestData.put("requester", requesterData);
                     
                     return requestData;

@@ -27,6 +27,9 @@ public class MessageService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private UserProfileService userProfileService;
+
     @Value("${app.debug.enabled:false}")
     private boolean debugEnabled;
 
@@ -208,9 +211,21 @@ public class MessageService {
         MessageDto dto = new MessageDto();
         dto.setContent(message.getContent());
         dto.setSenderUsername(message.getUser().getUsername());
-        dto.setUserId(message.getUser().getId()); // ユーザーID追加
+        dto.setUserId(message.getUser().getId());
         dto.setTimestamp(message.getSentAt().toString());
         dto.setChatRoomId(message.getChatRoom().getId());
+        
+        // ユーザープロフィール情報を取得してアバターと表示名を設定
+        try {
+            com.example.chatapp.entity.UserProfile profile = userProfileService.getOrCreateProfile(message.getUser());
+            dto.setSenderAvatarUrl(profile.getAvatarUrlOrDefault());
+            dto.setSenderDisplayName(profile.getDisplayNameOrUsername());
+        } catch (Exception e) {
+            // プロフィール取得エラーの場合はデフォルト値を設定
+            dto.setSenderAvatarUrl("/images/default-avatar.svg");
+            dto.setSenderDisplayName(message.getUser().getUsername());
+        }
+        
         return dto;
     }
 }

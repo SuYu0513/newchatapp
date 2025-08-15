@@ -151,18 +151,49 @@ public class ProfileController {
      * プロフィール更新
      */
     @PostMapping("/update")
-    public String updateProfile(@ModelAttribute UserProfile profileData, 
+    public String updateProfile(@ModelAttribute UserProfile profileData,
+                              @RequestParam(value = "avatarFile", required = false) MultipartFile avatarFile,
                               Authentication auth, 
                               RedirectAttributes redirectAttributes) {
         try {
+            System.out.println("=== プロフィール更新開始 ===");
             String username = auth.getName();
             User user = userService.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("ユーザーが見つかりません"));
             
+            System.out.println("ユーザー: " + user.getUsername());
+            System.out.println("アバターファイル: " + (avatarFile != null ? avatarFile.getOriginalFilename() : "null"));
+            System.out.println("ファイルが空か: " + (avatarFile != null ? avatarFile.isEmpty() : "null"));
+            
+            // プロフィール情報を更新
             userProfileService.updateProfile(user, profileData);
-            redirectAttributes.addFlashAttribute("successMessage", "プロフィールを更新しました");
+            System.out.println("プロフィール基本情報更新完了");
+            
+            // アバター画像がアップロードされている場合は処理
+            if (avatarFile != null && !avatarFile.isEmpty()) {
+                System.out.println("アバター画像をアップロード中...");
+                try {
+                    userProfileService.uploadAvatar(user, avatarFile);
+                    redirectAttributes.addFlashAttribute("successMessage", "プロフィールとアバター画像を更新しました");
+                    System.out.println("アバター画像アップロード成功");
+                } catch (IOException e) {
+                    System.err.println("アバター画像アップロードエラー（IO）: " + e.getMessage());
+                    e.printStackTrace();
+                    redirectAttributes.addFlashAttribute("successMessage", "プロフィールを更新しました（画像のアップロードに失敗: " + e.getMessage() + "）");
+                } catch (IllegalArgumentException e) {
+                    System.err.println("アバター画像アップロードエラー（引数）: " + e.getMessage());
+                    redirectAttributes.addFlashAttribute("successMessage", "プロフィールを更新しました（画像エラー: " + e.getMessage() + "）");
+                }
+            } else {
+                System.out.println("アバター画像なし");
+                redirectAttributes.addFlashAttribute("successMessage", "プロフィールを更新しました");
+            }
+            
+            System.out.println("=== プロフィール更新終了 ===");
             
         } catch (Exception e) {
+            System.err.println("プロフィール更新エラー: " + e.getMessage());
+            e.printStackTrace();
             redirectAttributes.addFlashAttribute("errorMessage", "プロフィールの更新に失敗しました: " + e.getMessage());
         }
         

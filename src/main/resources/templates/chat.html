@@ -229,6 +229,32 @@
                 max-width: 85%;
             }
         }
+        
+        /* ナビゲーションバーとドロップダウンメニューのz-index修正 */
+        .navbar {
+            z-index: 1030 !important;
+            position: relative;
+        }
+        
+        .dropdown-menu {
+            z-index: 1040 !important;
+            position: absolute !important;
+        }
+        
+        .dropdown {
+            z-index: 1035 !important;
+        }
+        
+        /* チャットエリアのz-index調整 */
+        .chat-main {
+            z-index: 1020;
+            position: relative;
+        }
+        
+        .chat-sidebar {
+            z-index: 1020;
+            position: relative;
+        }
     </style>
 </head>
 <body>
@@ -254,15 +280,15 @@
                         </span>
                     </a>
                 </div>
-                <!-- ランダムマッチングボタン -->
-                <div class="nav-item me-3">
+                <!-- ランダムマッチングボタン（デバッグモード時のみ） -->
+                <div th:if="${debugMode}" class="nav-item me-3">
                     <a class="nav-link d-flex align-items-center" href="/random-matching" style="padding: 8px 16px; border-radius: 12px; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); color: white; transition: all 0.3s ease;">
                         <i class="fas fa-dice me-2" style="font-size: 1.1rem;"></i>
                         <span style="font-weight: 500;">ランダムマッチング</span>
                     </a>
                 </div>
-                <!-- ID検索ボタン -->
-                <div class="nav-item me-3">
+                <!-- ID検索ボタン（デバッグモード時のみ） -->
+                <div th:if="${debugMode}" class="nav-item me-3">
                     <button class="nav-link btn btn-link" onclick="showUserSearchModal()" style="border: none; background: none;">
                         <i class="fas fa-search me-1"></i>ID検索
                     </button>
@@ -271,11 +297,11 @@
                     <i class="fas fa-list me-1"></i>ルーム一覧
                 </a>
                 <!-- プロフィールメニュー -->
-                <div class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown">
+                <div class="nav-item dropdown" style="z-index: 1040;">
+                    <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-user-circle me-1"></i>プロフィール
                     </a>
-                    <ul class="dropdown-menu">
+                    <ul class="dropdown-menu dropdown-menu-end" style="z-index: 1050;">
                         <li><a class="dropdown-item" th:href="@{/profile}">
                             <i class="fas fa-user me-2"></i>マイプロフィール
                         </a></li>
@@ -286,21 +312,24 @@
                         <li><a class="dropdown-item" th:href="@{/profile/search}">
                             <i class="fas fa-search me-2"></i>ユーザー検索
                         </a></li>
-                        <li><a class="dropdown-item" th:href="@{/profile/online}">
+                        <!-- デバッグモード時のみ表示 -->
+                        <li th:if="${debugMode}"><a class="dropdown-item" th:href="@{/profile/online}">
                             <i class="fas fa-circle text-success me-2"></i>オンラインユーザー
                         </a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" th:href="@{/random-matching}">
+                        <!-- ランダムマッチングはデバッグモード時のみ -->
+                        <li th:if="${debugMode}"><hr class="dropdown-divider"></li>
+                        <li th:if="${debugMode}"><a class="dropdown-item" th:href="@{/random-matching}">
                             <i class="fas fa-dice me-2"></i>ランダムマッチング
                         </a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#" onclick="toggleOnlineStatus()">
+                        <!-- デバッグモード時のみ表示 -->
+                        <li th:if="${debugMode}"><hr class="dropdown-divider"></li>
+                        <li th:if="${debugMode}"><a class="dropdown-item" href="#" onclick="toggleOnlineStatus()">
                             <i class="fas fa-power-off me-2"></i>ステータス変更
                         </a></li>
-                        <li><a class="dropdown-item" href="/debug/session">
+                        <li th:if="${debugMode}"><a class="dropdown-item" href="/debug/session">
                             <i class="fas fa-bug me-2"></i>セッション情報
                         </a></li>
-                        <li><a class="dropdown-item" href="#" onclick="openMultiSessionTab()">
+                        <li th:if="${debugMode}"><a class="dropdown-item" href="#" onclick="openMultiSessionTab()">
                             <i class="fas fa-external-link-alt me-2"></i>新しいタブでログイン
                         </a></li>
                     </ul>
@@ -440,8 +469,8 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <!-- デバッグ情報（開発時のみ） -->
-                        <div th:if="${debugEnabled}" class="alert alert-info" style="font-size: 12px;">
+                        <!-- デバッグ情報（デバッグモード時のみ） -->
+                        <div th:if="${debugMode and debugEnabled}" class="alert alert-info" style="font-size: 12px;">
                             <strong>デバッグ情報:</strong><br>
                             chatHistory is null: <span th:text="${chatHistory == null}"></span><br>
                             chatHistory size: <span th:text="${chatHistory != null ? chatHistory.size() : 'N/A'}"></span><br>
@@ -455,6 +484,7 @@
                                     <div class="message-bubble" 
                                          th:classappend="${msg.user.username == #authentication.name} ? 'own-message' : 'other-message'">
                                         <div class="message-header" th:if="${msg.user.username != #authentication.name}">
+                                            <!-- アバター画像はJavaScriptで動的に更新されるため、デフォルトのアイコンを表示 -->
                                             <i class="fas fa-user-circle me-1 user-avatar-clickable" 
                                                style="cursor: pointer; color: #007bff;" 
                                                th:data-user-id="${msg.user.id}"
@@ -961,18 +991,31 @@
                     <div class="message-bubble ${isCurrentUser ? 'own-message' : 'other-message'}">
                         ${!isCurrentUser ? `
                             <div class="message-header">
-                                <i class="fas fa-user-circle me-1 user-avatar-clickable" 
-                                   style="cursor: pointer; color: #007bff;" 
-                                   data-user-id="${userId}"
-                                   data-username="${username}"
-                                   onclick="showUserContextMenu(event, this)"
-                                   title="ユーザーメニューを表示"></i>
+                                ${message.senderAvatarUrl ? `
+                                    <img src="${message.senderAvatarUrl}" 
+                                         class="rounded-circle me-2 user-avatar-clickable" 
+                                         width="24" 
+                                         height="24" 
+                                         style="cursor: pointer; object-fit: cover;" 
+                                         data-user-id="${userId}"
+                                         data-username="${username}"
+                                         onclick="showUserContextMenu(event, this)"
+                                         title="ユーザーメニューを表示"
+                                         alt="アバター">
+                                ` : `
+                                    <i class="fas fa-user-circle me-1 user-avatar-clickable" 
+                                       style="cursor: pointer; color: #007bff;" 
+                                       data-user-id="${userId}"
+                                       data-username="${username}"
+                                       onclick="showUserContextMenu(event, this)"
+                                       title="ユーザーメニューを表示"></i>
+                                `}
                                 <span class="username-clickable" 
                                       style="cursor: pointer; color: #007bff;"
                                       data-user-id="${userId}"
                                       data-username="${username}"
                                       onclick="showUserContextMenu(event, this)"
-                                      title="ユーザーメニューを表示">${username}</span>
+                                      title="ユーザーメニューを表示">${message.senderDisplayName || username}</span>
                             </div>
                         ` : ''}
                         <div class="message-content">

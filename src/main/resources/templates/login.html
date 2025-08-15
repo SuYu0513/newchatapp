@@ -293,18 +293,38 @@
                             
                             <div class="text-center">
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div th:if="${!debugMode}" class="col-12">
                                         <p class="mb-2">アカウントをお持ちでない方は</p>
                                         <a th:href="@{/register}" class="register-link">
                                             <i class="fas fa-user-plus me-1"></i>🌟 新規登録はこちら
                                         </a>
                                     </div>
-                                    <div class="col-md-6">
+                                    <!-- デバッグモード時は2列レイアウト -->
+                                    <div th:if="${debugMode}" class="col-md-6">
+                                        <p class="mb-2">アカウントをお持ちでない方は</p>
+                                        <a th:href="@{/register}" class="register-link">
+                                            <i class="fas fa-user-plus me-1"></i>🌟 新規登録はこちら
+                                        </a>
+                                    </div>
+                                    <div th:if="${debugMode}" class="col-md-6">
                                         <p class="mb-2">マルチタブでログイン</p>
                                         <a href="javascript:void(0)" onclick="openNewTab()" class="register-link">
                                             <i class="fas fa-cogs me-1"></i>🔗 マルチログイン
                                         </a>
                                     </div>
+                                </div>
+                                <!-- デバッグモード時の表示 -->
+                                <div th:if="${debugMode}" class="mt-3">
+                                    <p class="mb-2" style="color: #e74c3c; font-weight: bold;">⚠️ デバッグモード有効</p>
+                                    <a th:href="@{/login/offdbg}" class="register-link" style="color: #e74c3c;">
+                                        <i class="fas fa-bug me-1"></i>🔧 デバッグ無効化
+                                    </a>
+                                </div>
+                                <!-- デバッグモード無効時にデバッグモード有効化リンクを表示 -->
+                                <div th:if="${!debugMode}" class="mt-3">
+                                    <small style="color: #999; font-size: 0.8rem;">
+                                        開発者の方は <a th:href="@{/login/ondbg}" style="color: #667eea; text-decoration: none;">こちら</a> からデバッグモードを有効にできます
+                                    </small>
                                 </div>
                             </div>
                         </div>
