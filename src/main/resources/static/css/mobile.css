@@ -121,11 +121,32 @@ body {
 
 /* チャット画面モバイル対応 - 完全リニューアル */
 @media (max-width: 768px) {
+    
+    /* 背景設定 - 固定された背景 */
+    body {
+        background: #f0f2f5 !important;
+        background-image: none !important;
+        position: relative;
+        overflow-x: hidden;
+    }
+    
+    /* 泡の背景を完全に非表示 */
+    .bubble, .bubble::before, .bubble::after,
+    body::before, body::after,
+    .container-fluid::before, .container-fluid::after {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+    }
+    
+    /* メインコンテナ */
     .container-fluid {
         padding: 60px 0 0 0 !important;
         margin: 0 !important;
         height: 100vh;
         overflow: hidden;
+        background: #f0f2f5 !important;
+        position: relative;
     }
     
     .row {
@@ -136,7 +157,7 @@ body {
     }
     
     /* スマホではサイドバーを完全に非表示（ハンバーガーメニューに統合） */
-    .col-md-3 {
+    .col-md-3, .chat-sidebar {
         display: none !important;
     }
     
@@ -155,7 +176,7 @@ body {
         display: none !important;
     }
     
-    /* チャットメイン */
+    /* チャットメイン - 完全なソリッドデザイン */
     .chat-main {
         height: 100% !important;
         border: none !important;
@@ -163,116 +184,161 @@ body {
         margin: 0 !important;
         display: flex !important;
         flex-direction: column !important;
-        background: #f8f9fa;
+        background: #ffffff !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
     }
     
-    .chat-main .card-header {
+    .chat-main .card-header, .chat-header {
         border-radius: 0 !important;
-        padding: 0.8rem 1rem;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-        border: none;
+        padding: 1rem !important;
+        background: #667eea !important;
+        border: none !important;
         z-index: 10;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
     }
     
-    .chat-main .card-header h5 {
-        font-size: 1rem;
-        margin: 0;
+    .chat-main .card-header h5, .chat-header h5 {
+        font-size: 1.1rem !important;
+        margin: 0 !important;
+        color: white !important;
+        font-weight: 600 !important;
     }
     
-    .chat-main .card-header small {
-        font-size: 0.8rem;
-        opacity: 0.9;
+    .chat-main .card-header small, .chat-header small {
+        font-size: 0.85rem !important;
+        opacity: 0.9 !important;
+        color: rgba(255,255,255,0.9) !important;
     }
     
-    /* チャットメッセージエリア */
+    /* チャットメッセージエリア - ソリッドな背景 */
     .chat-messages {
         flex: 1 !important;
         height: auto !important;
         overflow-y: auto !important;
         padding: 1rem !important;
-        background: #f8f9fa !important;
+        background: #f8f9fb !important;
         -webkit-overflow-scrolling: touch;
+        border: none !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
     }
     
-    /* チャットメッセージ */
+    /* チャットメッセージ - クリアなデザイン */
     .message-bubble {
-        max-width: 85% !important;
-        font-size: 0.9rem !important;
-        padding: 0.6rem 0.8rem !important;
-        margin-bottom: 0.5rem !important;
-        border-radius: 18px !important;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+        max-width: 80% !important;
+        font-size: 0.95rem !important;
+        padding: 0.75rem 1rem !important;
+        margin-bottom: 0.8rem !important;
+        border-radius: 20px !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+        line-height: 1.4 !important;
+        word-wrap: break-word !important;
+        clear: both !important;
+        display: block !important;
     }
     
     .message-bubble.own {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        background: #667eea !important;
         color: white !important;
         margin-left: auto !important;
         margin-right: 0 !important;
+        float: right !important;
+        border-bottom-right-radius: 5px !important;
     }
     
     .message-bubble.other {
-        background: white !important;
+        background: #ffffff !important;
         color: #333 !important;
         margin-left: 0 !important;
         margin-right: auto !important;
-        border: 1px solid rgba(0,0,0,0.1);
+        float: left !important;
+        border: 1px solid #e1e5e9 !important;
+        border-bottom-left-radius: 5px !important;
     }
     
     .message-info {
         font-size: 0.75rem !important;
-        margin-bottom: 0.3rem !important;
-        opacity: 0.8;
+        margin-bottom: 0.4rem !important;
+        opacity: 0.7 !important;
+        clear: both !important;
     }
     
-    /* 入力エリア */
+    /* 入力エリア - クリーンなデザイン */
     .chat-input-area {
         padding: 1rem !important;
-        background: white !important;
-        border-top: 1px solid rgba(0,0,0,0.1) !important;
+        background: #ffffff !important;
+        border-top: 2px solid #e1e5e9 !important;
         border-radius: 0 !important;
         z-index: 10;
+        box-shadow: 0 -2px 8px rgba(0,0,0,0.05) !important;
     }
     
     .chat-input-area .input-group {
-        gap: 0.5rem;
-        align-items: end;
+        gap: 0.75rem !important;
+        align-items: end !important;
+        display: flex !important;
     }
     
     .form-control {
         font-size: 16px !important; /* iOS のズーム防止 */
-        border-radius: 20px !important;
-        padding: 0.8rem 1rem !important;
-        border: 2px solid rgba(102, 126, 234, 0.2) !important;
-        background: #f8f9fa !important;
+        border-radius: 25px !important;
+        padding: 0.9rem 1.2rem !important;
+        border: 2px solid #e1e5e9 !important;
+        background: #f8f9fb !important;
         resize: none !important;
-        min-height: 44px;
-        max-height: 120px;
+        min-height: 48px !important;
+        max-height: 120px !important;
+        flex: 1 !important;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
     }
     
     .form-control:focus {
         border-color: #667eea !important;
         box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
-        background: white !important;
+        background: #ffffff !important;
+        outline: none !important;
     }
     
     .btn-primary {
         border-radius: 50% !important;
-        width: 44px !important;
-        height: 44px !important;
+        width: 48px !important;
+        height: 48px !important;
         padding: 0 !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        font-size: 1rem !important;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        font-size: 1.1rem !important;
+        background: #667eea !important;
         border: none !important;
         box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
+        flex-shrink: 0 !important;
     }
     
-    .btn-primary:hover {
-        transform: scale(1.05);
+    .btn-primary:hover, .btn-primary:active, .btn-primary:focus {
+        background: #5a67d8 !important;
+        transform: scale(1.05) !important;
         box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
+    }
+    
+    /* 通知数バッジなどの調整 */
+    .badge {
+        font-size: 0.7rem !important;
+        padding: 0.25rem 0.5rem !important;
+    }
+    
+    /* スクロールバーの調整 */
+    .chat-messages::-webkit-scrollbar {
+        width: 3px;
+    }
+    
+    .chat-messages::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    .chat-messages::-webkit-scrollbar-thumb {
+        background: rgba(102, 126, 234, 0.3);
+        border-radius: 3px;
     }
 }
     
