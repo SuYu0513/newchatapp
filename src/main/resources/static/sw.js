@@ -1,11 +1,13 @@
-const CACHE_NAME = 'chatapp-v1';
+const CACHE_NAME = 'chatapp-v2';
 const urlsToCache = [
   '/',
   '/login',
   '/chat',
   '/css/chat-style.css',
   '/css/kawaii-theme.css',
+  '/css/mobile.css',
   '/js/kawaii-theme.js',
+  '/js/pwa.js',
   '/images/default-avatar.svg',
   '/manifest.json',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css',
