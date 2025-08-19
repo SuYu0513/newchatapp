@@ -274,12 +274,82 @@
                 <i class="fas fa-comments me-2"></i>チャットアプリ
             </a>
             <div class="navbar-nav ms-auto">
-                <span class="navbar-text me-3" sec:authorize="isAuthenticated()">
+                <!-- モバイル専用ハンバーガーメニュー -->
+                <div class="nav-item dropdown mobile-hamburger d-md-none">
+                    <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-bars"></i>
+                        メニュー
+                    </button>
+                    <ul class="dropdown-menu">
+                        <!-- プロフィール -->
+                        <li>
+                            <a class="dropdown-item" href="/profile">
+                                <i class="fas fa-user"></i>
+                                プロフィール
+                            </a>
+                        </li>
+                        <!-- フレンド -->
+                        <li>
+                            <a class="dropdown-item" href="/friends">
+                                <i class="fas fa-user-friends"></i>
+                                フレンド
+                                <span class="badge bg-danger ms-auto" id="mobileNotificationBadge" style="display: none;">0</span>
+                            </a>
+                        </li>
+                        <!-- ルーム一覧 -->
+                        <li>
+                            <a class="dropdown-item" href="/rooms">
+                                <i class="fas fa-list"></i>
+                                ルーム一覧
+                            </a>
+                        </li>
+                        <!-- ルーム作成 -->
+                        <li>
+                            <a class="dropdown-item" href="/rooms/create">
+                                <i class="fas fa-plus"></i>
+                                ルーム作成
+                            </a>
+                        </li>
+                        <!-- デバッグモード時のみ表示 -->
+                        <li th:if="${debugMode}">
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li th:if="${debugMode}">
+                            <a class="dropdown-item" href="/random-matching">
+                                <i class="fas fa-dice"></i>
+                                ランダムマッチング
+                            </a>
+                        </li>
+                        <li th:if="${debugMode}">
+                            <a class="dropdown-item" href="#" onclick="showUserSearchModal()">
+                                <i class="fas fa-search"></i>
+                                ID検索
+                            </a>
+                        </li>
+                        <li th:if="${debugMode}">
+                            <a class="dropdown-item" href="/login/offdbg">
+                                <i class="fas fa-bug"></i>
+                                デバッグモード解除
+                            </a>
+                        </li>
+                        <!-- 共通メニュー -->
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-danger" href="/logout">
+                                <i class="fas fa-sign-out-alt"></i>
+                                ログアウト
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- デスクトップ用（従来通り） -->
+                <span class="navbar-text me-3 d-none d-md-inline" sec:authorize="isAuthenticated()">
                     <i class="fas fa-user me-1"></i>
                     ようこそ、<span sec:authentication="name"></span>さん
                 </span>
                 <!-- フレンド管理ボタン -->
-                <div class="nav-item position-relative me-3">
+                <div class="nav-item position-relative me-3 d-none d-md-block">
                     <a class="nav-link d-flex align-items-center" href="/friends" id="friendsButton" style="padding: 8px 16px; border-radius: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; transition: all 0.3s ease;">
                         <i class="fas fa-user-friends me-2" style="font-size: 1.1rem;"></i>
                         <span style="font-weight: 500;">フレンド</span>
@@ -291,23 +361,23 @@
                     </a>
                 </div>
                 <!-- ランダムマッチングボタン（デバッグモード時のみ） -->
-                <div th:if="${debugMode}" class="nav-item me-3">
+                <div th:if="${debugMode}" class="nav-item me-3 d-none d-md-block">
                     <a class="nav-link d-flex align-items-center" href="/random-matching" style="padding: 8px 16px; border-radius: 12px; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); color: white; transition: all 0.3s ease;">
                         <i class="fas fa-dice me-2" style="font-size: 1.1rem;"></i>
                         <span style="font-weight: 500;">ランダムマッチング</span>
                     </a>
                 </div>
                 <!-- ID検索ボタン（デバッグモード時のみ） -->
-                <div th:if="${debugMode}" class="nav-item me-3">
+                <div th:if="${debugMode}" class="nav-item me-3 d-none d-md-block">
                     <button class="nav-link btn btn-link" onclick="showUserSearchModal()" style="border: none; background: none;">
                         <i class="fas fa-search me-1"></i>ID検索
                     </button>
                 </div>
-                <a class="nav-link" th:href="@{/rooms}">
+                <a class="nav-link d-none d-md-block" th:href="@{/rooms}">
                     <i class="fas fa-list me-1"></i>ルーム一覧
                 </a>
                 <!-- プロフィールメニュー -->
-                <div class="nav-item dropdown" style="z-index: 1040;">
+                <div class="nav-item dropdown d-none d-md-block" style="z-index: 1040;">
                     <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-user-circle me-1"></i>プロフィール
                     </a>
@@ -2099,31 +2169,40 @@
     
     <!-- モバイル用JavaScript -->
     <script>
-        // モバイルサイドバートグル機能
-        function toggleMobileSidebar() {
-            const sidebar = document.getElementById('mobileSidebar');
-            if (sidebar) {
-                sidebar.classList.toggle('show');
+        // モバイル用通知バッジ同期
+        function syncMobileNotifications() {
+            const desktopBadge = document.getElementById('friendNotificationBadge');
+            const mobileBadge = document.getElementById('mobileNotificationBadge');
+            const desktopCount = document.getElementById('friendNotificationCount');
+            
+            if (desktopBadge && mobileBadge && desktopCount) {
+                const count = desktopCount.textContent;
+                if (desktopBadge.style.display !== 'none' && count > 0) {
+                    mobileBadge.textContent = count;
+                    mobileBadge.style.display = 'inline';
+                } else {
+                    mobileBadge.style.display = 'none';
+                }
             }
         }
         
-        // モバイルでサイドバー外をタップしたら閉じる
-        document.addEventListener('click', function(event) {
-            const sidebar = document.getElementById('mobileSidebar');
-            const toggleBtn = document.querySelector('.mobile-sidebar-toggle');
-            
-            if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains('show')) {
-                if (!sidebar.contains(event.target) && !toggleBtn.contains(event.target)) {
-                    sidebar.classList.remove('show');
-                }
-            }
-        });
+        // 定期的に通知バッジを同期
+        setInterval(syncMobileNotifications, 1000);
+        
+        // ページロード時に同期
+        document.addEventListener('DOMContentLoaded', syncMobileNotifications);
         
         // 画面サイズ変更時の処理
         window.addEventListener('resize', function() {
-            const sidebar = document.getElementById('mobileSidebar');
-            if (window.innerWidth > 768 && sidebar) {
-                sidebar.classList.remove('show');
+            // モバイル表示でハンバーガーメニューが開いている場合、閉じる
+            if (window.innerWidth > 768) {
+                const mobileDropdown = document.querySelector('.mobile-hamburger .dropdown-menu');
+                if (mobileDropdown && mobileDropdown.classList.contains('show')) {
+                    const dropdown = bootstrap.Dropdown.getInstance(document.querySelector('.mobile-hamburger .dropdown-toggle'));
+                    if (dropdown) {
+                        dropdown.hide();
+                    }
+                }
             }
         });
         
@@ -2132,12 +2211,6 @@
             const messageInput = document.getElementById('messageInput');
             if (messageInput && window.innerWidth <= 768) {
                 messageInput.addEventListener('focus', function() {
-                    // キーボード表示時にサイドバーを閉じる
-                    const sidebar = document.getElementById('mobileSidebar');
-                    if (sidebar) {
-                        sidebar.classList.remove('show');
-                    }
-                    
                     // メッセージエリアを最下部にスクロール
                     setTimeout(function() {
                         const messagesContainer = document.querySelector('.chat-messages');
