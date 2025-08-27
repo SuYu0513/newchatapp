@@ -178,30 +178,19 @@ public class RandomMatchingController {
         Map<String, Object> stats = new HashMap<>();
         
         try {
-            String username = auth.getName();
-            User user = userService.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("ユーザーが見つかりません"));
-
-            // ユーザーのマッチング履歴を取得
-            List<RandomMatch> allMatches = randomMatchingService.getMatchHistory(user);
-            List<RandomMatch> completedMatches = allMatches.stream()
-                .filter(match -> match.getStatus() != RandomMatch.MatchStatus.ACTIVE)
-                .collect(Collectors.toList());
+            // グローバル統計データを取得
+            long totalMatches = randomMatchingService.getTotalMatches();
+            long activeMatches = randomMatchingService.getActiveMatches();
+            long totalUsers = userService.getTotalUserCount();
             
-            // ユーザーのアクティブマッチ数を取得
-            long userActiveMatchCount = allMatches.stream()
-                .filter(match -> match.getStatus() == RandomMatch.MatchStatus.ACTIVE)
-                .count();
-
-            stats.put("totalMatches", completedMatches.size()); // 完了したマッチのみカウント
-            stats.put("activeMatches", userActiveMatchCount);  // ユーザー固有のアクティブマッチ数
-            stats.put("averageMessageCount", completedMatches.stream()
-                .mapToInt(match -> match.getMessageCount() != null ? match.getMessageCount() : 0)
-                .average()
-                .orElse(0.0));
+            stats.put("totalMatches", totalMatches);
+            stats.put("activeMatches", activeMatches);
+            stats.put("totalUsers", totalUsers);
+            stats.put("success", true);
 
         } catch (Exception e) {
             stats.put("error", "統計情報の取得に失敗しました");
+            stats.put("success", false);
         }
 
         return ResponseEntity.ok(stats);
@@ -290,4 +279,6 @@ public class RandomMatchingController {
 
         return ResponseEntity.ok(response);
     }
+
+
 }

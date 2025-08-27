@@ -43,7 +43,9 @@ public class SecurityConfig {
         http
             .userDetailsService(userDetailsService)
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/**").permitAll() // 一時的にすべてのアクセスを許可
+                .requestMatchers("/login", "/register", "/css/**", "/js/**", "/images/**", "/manifest.json", "/sw.js", "/icon-*.png").permitAll()
+                .requestMatchers("/h2-console/**").permitAll() // H2 Console用（開発時のみ）
+                .anyRequest().authenticated()
             )
             .formLogin(form -> form
                 .loginPage("/login")

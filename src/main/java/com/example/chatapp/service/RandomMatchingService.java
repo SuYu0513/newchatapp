@@ -367,6 +367,22 @@ public class RandomMatchingService {
     public long getActiveMatchCount() {
         return randomMatchRepository.countActiveMatches();
     }
+    
+    /**
+     * 総マッチ数を取得
+     */
+    @Transactional(readOnly = true)
+    public long getTotalMatches() {
+        return randomMatchRepository.count();
+    }
+    
+    /**
+     * アクティブなマッチ数を取得（統計用）
+     */
+    @Transactional(readOnly = true)
+    public long getActiveMatches() {
+        return getActiveMatchCount();
+    }
 
     /**
      * タイムアウトしたマッチを処理

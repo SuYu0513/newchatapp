@@ -309,6 +309,8 @@ body {
   border-radius: var(--border-radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-md);
+  display: flex !important;
+  align-items: stretch !important;
 }
 
 .form-control {
@@ -317,6 +319,8 @@ body {
   font-size: 1rem;
   background: white;
   transition: var(--transition-fast);
+  flex: 1 !important;
+  min-height: 50px !important;
 }
 
 .form-control:focus {
@@ -328,9 +332,14 @@ body {
 .btn-primary {
   background: var(--primary-gradient);
   border: none;
-  padding: 15px 30px;
+  padding: 15px 20px !important;
   font-weight: 600;
   transition: var(--transition-fast);
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 50px !important;
+  min-width: 50px !important;
 }
 
 .btn-primary:hover {
@@ -463,6 +472,43 @@ body {
 .dropdown-item:hover {
   background: var(--primary-gradient);
   color: white;
+}
+
+/* 通知設定ボタンの改善 */
+.navbar-nav .nav-link.dropdown-toggle {
+  min-width: auto !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+  padding: 8px 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  height: auto !important;
+  line-height: 1.4 !important;
+}
+
+.navbar-nav .nav-link.dropdown-toggle i {
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+/* ドロップダウンボタンのテキスト制御 */
+.navbar-nav .dropdown-toggle::after {
+  margin-left: 4px;
+}
+
+/* モバイルでの通知設定ボタン調整 */
+@media (max-width: 767px) {
+  .navbar-nav .nav-link.dropdown-toggle span {
+    display: none !important;
+  }
+  
+  .navbar-nav .nav-link.dropdown-toggle {
+    padding: 8px 10px !important;
+    min-width: 40px !important;
+    justify-content: center !important;
+  }
 }
 
 /* 通知トースト */

@@ -103,4 +103,11 @@ public class UserService {
         
         return results;
     }
+    
+    /**
+     * 全ユーザー数を取得
+     */
+    public long getTotalUserCount() {
+        return userRepository.count();
+    }
 }

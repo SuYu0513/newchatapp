@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chatapp-v3';
+const CACHE_NAME = 'chatapp-v8';
 const urlsToCache = [
   '/',
   '/login',
@@ -28,6 +28,12 @@ self.addEventListener('install', function(event) {
 
 // キャッシュからレスポンスを返す
 self.addEventListener('fetch', function(event) {
+  // リダイレクトレスポンスの場合は直接返す
+  if (event.request.redirect === 'manual') {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+  
   event.respondWith(
     caches.match(event.request)
       .then(function(response) {
@@ -37,9 +43,9 @@ self.addEventListener('fetch', function(event) {
         }
         
         // キャッシュにない場合はネットワークから取得
-        return fetch(event.request).then(function(response) {
-          // レスポンスが有効でない場合はそのまま返す
-          if (!response || response.status !== 200 || response.type !== 'basic') {
+        return fetch(event.request, { redirect: 'follow' }).then(function(response) {
+          // レスポンスが有効でない場合やリダイレクトの場合はそのまま返す
+          if (!response || response.status !== 200 || response.type !== 'basic' || response.redirected) {
             return response;
           }
           
@@ -51,6 +57,9 @@ self.addEventListener('fetch', function(event) {
             });
           
           return response;
+        }).catch(function(error) {
+          console.log('Service Worker: フェッチエラー', error);
+          throw error;
         });
       })
   );

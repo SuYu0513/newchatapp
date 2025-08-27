@@ -66,11 +66,15 @@ body {
         color: white;
         border: none;
         border-radius: 8px;
-        padding: 0.5rem 0.8rem;
-        font-size: 0.9rem;
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
         display: flex;
         align-items: center;
-        gap: 0.3rem;
+        gap: 0.4rem;
+        white-space: nowrap;
+        min-width: auto;
+        height: auto;
+        line-height: 1.2;
     }
     
     .mobile-hamburger .dropdown-toggle:hover {
@@ -112,6 +116,21 @@ body {
         color: #667eea;
     }
     
+    /* ログアウトボタンの特別スタイル */
+    .mobile-hamburger .dropdown-item.text-danger {
+        color: #dc3545 !important;
+        font-weight: 600 !important;
+    }
+    
+    .mobile-hamburger .dropdown-item.text-danger:hover {
+        background: rgba(220, 53, 69, 0.1) !important;
+        color: #dc3545 !important;
+    }
+    
+    .mobile-hamburger .dropdown-item.text-danger i {
+        color: #dc3545 !important;
+    }
+    
     .mobile-hamburger .dropdown-item i {
         width: 20px;
         text-align: center;
@@ -151,9 +170,9 @@ body {
     
     .row {
         margin: 0 !important;
-        height: calc(100vh - 60px);
+        /* height: calc(100vh - 60px); */
         display: flex;
-        flex-direction: column;
+        /* flex-direction: column; */
     }
     
     /* スマホではサイドバーを完全に非表示（ハンバーガーメニューに統合） */
@@ -276,8 +295,10 @@ body {
     
     .chat-input-area .input-group {
         gap: 0.75rem !important;
-        align-items: end !important;
+        align-items: center !important;
         display: flex !important;
+        flex-wrap: nowrap !important;
+        justify-content: space-between !important;
     }
     
     .form-control {
@@ -287,10 +308,13 @@ body {
         border: 2px solid #e1e5e9 !important;
         background: #f8f9fb !important;
         resize: none !important;
-        min-height: 48px !important;
+        height: 50px !important;
+        min-height: 50px !important;
         max-height: 120px !important;
         flex: 1 !important;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+        line-height: 1.4 !important;
+        align-self: center !important;
     }
     
     .form-control:focus {
@@ -302,17 +326,20 @@ body {
     
     .btn-primary {
         border-radius: 50% !important;
-        width: 48px !important;
-        height: 48px !important;
+        width: 50px !important;
+        height: 50px !important;
         padding: 0 !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        font-size: 1.1rem !important;
+        font-size: 1.2rem !important;
         background: #667eea !important;
         border: none !important;
         box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
         flex-shrink: 0 !important;
+        position: relative !important;
+        align-self: center !important;
+        margin-bottom: 0 !important;
     }
     
     .btn-primary:hover, .btn-primary:active, .btn-primary:focus {
@@ -458,11 +485,35 @@ body {
 @media (max-width: 768px) {
     .login-container {
         padding: 1rem;
-        min-height: 100vh;
+        min-height: 10vh;
+    }
+    
+    /* ログインページのrow要素にトップスペースを追加 */
+    .login-container .row {
+        margin-top: 2cm; /* 2センチのトップマージンを追加 */
+        padding-top: 0;
+    }
+    
+    /* text-center mb-4の上部に追加スペースを確保 */
+    .login-container .text-center.mb-4 {
+        margin-top: 1rem; /* さらに上部マージンを追加 */
+    }
+    
+    /* 認証ページ全般のスペーシング調整 */
+    body:has(.login-container) .container .row,
+    body:has(.card.mt-5) .container .row {
+        margin-top: 2cm !important;
+        padding-top: 1rem;
+    }
+    
+    /* 新規登録ページなどの一般的なカード */
+    .card.mt-5 {
+        margin-top: 1rem !important;
     }
     
     .login-card {
         margin: 0;
+        opacity: 0;
         border-radius: 20px;
         max-width: 100%;
     }

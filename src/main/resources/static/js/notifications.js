@@ -29,8 +29,13 @@ class ChatNotificationManager {
         // 設定の読み込み
         this.loadSettings();
         
-        // UIの初期化
-        this.initializeUI();
+        // UIの初期化（DOMの準備を待つ）
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.initializeUI());
+        } else {
+            // DOMが既に読み込み済みの場合は少し待ってから初期化
+            setTimeout(() => this.initializeUI(), 100);
+        }
         
         console.log('📢 通知システムが初期化されました');
     }
@@ -327,21 +332,38 @@ class ChatNotificationManager {
      * 通知設定UIの初期化
      */
     initializeUI() {
-        // 設定ボタンをナビゲーションバーに追加
-        this.addNotificationSettingsButton();
+        try {
+            // DOMが存在するかチェック
+            if (!document.body) {
+                console.warn('DOM がまだ準備されていません');
+                setTimeout(() => this.initializeUI(), 100);
+                return;
+            }
+            
+            // 設定ボタンをナビゲーションバーに追加
+            this.addNotificationSettingsButton();
+        } catch (error) {
+            console.error('UIの初期化でエラー:', error);
+        }
     }
 
     /**
      * 設定ボタンの追加
      */
     addNotificationSettingsButton() {
-        const navbar = document.querySelector('.navbar-nav');
-        if (navbar) {
+        try {
+            const navbar = document.querySelector('.navbar-nav');
+            if (!navbar) {
+                console.warn('navbar-nav が見つかりません');
+                return;
+            }
+            
             const settingsItem = document.createElement('div');
             settingsItem.className = 'nav-item dropdown';
+            settingsItem.id = 'notificationSettings';
             settingsItem.innerHTML = `
-                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                    <i class="fas fa-bell me-1"></i>通知設定
+                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-bell me-1"></i><span class="d-none d-md-inline">通知設定</span>
                 </a>
                 <ul class="dropdown-menu">
                     <li>
@@ -369,16 +391,23 @@ class ChatNotificationManager {
                 </ul>
             `;
             
-            // ログアウトボタンの前に挿入
-            const logoutLink = navbar.querySelector('a[href*="logout"]');
-            if (logoutLink) {
-                navbar.insertBefore(settingsItem, logoutLink.parentElement);
-            } else {
-                navbar.appendChild(settingsItem);
+            // 既存の設定ボタンを削除（重複防止）
+            const existingSettings = navbar.querySelector('#notificationSettings');
+            if (existingSettings) {
+                existingSettings.remove();
             }
             
-            // イベントリスナーを追加
-            this.attachSettingsEventListeners();
+            // 最も安全な方法：末尾に追加
+            navbar.appendChild(settingsItem);
+            
+            console.log('✅ 通知設定ボタンを追加しました');
+            
+            // イベントリスナーを少し遅延して追加（DOM安定化のため）
+            setTimeout(() => {
+                this.attachSettingsEventListeners();
+            }, 50);
+        } catch (error) {
+            console.error('通知設定ボタンの追加でエラー:', error);
         }
     }
 
@@ -386,33 +415,43 @@ class ChatNotificationManager {
      * 設定のイベントリスナー
      */
     attachSettingsEventListeners() {
-        const notificationToggle = document.getElementById('notificationToggle');
-        const soundToggle = document.getElementById('soundToggle');
-        const testButton = document.getElementById('testNotification');
-        
-        if (notificationToggle) {
-            notificationToggle.addEventListener('change', (e) => {
-                this.isNotificationEnabled = e.target.checked;
+        try {
+            const notificationToggle = document.getElementById('notificationToggle');
+            const soundToggle = document.getElementById('soundToggle');
+            const testButton = document.getElementById('testNotification');
+            
+            if (notificationToggle) {
+                notificationToggle.addEventListener('change', (e) => {
+                    this.isNotificationEnabled = e.target.checked;
+                    this.saveSettings();
+                    
+                    if (this.isNotificationEnabled && this.notificationPermission !== 'granted') {
+                        this.checkNotificationPermission();
+                    }
+                });
+            } else {
+                console.warn('notificationToggle が見つかりません');
+            }
+            
+            if (soundToggle) {
+                soundToggle.addEventListener('change', (e) => {
+                    this.isSoundEnabled = e.target.checked;
                 this.saveSettings();
-                
-                if (this.isNotificationEnabled && this.notificationPermission !== 'granted') {
-                    this.checkNotificationPermission();
-                }
             });
-        }
-        
-        if (soundToggle) {
-            soundToggle.addEventListener('change', (e) => {
-                this.isSoundEnabled = e.target.checked;
-                this.saveSettings();
-            });
-        }
-        
-        if (testButton) {
-            testButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.testNotification();
-            });
+            } else {
+                console.warn('soundToggle が見つかりません');
+            }
+            
+            if (testButton) {
+                testButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.testNotification();
+                });
+            } else {
+                console.warn('testButton が見つかりません');
+            }
+        } catch (error) {
+            console.error('イベントリスナーの設定でエラー:', error);
         }
     }
 
@@ -453,4 +492,11 @@ class ChatNotificationManager {
 }
 
 // グローバルに通知マネージャーを設定
-window.notificationManager = new ChatNotificationManager();
+// DOMの準備を待ってからインスタンス化
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        window.notificationManager = new ChatNotificationManager();
+    });
+} else {
+    window.notificationManager = new ChatNotificationManager();
+}

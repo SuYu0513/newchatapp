@@ -25,6 +25,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(@NonNull StompEndpointRegistry registry) {
         // WebSocketエンドポイントを登録
         registry.addEndpoint("/ws")
+                .setAllowedOriginPatterns("*") // 全てのOriginを許可（Dev Tunnels対応）
                 .withSockJS(); // SockJSフォールバックを有効化
     }
 }
