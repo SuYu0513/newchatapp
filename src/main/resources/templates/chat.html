@@ -395,7 +395,7 @@
                         </a></li>
                         <!-- デバッグモード時のみ表示 -->
                         <li th:if="${debugMode}"><a class="dropdown-item" th:href="@{/profile/online}">
-                            <i class="fas fa-circle text-success me-2"></i>オンラインユーザー
+                            <i class="fas fa-circle text-success me-2"></i>オンラインユーザー数
                         </a></li>
                         <!-- ランダムマッチングはデバッグモード時のみ -->
                         <li th:if="${debugMode}"><hr class="dropdown-divider"></li>
@@ -496,7 +496,7 @@
                             <div class="d-grid gap-2">
                                 <a href="/random-matching" class="btn btn-primary" 
                                    style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); border: none;">
-                                    <i class="fas fa-dice me-1"></i>マッチング開始
+                                    <i class="fas fa-dice me-1"></i>マッチング<br>開始
                                 </a>
                                 <button class="btn btn-outline-secondary btn-sm" onclick="showQuickMatchModal()">
                                     <i class="fas fa-bolt me-1"></i>クイックマッチ
@@ -627,12 +627,12 @@
                 <div class="card">
                     <div class="card-header">
                         <h5 class="mb-0">
-                            <i class="fas fa-users me-2"></i>オンラインユーザー
+                            <i class="fas fa-users me-2"></i>オンラインユーザー数
                         </h5>
                     </div>
                     <div class="card-body">
                         <ul id="users-list" class="list-unstyled">
-                            <!-- オンラインユーザーがここに表示されます -->
+                            <!-- オンラインユーザー数がここに表示されます -->
                         </ul>
                     </div>
                 </div>
@@ -2126,7 +2126,7 @@
                 KawaiiTheme.addSparkle(room);
             });
             
-            // オンラインユーザーにハート効果
+            // オンラインユーザー数にハート効果
             document.querySelectorAll('.user-card').forEach(user => {
                 user.addEventListener('mouseenter', function() {
                     KawaiiTheme.addHeartBeat(this);

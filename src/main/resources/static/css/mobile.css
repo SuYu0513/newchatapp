@@ -143,18 +143,18 @@ body {
     
     /* 背景設定 - 固定された背景 */
     body {
-        background: #f0f2f5 !important;
+        background: rgb(163, 6, 124) !important;
         background-image: none !important;
         position: relative;
         overflow-x: hidden;
     }
     
-    /* 泡の背景を完全に非表示 */
+    /* 泡の背景を表示 */
     .bubble, .bubble::before, .bubble::after,
     body::before, body::after,
     .container-fluid::before, .container-fluid::after {
-        display: none !important;
-        opacity: 0 !important;
+        display: flex !important;
+        opacity: 0.5 !important;
         visibility: hidden !important;
     }
     
@@ -182,7 +182,7 @@ body {
     
     /* チャットメイン画面を全画面に */
     .col-md-9 {
-        width: 100% !important;
+        width: 90% !important;
         max-width: 100% !important;
         padding: 0 !important;
         flex: 1;
@@ -203,9 +203,10 @@ body {
         margin: 0 !important;
         display: flex !important;
         flex-direction: column !important;
-        background: #ffffff !important;
+        background: #aa0c0c !important;
         box-shadow: none !important;
         backdrop-filter: none !important;
+        opacity: 0;
     }
     
     .chat-main .card-header, .chat-header {
@@ -488,21 +489,21 @@ body {
         min-height: 10vh;
     }
     
-    /* ログインページのrow要素にトップスペースを追加 */
+    /* ログインページのrow要素にトップスペースを追加
     .login-container .row {
-        margin-top: 2cm; /* 2センチのトップマージンを追加 */
+        margin-top: 2cm; /* 2センチのトップマージンを追加 
         padding-top: 0;
-    }
+    } */
     
-    /* text-center mb-4の上部に追加スペースを確保 */
+    /* text-center mb-4の上部に追加スペースを確保
     .login-container .text-center.mb-4 {
-        margin-top: 1rem; /* さらに上部マージンを追加 */
-    }
+        margin-top: 0.2rem; /* さらに上部マージンを追加 
+    } */
     
     /* 認証ページ全般のスペーシング調整 */
     body:has(.login-container) .container .row,
     body:has(.card.mt-5) .container .row {
-        margin-top: 2cm !important;
+        /* margin-top: 2cm !important; */
         padding-top: 1rem;
     }
     
@@ -680,4 +681,193 @@ body {
         transform: translateY(0);
         opacity: 1;
     }
+}
+
+/* ======================================
+   チャットアプリ モバイル専用スタイル
+   ====================================== */
+
+/* モバイル用レスポンシブデザイン */
+@media (max-width: 768px) {
+  .container-fluid {
+    padding: 10px;
+  }
+  
+  .card-body {
+    padding: 15px;
+  }
+  
+  #chat-container {
+    height: 400px;
+  }
+  
+  .message-bubble {
+    max-width: 85%;
+    padding: 12px 16px;
+  }
+  
+  .navbar-brand {
+    font-size: 1.2rem;
+  }
+  
+  /* モバイルでの通知設定ボタン調整 */
+  .navbar-nav .nav-link.dropdown-toggle span {
+    display: none !important;
+  }
+  
+  .navbar-nav .nav-link.dropdown-toggle {
+    padding: 8px 10px !important;
+    min-width: 40px !important;
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .room-item {
+    padding: 10px;
+  }
+  
+  .message-bubble {
+    max-width: 90%;
+    padding: 10px 14px;
+  }
+  
+  .form-control {
+    padding: 12px 16px;
+  }
+  
+  .btn-primary {
+    padding: 12px 20px;
+  }
+}
+
+/* モバイル専用チャット機能 */
+@media (max-width: 768px) {
+  /* チャットコンテナのモバイル最適化 */
+  #chat-container {
+    border-radius: 12px;
+    margin: 10px 0;
+  }
+  
+  #chat-container::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  /* メッセージバブルのモバイル調整 */
+  .message {
+    margin-bottom: 12px;
+  }
+  
+  .message-bubble {
+    border-radius: 18px;
+    font-size: 0.9rem;
+    line-height: 1.3;
+  }
+  
+  .message-bubble.own-message {
+    margin-left: 15%;
+  }
+  
+  .message-bubble.other-message {
+    margin-right: 15%;
+  }
+  
+  /* モバイル用入力エリア */
+  .input-group {
+    border-radius: 12px;
+    margin: 10px 0;
+  }
+  
+  .form-control {
+    border-radius: 12px 0 0 12px;
+    font-size: 1rem;
+    min-height: 45px;
+  }
+  
+  .btn-primary {
+    border-radius: 0 12px 12px 0;
+    min-height: 45px;
+    min-width: 80px;
+    font-size: 0.9rem;
+  }
+  
+  /* カードのモバイル調整 */
+  .card {
+    border-radius: 15px;
+    margin-bottom: 15px;
+  }
+  
+  .card-header {
+    padding: 15px;
+  }
+  
+  .card-header h5,
+  .card-header h6 {
+    font-size: 1.1rem;
+  }
+  
+  /* ルーム一覧のモバイル調整 */
+  .room-item {
+    border-radius: 12px;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+  }
+  
+  .room-item:hover {
+    transform: translateX(5px);
+  }
+  
+  /* 通知バッジのモバイル調整 */
+  .badge {
+    font-size: 0.7rem;
+    padding: 0.3em 0.5em;
+  }
+  
+  /* モバイル用アニメーション調整 */
+  .message-bubble:hover {
+    transform: translateY(-1px);
+  }
+  
+  .card:hover {
+    transform: translateY(-2px);
+  }
+  
+  /* モバイル用通知トースト */
+  .toast {
+    font-size: 0.9rem;
+    border-radius: 12px;
+  }
+}
+
+/* 超小画面（iPhone SE など）専用調整 */
+@media (max-width: 380px) {
+  .container-fluid {
+    padding: 8px;
+  }
+  
+  .card-body {
+    padding: 12px;
+  }
+  
+  .message-bubble {
+    max-width: 95%;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+  
+  .form-control {
+    padding: 10px 14px;
+    font-size: 0.9rem;
+  }
+  
+  .btn-primary {
+    padding: 10px 16px;
+    font-size: 0.85rem;
+    min-width: 70px;
+  }
+  
+  .room-item {
+    padding: 8px;
+    font-size: 0.85rem;
+  }
 }

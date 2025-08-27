@@ -50,7 +50,12 @@ class PWAManager {
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             this.deferredPrompt = e;
-            this.showInstallPrompt();
+            console.log('PWA install prompt available');
+            
+            // Chrome用プロンプトを少し遅らせて表示
+            setTimeout(() => {
+                this.showInstallPrompt();
+            }, 3000);
         });
 
         window.addEventListener('appinstalled', () => {
@@ -113,7 +118,23 @@ class PWAManager {
             window.navigator.standalone === true) {
             this.isInstalled = true;
             document.body.classList.add('standalone-mode');
+            console.log('PWA: スタンドアロンモードで実行中');
+            return;
         }
+
+        console.log('PWA: ブラウザモードで実行中');
+        
+        // PWA要件のチェック（デバッグ用）
+        this.checkPWARequirements();
+    }
+
+    // PWA要件チェック（デバッグ用）
+    checkPWARequirements() {
+        console.log('PWA要件チェック:');
+        console.log('- HTTPS:', location.protocol === 'https:' || location.hostname === 'localhost');
+        console.log('- Service Worker:', 'serviceWorker' in navigator);
+        console.log('- Manifest:', document.querySelector('link[rel="manifest"]') !== null);
+        console.log('- beforeinstallprompt対応:', this.deferredPrompt !== null);
     }
 
     // オンライン/オフライン処理

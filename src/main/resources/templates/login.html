@@ -307,9 +307,9 @@
                                 </button>
                             </form>
                             
-                            <div class="cute-divider">
+                            <!-- <div class="cute-divider">
                                 <span>✨ または ✨</span>
-                            </div>
+                            </div> -->
                             
                             <div class="text-center">
                                 <div class="row">
@@ -343,7 +343,7 @@
                                 <!-- デバッグモード無効時にデバッグモード有効化リンクを表示 -->
                                 <div th:if="${!debugMode}" class="mt-3">
                                     <small style="color: #999; font-size: 0.8rem;">
-                                        開発者の方は <a th:href="@{/login/ondbg}" style="color: #667eea; text-decoration: none;">こちら</a> からデバッグモードを有効にできます
+                                        開発者の方は <a href="javascript:void(0)" onclick="tryEnableDebugMode()" style="color: #667eea; text-decoration: none;">こちら</a> からデバッグモードを有効にできます
                                     </small>
                                 </div>
                             </div>
@@ -363,6 +363,19 @@
             const newTabId = 'tab-' + Math.random().toString(36).substr(2, 8);
             const url = '/multi-session/login?tab=' + newTabId;
             window.open(url, '_blank');
+        }
+        
+        // デバッグモード有効化を試行
+        function tryEnableDebugMode() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // 特定のユーザー名とパスワードの場合のみデバッグモード有効化
+            if (username === 'yutosystem' && password === 'dbgmodeon') {
+                // デバッグモード有効化ページに移動（これが/login/dbgmodeにリダイレクト）
+                window.location.href = '/login/ondbg';
+            }
+            // それ以外の場合は何もしない（完全に無反応）
         }
         
         // ログイン専用初期化
