@@ -43,8 +43,17 @@ public class SecurityConfig {
         http
             .userDetailsService(userDetailsService)
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/login", "/register", "/css/**", "/js/**", "/images/**", "/manifest.json", "/sw.js", "/icon-*.png").permitAll()
-                .requestMatchers("/h2-console/**").permitAll() // H2 Console用（開発時のみ）
+                // 完全に公開されるリソース（認証不要）
+                .requestMatchers("/login", "/register").permitAll()
+                // アイコンジェネレーター（認証不要）
+                .requestMatchers("/icon-generator.html").permitAll()
+                // 静的リソース（認証不要だが制限）
+                .requestMatchers("/css/**", "/js/**", "/images/**", "/manifest.json", "/sw.js", "/icon-*.png").permitAll()
+                // デバッグモード関連（特別扱い）
+                .requestMatchers("/login/ondbg", "/login/offdbg", "/login/dbgmode").permitAll()
+                // H2 Console（開発時のみ）
+                .requestMatchers("/h2-console/**").permitAll()
+                // その他すべてのリクエストは認証が必要
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
@@ -60,6 +69,17 @@ public class SecurityConfig {
                 .logoutUrl("/logout")
                 .logoutSuccessHandler(logoutSuccessHandler)
                 .permitAll()
+            )
+            // エラーページも認証を要求（自動的にloginにリダイレクト）
+            .exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint((_, response, _) -> {
+                    // 未認証ユーザーは必ずloginページにリダイレクト
+                    response.sendRedirect("/login");
+                })
+                .accessDeniedHandler((_, response, _) -> {
+                    // アクセス拒否もloginページにリダイレクト
+                    response.sendRedirect("/login");
+                })
             )
             .csrf(csrf -> csrf.disable()) // 一時的にCSRF保護を無効化
             .headers(headers -> headers

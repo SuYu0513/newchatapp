@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chatapp-v8';
+const CACHE_NAME = 'chat-app-v11';
 const urlsToCache = [
   '/',
   '/login',
@@ -9,6 +9,15 @@ const urlsToCache = [
   '/js/kawaii-theme.js',
   '/js/pwa.js',
   '/images/default-avatar.svg',
+  '/images/app-icon.svg',
+  '/images/app-icon-48.svg',
+  '/images/app-icon-72.svg',
+  '/images/app-icon-96.svg',
+  '/images/app-icon-144.svg',
+  '/images/app-icon-180.svg',
+  '/images/app-icon-180.png',
+  '/images/app-icon-192.svg',
+  '/images/app-icon-192-enhanced.svg',
   '/manifest.json',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',

@@ -6,7 +6,6 @@ import com.example.chatapp.entity.User;
 import com.example.chatapp.entity.UserProfile;
 import com.example.chatapp.repository.ChatRoomRepository;
 import com.example.chatapp.repository.RandomMatchRepository;
-import com.example.chatapp.repository.UserProfileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

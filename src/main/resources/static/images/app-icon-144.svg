@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144">
+  <!-- 背景グラデーション -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff9ff3;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#f368e0;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#d946ef;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#a855f7;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="catGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fef3c7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fed7aa;stop-opacity:1" />
+    </linearGradient>
+    
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+  
+  <!-- 背景 -->
+  <rect width="144" height="144" rx="34" ry="34" fill="url(#bgGradient)"/>
+  
+  <!-- 背景の星 -->
+  <g opacity="0.3">
+    <path d="M34 23 L35 26 L38 26 L36 28 L37 31 L34 29 L31 31 L32 28 L30 26 L33 26 Z" fill="#ffffff"/>
+    <path d="M112 34 L113 36 L115 36 L114 37 L115 39 L113 38 L111 39 L112 37 L110 36 L112 36 Z" fill="#ffffff"/>
+  </g>
+  
+  <!-- 可愛い猫の顔 -->
+  <g transform="translate(72, 62)" filter="url(#shadow)">
+    <!-- 耳 -->
+    <ellipse cx="-17" cy="-11" rx="7" ry="10" fill="url(#catGradient)" transform="rotate(-20)"/>
+    <ellipse cx="17" cy="-11" rx="7" ry="10" fill="url(#catGradient)" transform="rotate(20)"/>
+    
+    <!-- 耳の内側 -->
+    <ellipse cx="-17" cy="-10" rx="3" ry="5" fill="#ff9ff3" transform="rotate(-20)"/>
+    <ellipse cx="17" cy="-10" rx="3" ry="5" fill="#ff9ff3" transform="rotate(20)"/>
+    
+    <!-- 顔 -->
+    <ellipse cx="0" cy="0" rx="23" ry="21" fill="url(#catGradient)"/>
+    
+    <!-- 目 -->
+    <ellipse cx="-7" cy="-4" rx="3" ry="5" fill="#2d3748"/>
+    <ellipse cx="7" cy="-4" rx="3" ry="5" fill="#2d3748"/>
+    
+    <!-- 目のハイライト -->
+    <ellipse cx="-6" cy="-6" rx="1" ry="1.5" fill="#ffffff"/>
+    <ellipse cx="8" cy="-6" rx="1" ry="1.5" fill="#ffffff"/>
+    
+    <!-- 鼻 -->
+    <path d="M0 1.5 L-1.5 4.5 L1.5 4.5 Z" fill="#ff6b9d"/>
+    
+    <!-- 口 -->
+    <path d="M0 6 Q-4 10 -7 7" stroke="#2d3748" stroke-width="1" fill="none" stroke-linecap="round"/>
+    <path d="M0 6 Q4 10 7 7" stroke="#2d3748" stroke-width="1" fill="none" stroke-linecap="round"/>
+    
+    <!-- ひげ -->
+    <line x1="-15" y1="0" x2="-21" y2="-1" stroke="#2d3748" stroke-width="0.6" stroke-linecap="round"/>
+    <line x1="-15" y1="3" x2="-21" y2="3" stroke="#2d3748" stroke-width="0.6" stroke-linecap="round"/>
+    <line x1="-15" y1="6" x2="-21" y2="7" stroke="#2d3748" stroke-width="0.6" stroke-linecap="round"/>
+    
+    <line x1="15" y1="0" x2="21" y2="-1" stroke="#2d3748" stroke-width="0.6" stroke-linecap="round"/>
+    <line x1="15" y1="3" x2="21" y2="3" stroke="#2d3748" stroke-width="0.6" stroke-linecap="round"/>
+    <line x1="15" y1="6" x2="21" y2="7" stroke="#2d3748" stroke-width="0.6" stroke-linecap="round"/>
+    
+    <!-- チーク -->
+    <ellipse cx="-14" cy="3" rx="2.5" ry="1.5" fill="#ff9ff3" opacity="0.6"/>
+    <ellipse cx="14" cy="3" rx="2.5" ry="1.5" fill="#ff9ff3" opacity="0.6"/>
+  </g>
+  
+  <!-- キラキラ効果 -->
+  <g opacity="0.8">
+    <path d="M28 84 L29 86 L31 86 L29 88 L30 90 L28 89 L26 90 L27 88 L25 86 L27 86 Z" fill="#ffffff"/>
+    <path d="M118 45 L119 46 L120 46 L119 47 L120 48 L119 47 L118 48 L118 47 L117 46 L118 46 Z" fill="#ffffff"/>
+  </g>
+</svg>

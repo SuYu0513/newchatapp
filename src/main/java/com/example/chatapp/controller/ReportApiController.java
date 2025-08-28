@@ -85,8 +85,8 @@ public class ReportApiController {
             }
             
             if (report != null) {
-                // 通報回数を取得
-                long reportCount = reportService.getReportCountForUser(reportedUserOpt.get());
+                // 通報回数を取得（将来の管理者通知機能で使用予定）
+                // long reportCount = reportService.getReportCountForUser(reportedUserOpt.get());
                 
                 // 管理者通知を作成（TODO: 実装）
                 // createAdminNotification(report, reportCount);

@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff9ff3;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#a855f7;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="catGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fef3c7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fed7aa;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <rect width="48" height="48" rx="11" ry="11" fill="url(#bgGradient)"/>
+  
+  <g transform="translate(24, 21)">
+    <!-- 耳 -->
+    <ellipse cx="-5.5" cy="-3.5" rx="2" ry="3.5" fill="url(#catGradient)" transform="rotate(-20)"/>
+    <ellipse cx="5.5" cy="-3.5" rx="2" ry="3.5" fill="url(#catGradient)" transform="rotate(20)"/>
+    <ellipse cx="-5.5" cy="-3" rx="1" ry="1.5" fill="#ff9ff3" transform="rotate(-20)"/>
+    <ellipse cx="5.5" cy="-3" rx="1" ry="1.5" fill="#ff9ff3" transform="rotate(20)"/>
+    
+    <!-- 顔 -->
+    <ellipse cx="0" cy="0" rx="7.5" ry="7" fill="url(#catGradient)"/>
+    
+    <!-- 目 -->
+    <ellipse cx="-2.5" cy="-1.5" rx="1" ry="1.5" fill="#2d3748"/>
+    <ellipse cx="2.5" cy="-1.5" rx="1" ry="1.5" fill="#2d3748"/>
+    <ellipse cx="-2" cy="-2" rx="0.4" ry="0.6" fill="#ffffff"/>
+    <ellipse cx="3" cy="-2" rx="0.4" ry="0.6" fill="#ffffff"/>
+    
+    <!-- 鼻と口 -->
+    <path d="M0 0.5 L-0.5 1.5 L0.5 1.5 Z" fill="#ff6b9d"/>
+    <path d="M0 2 Q-1.5 3.5 -2.5 2.5" stroke="#2d3748" stroke-width="0.4" fill="none" stroke-linecap="round"/>
+    <path d="M0 2 Q1.5 3.5 2.5 2.5" stroke="#2d3748" stroke-width="0.4" fill="none" stroke-linecap="round"/>
+    
+    <!-- ひげ -->
+    <line x1="-5" y1="0" x2="-7" y2="-0.3" stroke="#2d3748" stroke-width="0.2" stroke-linecap="round"/>
+    <line x1="-5" y1="1" x2="-7" y2="1" stroke="#2d3748" stroke-width="0.2" stroke-linecap="round"/>
+    <line x1="5" y1="0" x2="7" y2="-0.3" stroke="#2d3748" stroke-width="0.2" stroke-linecap="round"/>
+    <line x1="5" y1="1" x2="7" y2="1" stroke="#2d3748" stroke-width="0.2" stroke-linecap="round"/>
+    
+    <!-- チーク -->
+    <ellipse cx="-4.5" cy="1" rx="0.8" ry="0.5" fill="#ff9ff3" opacity="0.6"/>
+    <ellipse cx="4.5" cy="1" rx="0.8" ry="0.5" fill="#ff9ff3" opacity="0.6"/>
+  </g>
+  
+  <!-- キラキラ -->
+  <path d="M10 28 L11 30 L13 30 L11 32 L12 34 L10 33 L8 34 L9 32 L7 30 L9 30 Z" fill="#ffffff" opacity="0.8"/>
+  <path d="M37 15 L38 16 L39 16 L38 17 L39 18 L38 17 L37 18 L37 17 L36 16 L37 16 Z" fill="#ffffff" opacity="0.8"/>
+</svg>

@@ -1,0 +1,69 @@
+/* iOS用PNGアイコンを生成するためのSVGテンプレート */
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 180 180">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff9ff3"/>
+      <stop offset="30%" style="stop-color:#f368e0"/>
+      <stop offset="70%" style="stop-color:#d946ef"/>
+      <stop offset="100%" style="stop-color:#a855f7"/>
+    </linearGradient>
+    <linearGradient id="cat" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fef3c7"/>
+      <stop offset="100%" style="stop-color:#fed7aa"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- 背景 -->
+  <rect width="180" height="180" rx="40" fill="url(#bg)"/>
+  
+  <!-- 星 -->
+  <g fill="#ffffff" opacity="0.4">
+    <path d="M40 25 L42 30 L47 30 L43 34 L45 39 L40 36 L35 39 L37 34 L33 30 L38 30 Z"/>
+    <path d="M140 40 L141 43 L144 43 L142 45 L143 48 L140 46 L137 48 L138 45 L136 43 L139 43 Z"/>
+  </g>
+  
+  <!-- 猫 -->
+  <g transform="translate(90, 77)">
+    <!-- 耳 -->
+    <ellipse cx="-20" cy="-14" rx="8" ry="12" fill="url(#cat)" transform="rotate(-20)"/>
+    <ellipse cx="20" cy="-14" rx="8" ry="12" fill="url(#cat)" transform="rotate(20)"/>
+    <ellipse cx="-20" cy="-12" rx="3.5" ry="6" fill="#ff9ff3" transform="rotate(-20)"/>
+    <ellipse cx="20" cy="-12" rx="3.5" ry="6" fill="#ff9ff3" transform="rotate(20)"/>
+    
+    <!-- 顔 -->
+    <ellipse cx="0" cy="0" rx="28" ry="26" fill="url(#cat)"/>
+    
+    <!-- 目 -->
+    <ellipse cx="-8" cy="-5" rx="3.5" ry="6" fill="#2d3748"/>
+    <ellipse cx="8" cy="-5" rx="3.5" ry="6" fill="#2d3748"/>
+    <ellipse cx="-7" cy="-7" rx="1.3" ry="1.8" fill="#ffffff"/>
+    <ellipse cx="9" cy="-7" rx="1.3" ry="1.8" fill="#ffffff"/>
+    
+    <!-- 鼻 -->
+    <path d="M0 2 L-1.8 5.5 L1.8 5.5 Z" fill="#ff6b9d"/>
+    
+    <!-- 口 -->
+    <path d="M0 7.5 Q-5.5 12 -8 8.5" stroke="#2d3748" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+    <path d="M0 7.5 Q5.5 12 8 8.5" stroke="#2d3748" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+    
+    <!-- ひげ -->
+    <g stroke="#2d3748" stroke-width="0.7" stroke-linecap="round">
+      <line x1="-18" y1="0" x2="-26" y2="-1.5"/>
+      <line x1="-18" y1="3.5" x2="-26" y2="3.5"/>
+      <line x1="-18" y1="7" x2="-26" y2="9"/>
+      <line x1="18" y1="0" x2="26" y2="-1.5"/>
+      <line x1="18" y1="3.5" x2="26" y2="3.5"/>
+      <line x1="18" y1="7" x2="26" y2="9"/>
+    </g>
+    
+    <!-- チーク -->
+    <ellipse cx="-16" cy="3.5" rx="2.8" ry="1.8" fill="#ff9ff3" opacity="0.6"/>
+    <ellipse cx="16" cy="3.5" rx="2.8" ry="1.8" fill="#ff9ff3" opacity="0.6"/>
+  </g>
+  
+  <!-- キラキラ -->
+  <g fill="#ffffff" opacity="0.9">
+    <path d="M35 105 L36 108 L39 108 L37 110 L38 113 L35 111 L32 113 L33 110 L31 108 L34 108 Z"/>
+    <path d="M147 55 L148 57 L150 57 L149 58 L150 60 L148 59 L146 60 L147 58 L145 57 L147 57 Z"/>
+  </g>
+</svg>

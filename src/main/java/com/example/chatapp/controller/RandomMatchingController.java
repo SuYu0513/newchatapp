@@ -7,7 +7,6 @@ import com.example.chatapp.entity.UserProfile;
 import com.example.chatapp.service.RandomMatchingService;
 import com.example.chatapp.service.UserService;
 import com.example.chatapp.service.UserProfileService;
-import com.example.chatapp.service.ChatRoomService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -18,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * ランダムマッチング機能のコントローラー
@@ -35,9 +33,6 @@ public class RandomMatchingController {
 
     @Autowired
     private UserProfileService userProfileService;
-
-    @Autowired
-    private ChatRoomService chatRoomService;
 
     /**
      * ランダムマッチングページの表示

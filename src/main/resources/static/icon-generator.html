@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SVG to PNG Converter</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        canvas { border: 1px solid #ccc; margin: 10px 0; }
+        .download-link { 
+            display: inline-block; 
+            margin: 5px; 
+            padding: 10px 15px; 
+            background: #007AFF; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>iOS用PNGアイコン生成</h1>
+    <canvas id="canvas180" width="180" height="180"></canvas><br>
+    <a id="download180" class="download-link">180x180 PNG をダウンロード</a><br>
+    
+    <canvas id="canvas192" width="192" height="192"></canvas><br>
+    <a id="download192" class="download-link">192x192 PNG をダウンロード</a><br>
+    
+    <canvas id="canvas512" width="512" height="512"></canvas><br>
+    <a id="download512" class="download-link">512x512 PNG をダウンロード</a>
+
+    <script>
+        // かわいい猫アイコンを描画する関数
+        function drawCatIcon(ctx, size) {
+            const scale = size / 192;
+            ctx.scale(scale, scale);
+            
+            // 背景グラデーション
+            const bgGradient = ctx.createLinearGradient(0, 0, 192, 192);
+            bgGradient.addColorStop(0, '#ff9ff3');
+            bgGradient.addColorStop(0.3, '#f368e0');
+            bgGradient.addColorStop(0.7, '#d946ef');
+            bgGradient.addColorStop(1, '#a855f7');
+            
+            // 背景（角丸）
+            ctx.fillStyle = bgGradient;
+            ctx.beginPath();
+            ctx.roundRect(0, 0, 192, 192, 45);
+            ctx.fill();
+            
+            // 猫の描画
+            ctx.translate(96, 82);
+            
+            // 猫の顔のグラデーション
+            const catGradient = ctx.createLinearGradient(-30, -28, 30, 28);
+            catGradient.addColorStop(0, '#fef3c7');
+            catGradient.addColorStop(1, '#fed7aa');
+            
+            // 耳
+            ctx.fillStyle = catGradient;
+            ctx.save();
+            ctx.translate(-22, -15);
+            ctx.rotate(-0.35); // -20度
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 9, 13, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.restore();
+            
+            ctx.save();
+            ctx.translate(22, -15);
+            ctx.rotate(0.35); // 20度
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 9, 13, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.restore();
+            
+            // 耳の内側
+            ctx.fillStyle = '#ff9ff3';
+            ctx.save();
+            ctx.translate(-22, -13);
+            ctx.rotate(-0.35);
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 4, 7, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.restore();
+            
+            ctx.save();
+            ctx.translate(22, -13);
+            ctx.rotate(0.35);
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 4, 7, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.restore();
+            
+            // 顔
+            ctx.fillStyle = catGradient;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 30, 28, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // 目
+            ctx.fillStyle = '#2d3748';
+            ctx.beginPath();
+            ctx.ellipse(-9, -6, 4, 7, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(9, -6, 4, 7, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // 目のハイライト
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.ellipse(-8, -8, 1.5, 2, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(10, -8, 1.5, 2, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // 鼻
+            ctx.fillStyle = '#ff6b9d';
+            ctx.beginPath();
+            ctx.moveTo(0, 2);
+            ctx.lineTo(-2, 6);
+            ctx.lineTo(2, 6);
+            ctx.closePath();
+            ctx.fill();
+            
+            // 口
+            ctx.strokeStyle = '#2d3748';
+            ctx.lineWidth = 1.2;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(0, 8);
+            ctx.quadraticCurveTo(-6, 13, -9, 9);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(0, 8);
+            ctx.quadraticCurveTo(6, 13, 9, 9);
+            ctx.stroke();
+            
+            // ひげ
+            ctx.strokeStyle = '#2d3748';
+            ctx.lineWidth = 0.8;
+            ctx.beginPath();
+            ctx.moveTo(-20, 0); ctx.lineTo(-28, -2);
+            ctx.moveTo(-20, 4); ctx.lineTo(-28, 4);
+            ctx.moveTo(-20, 8); ctx.lineTo(-28, 10);
+            ctx.moveTo(20, 0); ctx.lineTo(28, -2);
+            ctx.moveTo(20, 4); ctx.lineTo(28, 4);
+            ctx.moveTo(20, 8); ctx.lineTo(28, 10);
+            ctx.stroke();
+            
+            // チーク
+            ctx.fillStyle = 'rgba(255, 159, 243, 0.6)';
+            ctx.beginPath();
+            ctx.ellipse(-18, 4, 3, 2, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(18, 4, 3, 2, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // キラキラ効果
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.translate(-96, -82); // 原点に戻す
+            
+            // 星1
+            ctx.beginPath();
+            ctx.moveTo(37, 112); ctx.lineTo(38, 115); ctx.lineTo(41, 115);
+            ctx.lineTo(39, 117); ctx.lineTo(40, 120); ctx.lineTo(37, 118);
+            ctx.lineTo(34, 120); ctx.lineTo(35, 117); ctx.lineTo(33, 115);
+            ctx.lineTo(36, 115); ctx.closePath();
+            ctx.fill();
+            
+            // 星2
+            ctx.beginPath();
+            ctx.moveTo(157, 60); ctx.lineTo(158, 62); ctx.lineTo(160, 62);
+            ctx.lineTo(159, 63); ctx.lineTo(160, 65); ctx.lineTo(158, 64);
+            ctx.lineTo(156, 65); ctx.lineTo(157, 63); ctx.lineTo(155, 62);
+            ctx.lineTo(157, 62); ctx.closePath();
+            ctx.fill();
+        }
+        
+        function generateIcon(canvasId, downloadId, size) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            
+            // Canvas をクリア
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // アイコンを描画
+            drawCatIcon(ctx, size);
+            
+            // ダウンロードリンクを設定
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const link = document.getElementById(downloadId);
+                link.href = url;
+                link.download = `app-icon-${size}x${size}.png`;
+            });
+        }
+        
+        // ページ読み込み時にアイコンを生成
+        window.onload = function() {
+            generateIcon('canvas180', 'download180', 180);
+            generateIcon('canvas192', 'download192', 192);
+            generateIcon('canvas512', 'download512', 512);
+        };
+        
+        // Canvas 2D の roundRect ポリフィル
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, width, height, radius) {
+                this.beginPath();
+                this.moveTo(x + radius, y);
+                this.lineTo(x + width - radius, y);
+                this.quadraticCurveTo(x + width, y, x + width, y + radius);
+                this.lineTo(x + width, y + height - radius);
+                this.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                this.lineTo(x + radius, y + height);
+                this.quadraticCurveTo(x, y + height, x, y + height - radius);
+                this.lineTo(x, y + radius);
+                this.quadraticCurveTo(x, y, x + radius, y);
+                this.closePath();
+            };
+        }
+    </script>
+</body>
+</html>

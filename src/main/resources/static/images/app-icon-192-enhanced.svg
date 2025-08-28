@@ -1,0 +1,106 @@
+<!-- このSVGをPNGに変換するため、ベースファイルとして使用 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <!-- 背景グラデーション -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff9ff3;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#f368e0;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#d946ef;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#a855f7;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="catGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fef3c7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fed7aa;stop-opacity:1" />
+    </linearGradient>
+    
+    <radialGradient id="bubbleGradient" cx="30%" cy="30%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.3" />
+    </radialGradient>
+    
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000000" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+  
+  <!-- 背景 -->
+  <rect width="192" height="192" rx="45" ry="45" fill="url(#bgGradient)"/>
+  
+  <!-- 背景の星とハート -->
+  <g opacity="0.4">
+    <!-- 星 -->
+    <path d="M45 30 L47 35 L52 35 L48 39 L50 44 L45 41 L40 44 L42 39 L38 35 L43 35 Z" fill="#ffffff"/>
+    <path d="M150 45 L151 48 L154 48 L152 50 L153 53 L150 51 L147 53 L148 50 L146 48 L149 48 Z" fill="#ffffff"/>
+    <path d="M30 150 L32 155 L37 155 L33 159 L35 164 L30 161 L25 164 L27 159 L23 155 L28 155 Z" fill="#ffffff"/>
+    
+    <!-- ハート -->
+    <path d="M75 55 C73 53, 69 53, 69 57 C69 53, 65 53, 63 55 C63 59, 69 67, 69 67 S75 59, 75 55" fill="#ffffff"/>
+    <path d="M160 140 C158 138, 154 138, 154 142 C154 138, 150 138, 148 140 C148 144, 154 152, 154 152 S160 144, 160 140" fill="#ffffff"/>
+  </g>
+  
+  <!-- 可愛い猫の顔 -->
+  <g transform="translate(96, 82)" filter="url(#shadow)">
+    <!-- 耳 -->
+    <ellipse cx="-22" cy="-15" rx="9" ry="13" fill="url(#catGradient)" transform="rotate(-20)"/>
+    <ellipse cx="22" cy="-15" rx="9" ry="13" fill="url(#catGradient)" transform="rotate(20)"/>
+    
+    <!-- 耳の内側 -->
+    <ellipse cx="-22" cy="-13" rx="4" ry="7" fill="#ff9ff3" transform="rotate(-20)"/>
+    <ellipse cx="22" cy="-13" rx="4" ry="7" fill="#ff9ff3" transform="rotate(20)"/>
+    
+    <!-- 顔 -->
+    <ellipse cx="0" cy="0" rx="30" ry="28" fill="url(#catGradient)"/>
+    
+    <!-- 目 -->
+    <ellipse cx="-9" cy="-6" rx="4" ry="7" fill="#2d3748"/>
+    <ellipse cx="9" cy="-6" rx="4" ry="7" fill="#2d3748"/>
+    
+    <!-- 目のハイライト -->
+    <ellipse cx="-8" cy="-8" rx="1.5" ry="2" fill="#ffffff"/>
+    <ellipse cx="10" cy="-8" rx="1.5" ry="2" fill="#ffffff"/>
+    
+    <!-- 鼻 -->
+    <path d="M0 2 L-2 6 L2 6 Z" fill="#ff6b9d"/>
+    
+    <!-- 口 -->
+    <path d="M0 8 Q-6 13 -9 9" stroke="#2d3748" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    <path d="M0 8 Q6 13 9 9" stroke="#2d3748" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    
+    <!-- ひげ -->
+    <line x1="-20" y1="0" x2="-28" y2="-2" stroke="#2d3748" stroke-width="0.8" stroke-linecap="round"/>
+    <line x1="-20" y1="4" x2="-28" y2="4" stroke="#2d3748" stroke-width="0.8" stroke-linecap="round"/>
+    <line x1="-20" y1="8" x2="-28" y2="10" stroke="#2d3748" stroke-width="0.8" stroke-linecap="round"/>
+    
+    <line x1="20" y1="0" x2="28" y2="-2" stroke="#2d3748" stroke-width="0.8" stroke-linecap="round"/>
+    <line x1="20" y1="4" x2="28" y2="4" stroke="#2d3748" stroke-width="0.8" stroke-linecap="round"/>
+    <line x1="20" y1="8" x2="28" y2="10" stroke="#2d3748" stroke-width="0.8" stroke-linecap="round"/>
+    
+    <!-- チーク -->
+    <ellipse cx="-18" cy="4" rx="3" ry="2" fill="#ff9ff3" opacity="0.6"/>
+    <ellipse cx="18" cy="4" rx="3" ry="2" fill="#ff9ff3" opacity="0.6"/>
+  </g>
+  
+  <!-- チャットバブル -->
+  <g transform="translate(67, 135)">
+    <ellipse cx="0" cy="0" rx="15" ry="11" fill="url(#bubbleGradient)"/>
+    <path d="M-9 9 L-6 15 L-4 9" fill="url(#bubbleGradient)"/>
+    <!-- ハート -->
+    <path d="M0 -2 C-1 -3, -3 -3, -3 -1 C-3 -3, -5 -3, -6 -2 C-6 0, -3 4, -3 4 S0 0, 0 -2" fill="#ff6b9d"/>
+  </g>
+  
+  <g transform="translate(142, 142)">
+    <ellipse cx="0" cy="0" rx="13" ry="9" fill="url(#bubbleGradient)"/>
+    <path d="M7 7 L11 12 L13 7" fill="url(#bubbleGradient)"/>
+    <!-- 星 -->
+    <path d="M0 -1 L1 1 L3 1 L1 3 L2 5 L0 3 L-2 5 L-1 3 L-3 1 L-1 1 Z" fill="#ffd700"/>
+  </g>
+  
+  <!-- キラキラ効果 -->
+  <g opacity="0.9">
+    <path d="M37 112 L38 115 L41 115 L39 117 L40 120 L37 118 L34 120 L35 117 L33 115 L36 115 Z" fill="#ffffff"/>
+    <path d="M157 60 L158 62 L160 62 L159 63 L160 65 L158 64 L156 65 L157 63 L155 62 L157 62 Z" fill="#ffffff"/>
+    <path d="M30 67 L31 70 L34 70 L32 72 L33 75 L30 73 L27 75 L28 72 L26 70 L29 70 Z" fill="#ffffff"/>
+    <path d="M165 25 L166 27 L168 27 L166 29 L167 31 L165 30 L163 31 L164 29 L162 27 L164 27 Z" fill="#ffffff"/>
+  </g>
+</svg>
