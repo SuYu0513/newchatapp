@@ -347,4 +347,95 @@ public class UserProfileService {
                 return false;
         }
     }
+
+    /**
+     * フィルター条件付きプロフィール検索
+     */
+    public List<UserProfile> searchProfilesWithFilters(String keyword, String location, String onlineStatus, boolean onlineOnly) {
+        List<UserProfile> allProfiles = userProfileRepository.findAll();
+        
+        return allProfiles.stream()
+            .filter(profile -> {
+                // 検索可能設定をチェック
+                if (!profile.getIsSearchable()) {
+                    return false;
+                }
+                
+                // オンラインユーザーのみフィルター
+                if (onlineOnly && profile.getOnlineStatus() != UserProfile.OnlineStatus.ONLINE) {
+                    return false;
+                }
+                
+                // オンラインステータスフィルター
+                if (onlineStatus != null && !onlineStatus.trim().isEmpty()) {
+                    try {
+                        UserProfile.OnlineStatus targetStatus = UserProfile.OnlineStatus.valueOf(onlineStatus);
+                        if (profile.getOnlineStatus() != targetStatus) {
+                            return false;
+                        }
+                    } catch (IllegalArgumentException e) {
+                        // 無効なステータス値の場合は無視
+                    }
+                }
+                
+                // キーワード検索
+                if (keyword != null && !keyword.trim().isEmpty()) {
+                    String searchTerm = keyword.toLowerCase();
+                    boolean matchesKeyword = false;
+                    
+                    // 表示名での検索
+                    if (profile.getDisplayName() != null && 
+                        profile.getDisplayName().toLowerCase().contains(searchTerm)) {
+                        matchesKeyword = true;
+                    }
+                    
+                    // ユーザー名での検索
+                    if (profile.getUser().getUsername().toLowerCase().contains(searchTerm)) {
+                        matchesKeyword = true;
+                    }
+                    
+                    // 自己紹介での検索
+                    if (profile.getBio() != null && 
+                        profile.getBio().toLowerCase().contains(searchTerm)) {
+                        matchesKeyword = true;
+                    }
+                    
+                    // 居住地での検索
+                    if (profile.getLocation() != null && 
+                        profile.getLocation().toLowerCase().contains(searchTerm)) {
+                        matchesKeyword = true;
+                    }
+                    
+                    if (!matchesKeyword) {
+                        return false;
+                    }
+                }
+                
+                // 居住地フィルター
+                if (location != null && !location.trim().isEmpty()) {
+                    if (profile.getLocation() == null || 
+                        !profile.getLocation().toLowerCase().contains(location.toLowerCase())) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            })
+            .sorted((p1, p2) -> {
+                // オンラインユーザーを優先してソート
+                if (p1.getOnlineStatus() == UserProfile.OnlineStatus.ONLINE && 
+                    p2.getOnlineStatus() != UserProfile.OnlineStatus.ONLINE) {
+                    return -1;
+                } else if (p1.getOnlineStatus() != UserProfile.OnlineStatus.ONLINE && 
+                           p2.getOnlineStatus() == UserProfile.OnlineStatus.ONLINE) {
+                    return 1;
+                }
+                // 最終ログイン時間でソート（新しい順）
+                if (p1.getLastSeen() != null && p2.getLastSeen() != null) {
+                    return p2.getLastSeen().compareTo(p1.getLastSeen());
+                }
+                return 0;
+            })
+            .collect(Collectors.toList());
+    }
 }

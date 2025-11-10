@@ -47,6 +47,11 @@ public interface RandomMatchRepository extends JpaRepository<RandomMatch, Long> 
     @Query("SELECT rm FROM RandomMatch rm WHERE rm.chatRoom.id = :chatRoomId")
     Optional<RandomMatch> findByChatRoomId(@Param("chatRoomId") Long chatRoomId);
 
+    // 二人のユーザー間の既存マッチをチェック
+    @Query("SELECT rm FROM RandomMatch rm WHERE " +
+           "((rm.user1 = :user1 AND rm.user2 = :user2) OR (rm.user1 = :user2 AND rm.user2 = :user1))")
+    List<RandomMatch> findByUser1AndUser2OrUser2AndUser1(@Param("user1") User user1, @Param("user2") User user2);
+
     // 統計用クエリ
     @Query("SELECT AVG(rm.durationMinutes) FROM RandomMatch rm WHERE rm.durationMinutes IS NOT NULL")
     Double getAverageMatchDuration();

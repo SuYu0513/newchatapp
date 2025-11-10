@@ -40,10 +40,18 @@ function createParticles() {
     particlesContainer.id = 'particles';
     
     const particleCount = 50;
+    const cardMarks = ['❤', '★', '♦', '♠', '♣'];
     
     for (let i = 0; i < particleCount; i++) {
         const particle = document.createElement('div');
         particle.className = 'particle';
+        
+        // ランダムにカードマークを選択
+        const randomMark = cardMarks[Math.floor(Math.random() * cardMarks.length)];
+        particle.innerHTML = randomMark;
+        particle.style.fontSize = '1.2rem';
+        particle.style.color = getRandomColor();
+        
         particle.style.left = Math.random() * 100 + '%';
         particle.style.animationDelay = Math.random() * 8 + 's';
         particle.style.animationDuration = (Math.random() * 3 + 5) + 's';
@@ -51,6 +59,16 @@ function createParticles() {
     }
     
     document.body.appendChild(particlesContainer);
+}
+
+// ランダムな色を生成する関数
+function getRandomColor() {
+    const colors = [
+        '#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', 
+        '#6c5ce7', '#fd79a8', '#fdcb6e', '#e17055',
+        '#74b9ff', '#fd79a8', '#fdcb6e', '#55a3ff'
+    ];
+    return colors[Math.floor(Math.random() * colors.length)];
 }
 
 // カードのホバー効果
@@ -120,16 +138,22 @@ function addRippleEffect() {
 // キラキラ効果
 function addSparkleEffect(element) {
     element.addEventListener('mouseenter', function() {
+        // カードマークの配列
+        const cardMarks = ['❤', '★', '♦', '♠', '♣'];
+        
         for (let i = 0; i < 3; i++) {
             setTimeout(() => {
                 const sparkle = document.createElement('div');
-                sparkle.innerHTML = '✨';
+                // ランダムにカードマークを選択
+                const randomMark = cardMarks[Math.floor(Math.random() * cardMarks.length)];
+                sparkle.innerHTML = randomMark;
                 sparkle.style.position = 'absolute';
                 sparkle.style.pointerEvents = 'none';
                 sparkle.style.animation = 'sparkle 1s ease-out forwards';
                 sparkle.style.left = Math.random() * 100 + '%';
                 sparkle.style.top = Math.random() * 100 + '%';
                 sparkle.style.zIndex = '1000';
+                sparkle.style.fontSize = '1.2rem';
                 this.style.position = 'relative';
                 this.appendChild(sparkle);
                 

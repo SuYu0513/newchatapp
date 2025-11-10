@@ -84,7 +84,7 @@ public class RandomMatchingController {
             
             if (matchedUser == null) {
                 response.put("success", false);
-                response.put("message", "現在マッチング可能なユーザーが見つかりません");
+                response.put("message", "現在マッチング可能なユーザーが見つかりません。既にマッチした相手や、マッチング条件に合うユーザーがオンラインにいない可能性があります。");
                 return ResponseEntity.ok(response);
             }
 

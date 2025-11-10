@@ -230,14 +230,31 @@ public class ProfileController {
      * プロフィール検索
      */
     @GetMapping("/search")
-    public String searchProfiles(@RequestParam(required = false) String keyword, Model model) {
+    public String searchProfiles(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) String onlineStatus,
+            @RequestParam(required = false, defaultValue = "false") boolean onlineOnly,
+            Model model) {
+        
         List<UserProfile> searchResults = List.of();
         
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            searchResults = userProfileService.searchProfiles(keyword);
+        // 検索条件が指定されている場合のみ検索実行
+        if ((keyword != null && !keyword.trim().isEmpty()) ||
+            (location != null && !location.trim().isEmpty()) ||
+            (onlineStatus != null && !onlineStatus.trim().isEmpty()) ||
+            onlineOnly) {
+            
+            searchResults = userProfileService.searchProfilesWithFilters(
+                keyword, location, onlineStatus, onlineOnly
+            );
         }
         
+        // 検索条件をモデルに追加
         model.addAttribute("keyword", keyword);
+        model.addAttribute("location", location);
+        model.addAttribute("onlineStatus", onlineStatus);
+        model.addAttribute("onlineOnly", onlineOnly);
         model.addAttribute("searchResults", searchResults);
         
         return "profile/search";

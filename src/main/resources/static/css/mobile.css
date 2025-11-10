@@ -86,7 +86,7 @@ body {
         position: fixed !important;
         top: 60px !important;
         right: 15px !important;
-        left: auto !important;
+        left: 20px !important;
         width: 250px;
         max-height: calc(100vh - 80px);
         overflow-y: auto;
@@ -304,7 +304,7 @@ body {
     
     .form-control {
         font-size: 16px !important; /* iOS のズーム防止 */
-        border-radius: 25px !important;
+        /* border-radius: 25px !important; */
         padding: 0.9rem 1.2rem !important;
         border: 2px solid #e1e5e9 !important;
         background: #f8f9fb !important;
@@ -326,7 +326,7 @@ body {
     }
     
     .btn-primary {
-        border-radius: 50% !important;
+        /* border-radius: 50% !important; */
         width: 50px !important;
         height: 50px !important;
         padding: 0 !important;
@@ -418,7 +418,7 @@ body {
     }
     
     .dropdown-menu {
-        width: 180px;
+        width: 185px;
         font-size: 0.7rem;
     }
     

@@ -2,6 +2,7 @@ package com.example.chatapp.service;
 
 import com.example.chatapp.entity.ChatRoom;
 import com.example.chatapp.entity.RandomMatch;
+import com.example.chatapp.entity.RandomMatch.MatchStatus;
 import com.example.chatapp.entity.User;
 import com.example.chatapp.entity.UserProfile;
 import com.example.chatapp.repository.ChatRoomRepository;
@@ -35,12 +36,22 @@ public class RandomMatchingService {
 
     /**
      * 最適なマッチング相手を見つける（相性重視）
+     * 既存のマッチ（チャットルーム）がある相手は除外
      */
     public User findBestMatch(User user) {
         UserProfile userProfile = userProfileService.getOrCreateProfile(user);
         
         // ランダムマッチング許可済みで、現在アクティブでないユーザーを取得
         List<UserProfile> candidates = userProfileService.getAvailableForRandomMatching(user);
+        
+        if (candidates.isEmpty()) {
+            return null;
+        }
+
+        // 既存のマッチ（チャットルーム）がある相手を除外
+        candidates = candidates.stream()
+            .filter(profile -> !hasExistingMatch(user, profile.getUser()))
+            .collect(java.util.stream.Collectors.toList());
         
         if (candidates.isEmpty()) {
             return null;
@@ -57,6 +68,23 @@ public class RandomMatchingService {
         List<MatchCandidate> topCandidates = scoredCandidates.subList(0, topCandidatesCount);
         
         return topCandidates.get(random.nextInt(topCandidates.size())).user;
+    }
+
+    /**
+     * 二人のユーザー間に既存のマッチ（チャットルーム）があるかチェック
+     */
+    private boolean hasExistingMatch(User user1, User user2) {
+        // ランダムマッチの履歴をチェック
+        List<RandomMatch> existingMatches = randomMatchRepository.findByUser1AndUser2OrUser2AndUser1(user1, user2);
+        
+        // 既存のマッチがあり、かつそのマッチにチャットルームが存在するかチェック
+        for (RandomMatch match : existingMatches) {
+            if (match.getChatRoom() != null) {
+                return true; // 既存のチャットルームがある
+            }
+        }
+        
+        return false; // 既存のマッチなし、またはチャットルームがまだ作成されていない
     }
 
     /**
@@ -173,38 +201,59 @@ public class RandomMatchingService {
     }
 
     /**
-     * チャット開始時にルームを作成または既存ルームを取得
+     * チャット開始時にルームを作成または既存ルームを取得（トランザクション強化）
      */
+    @Transactional
     public ChatRoom getOrCreateChatRoom(RandomMatch match) {
-        User user1 = match.getUser1();
-        User user2 = match.getUser2();
-        
-        // 既存のプライベートルームを検索
-        Optional<ChatRoom> existingRoom = chatRoomService.findExistingPrivateRoom(user1, user2);
-        
-        if (existingRoom.isPresent()) {
-            // 既存ルームがある場合はそれを使用
-            ChatRoom room = existingRoom.get();
-            match.setChatRoom(room);
-            randomMatchRepository.save(match);
-            return room;
-        } else {
-            // 新しいルームを作成
-            String roomName = "ランダムチャット - " + user1.getUsername() + " & " + user2.getUsername();
-            ChatRoom chatRoom = chatRoomService.createPrivateRoom(roomName, user1);
+        try {
+            User user1 = match.getUser1();
+            User user2 = match.getUser2();
             
-            // 相手をルームに追加
-            chatRoomService.addUserToRoom(chatRoom.getId(), user2);
+            System.out.println("ランダムマッチのチャットルーム作成/取得開始: " + user1.getUsername() + " & " + user2.getUsername());
             
-            // ルームタイプをRANDOMに設定
-            chatRoom.setType(ChatRoom.ChatRoomType.RANDOM);
-            chatRoom = chatRoomRepository.save(chatRoom);
+            // 既存のプライベートルームを検索
+            Optional<ChatRoom> existingRoom = chatRoomService.findExistingPrivateRoom(user1, user2);
             
-            // マッチにルームを設定
-            match.setChatRoom(chatRoom);
-            randomMatchRepository.save(match);
-            
-            return chatRoom;
+            if (existingRoom.isPresent()) {
+                // 既存ルームがある場合はそれを使用
+                ChatRoom room = existingRoom.get();
+                System.out.println("既存のチャットルームを使用: " + room.getName() + " (ID: " + room.getId() + ")");
+                
+                // マッチにルームを関連付け
+                match.setChatRoom(room);
+                randomMatchRepository.save(match);
+                randomMatchRepository.flush(); // 確実に保存
+                
+                return room;
+            } else {
+                // 新しいルームを作成
+                String roomName = "ランダムチャット - " + user1.getUsername() + " & " + user2.getUsername();
+                ChatRoom chatRoom = chatRoomService.createPrivateRoom(roomName, user1);
+                
+                // 相手をルームに追加
+                chatRoomService.addUserToRoom(chatRoom.getId(), user2);
+                
+                // ルームタイプをRANDOMに設定
+                chatRoom.setType(ChatRoom.ChatRoomType.RANDOM);
+                chatRoom = chatRoomRepository.save(chatRoom);
+                chatRoomRepository.flush(); // 確実に保存
+                
+                System.out.println("新しいランダムチャットルームを作成: " + chatRoom.getName() + " (ID: " + chatRoom.getId() + ")");
+                
+                // マッチにルームを設定
+                match.setChatRoom(chatRoom);
+                match.setStatus(MatchStatus.ACTIVE);
+                randomMatchRepository.save(match);
+                randomMatchRepository.flush(); // 確実に保存
+                
+                System.out.println("マッチをアクティブ状態に更新: MatchID=" + match.getId());
+                
+                return chatRoom;
+            }
+        } catch (Exception e) {
+            System.err.println("チャットルーム作成/取得エラー: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("チャットルームの作成に失敗しました", e);
         }
     }
 
