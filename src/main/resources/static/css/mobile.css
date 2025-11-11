@@ -1,6 +1,526 @@
-/* モバイル専用CSS */
+/* モバイル専用CSS - Last updated: 2025/11/10 */
+
+/* チャット専用スタイル - 全共通 */
+.chatto-saido {
+    position: fixed;
+    top: 56px;
+    left: -250px;
+    width: 250px;
+    height: calc(100vh - 56px);
+    background: #ffffff;
+    transition: left 0.3s ease;
+    z-index: 1000;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    overflow-y: auto;
+}
+
+.chatto-saido.hirakuji {
+    left: 0;
+}
+
+.saido-hedda {
+    background: #007bff;
+    color: white;
+    padding: 15px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.rikai-listo {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.rikai-listo li {
+    padding: 12px 20px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.rikai-listo li:hover {
+    background-color: #f0f8ff;
+}
+
+.rikai-listo li.actif {
+    background-color: #e7f3ff;
+    border-left: 4px solid #007bff;
+}
+
+.messagi-chatta {
+    position: fixed;
+    top: 56px;
+    bottom: 60px;
+    left: 0;
+    right: 0;
+    overflow-y: auto;
+    padding: 10px;
+    background: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+}
+
+.messagi-itimu {
+    max-width: 70%;
+    margin-bottom: 15px;
+    animation: messagi-fadein 0.3s ease-out;
+}
+
+.messagi-jibun {
+    align-self: flex-end;
+}
+
+.messagi-aite {
+    align-self: flex-start;
+}
+
+.messagi-bubble {
+    padding: clamp(0.7rem, 3vw, 1rem) clamp(1rem, 4vw, 1.2rem);
+    border-radius: clamp(1rem, 4vw, 1.2rem);
+    word-wrap: break-word;
+    position: relative;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    font-size: var(--dynamic-font-size);
+}
+
+.messagi-jibun .messagi-bubble {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    border-bottom-right-radius: 5px;
+}
+
+.messagi-aite .messagi-bubble {
+    background: white;
+    color: #333;
+    border: 1px solid #e0e0e0;
+    border-bottom-left-radius: 5px;
+}
+
+.messagi-jikoku {
+    font-size: 11px;
+    opacity: 0.7;
+    margin-top: 5px;
+    text-align: center;
+}
+
+.messagi-youza {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.nyuuryoku-eria {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    padding: 10px;
+    border-top: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    z-index: 100;
+}
+
+.nyuuryoku-fiirudo {
+    flex: 1;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    padding: clamp(0.6rem, 2.5vw, 1rem) clamp(0.8rem, 3vw, 1.2rem);
+    font-size: var(--dynamic-font-size);
+    outline: none;
+    resize: none;
+    min-height: clamp(2.5rem, 8vw, 3rem);
+    max-height: clamp(4rem, 15vw, 6rem);
+}
+
+.nyuuryoku-fiirudo:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+.soushin-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: clamp(2.5rem, 8vw, 3rem);
+    height: clamp(2.5rem, 8vw, 3rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: var(--dynamic-button-font);
+}
+
+.soushin-btn:hover {
+    background: #0056b3;
+    transform: scale(1.05);
+}
+
+.soushin-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.konekushon-suteetasu {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    z-index: 1001;
+    font-weight: bold;
+}
+
+.konekushon-suteetasu.setsuzoku {
+    background: #28a745;
+    color: white;
+}
+
+.konekushon-suteetasu.setsudan {
+    background: #dc3545;
+    color: white;
+}
+
+.konekushon-suteetasu.setsuzoku-chu {
+    background: #ffc107;
+    color: #212529;
+}
+
+.menu-oobaree {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.3);
+    z-index: 999;
+    display: none;
+}
+
+.menu-oobaree.hirakuji {
+    display: block;
+}
+
+@keyframes messagi-fadein {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.paatikyuru-kontena {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: -1;
+}
+
+@keyframes paatikyuru-foru {
+    to {
+        transform: translateY(100vh) rotate(360deg);
+    }
+}
+
+.paatikyuru {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    border-radius: 50%;
+    animation: paatikyuru-foru linear infinite;
+    opacity: 0.7;
+}
+
+/* ログイン専用スタイル */
+.login-kontena {
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 0;
+}
+
+.login-kaado {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(15px);
+    border-radius: 25px;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+    border: none;
+    overflow: hidden;
+    max-width: 450px;
+    width: 100%;
+}
+
+.apuri-rogo {
+    font-size: 4rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-align: center;
+    margin-top: 0 !important;
+    margin-bottom: 1rem;
+    animation: rogo-purusu 2s ease-in-out infinite;
+}
+
+@keyframes rogo-purusu {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.login-hedda {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.2rem 2rem 0.5rem !important;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.login-hedda::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: kaitin 20s linear infinite;
+}
+
+@keyframes kaitin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.login-bodii {
+    padding: 2.5rem;
+}
+
+.nyuuryoku-guruupu {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+.nyuuryoku-fiirudo {
+    width: 100%;
+    padding: 1rem 1.2rem;
+    border: 2px solid #e9ecef;
+    border-radius: 15px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.nyuuryoku-fiirudo:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    background: white;
+}
+
+.nyuuryoku-fiirudo::placeholder {
+    color: #adb5bd;
+    transition: all 0.3s ease;
+}
+
+.nyuuryoku-fiirudo:focus::placeholder {
+    opacity: 0.7;
+    transform: translateY(-2px);
+}
+
+/* ログインボタン専用スタイル　*/
+button.login-btn,
+.btn.login-btn,
+button[type="submit"].login-btn {
+    width: 100% !important;
+    padding: 1rem 2rem !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    border: none !important;
+    border-radius: 15px !important;
+    color: white !important;
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+button.login-btn:hover,
+.btn.login-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3) !important;
+}
+
+button.login-btn:active,
+.btn.login-btn:active {
+    transform: translateY(0) !important;
+}
+
+button.login-btn::before,
+.btn.login-btn::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent) !important;
+    transition: left 0.5s !important;
+}
+
+button.login-btn:hover::before,
+.btn.login-btn:hover::before {
+    left: 100% !important;
+}
+
+.touroku-rinku {
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.touroku-rinku a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.touroku-rinku a:hover {
+    color: #764ba2;
+    text-decoration: underline;
+}
+
+.erebeetaa-burokkaa {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    border-radius: 25px;
+}
+
+.roodingu-supinaa {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: supinaa-kaitin 1s linear infinite;
+}
+
+@keyframes supinaa-kaitin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* デバッグログイン専用スタイル */
+.debug-kontena {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 0;
+}
+
+.debug-kaado {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(15px);
+    border-radius: 25px;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+    border: 3px solid #e74c3c;
+    overflow: hidden;
+    max-width: 500px;
+    width: 100%;
+}
+
+.debug-hedda {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.debug-hedda::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(255, 255, 255, 0.1) 10px,
+        rgba(255, 255, 255, 0.1) 20px
+    );
+    animation: kaitin 15s linear infinite;
+}
+
+.debug-bodii {
+    padding: 2.5rem;
+}
+
+.debug-btn {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    border: none;
+    border-radius: 15px;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding: 1rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.debug-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(231, 76, 60, 0.3);
+}
+
+.debug-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.debug-btn:hover::before {
+    left: 100%;
+}
 
 /* 基本設定 */
+body {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
 * {
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
@@ -8,6 +528,168 @@
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+}
+
+/* レスポンシブフォントサイズ - 画面幅に応じて自動調整 */
+:root {
+    --dynamic-font-size: clamp(0.8rem, 2.5vw, 1.2rem);
+    --dynamic-button-font: clamp(0.9rem, 3vw, 1.1rem);
+    --dynamic-title-font: clamp(1.2rem, 4vw, 2rem);
+    --dynamic-small-font: clamp(0.7rem, 2vw, 0.9rem);
+}
+
+/* 横並び要素の自動調整 */
+.yokonarabi-auto {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(0.5rem, 2vw, 1rem);
+    font-size: var(--dynamic-font-size);
+}
+
+.yokonarabi-auto > * {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: inherit;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 画面幅が狭い時にテキストサイズを更に小さく */
+@media (max-width: 320px) {
+    .yokonarabi-auto {
+        font-size: clamp(0.6rem, 3vw, 0.8rem);
+    }
+    
+    .yokonarabi-auto > * {
+        font-size: inherit;
+    }
+}
+
+/* ボタン群の自動調整 */
+.botan-guruupu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(0.3rem, 1.5vw, 0.8rem);
+    align-items: center;
+}
+
+.botan-guruupu .btn,
+.botan-guruupu button {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: var(--dynamic-button-font);
+    padding: clamp(0.4rem, 2vw, 0.8rem) clamp(0.6rem, 3vw, 1.2rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 小さな画面では縦並びに変更 */
+@media (max-width: 480px) {
+    .botan-guruupu {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .botan-guruupu .btn,
+    .botan-guruupu button {
+        width: 100%;
+        flex: none;
+    }
+    
+    /* チャット入力エリアは常に横並び */
+    .message-input-area .botan-guruupu,
+    .nyuuryoku-eria .botan-guruupu {
+        flex-direction: row !important;
+    }
+    
+    .message-input-area .botan-guruupu .btn,
+    .message-input-area .botan-guruupu button,
+    .nyuuryoku-eria .botan-guruupu .btn,
+    .nyuuryoku-eria .botan-guruupu button {
+        width: 70px !important;
+        flex: none !important;
+    }
+}
+
+/* メッセージ入力エリア専用設定 */
+.message-input-area .input-group,
+.nyuuryoku-eria .input-group {
+    gap: 0 !important;
+}
+
+.message-input-area .form-control,
+.nyuuryoku-eria .nyuuryoku-fiirudo {
+    max-width: calc(100% - 70px) !important;
+}
+
+.message-input-area .soushin-btn,
+.nyuuryoku-eria .soushin-btn {
+    width: 70px !important;
+    margin-left: 0 !important;
+}
+
+/* ナビゲーションの自動調整 */
+.navbar-brand {
+    font-size: var(--dynamic-title-font) !important;
+    max-width: 50vw;
+}
+
+.navbar-nav .nav-link {
+    font-size: var(--dynamic-font-size) !important;
+    padding: clamp(0.3rem, 1.5vw, 0.6rem) clamp(0.5rem, 2vw, 1rem) !important;
+}
+
+.dropdown-menu .dropdown-item {
+    font-size: var(--dynamic-small-font) !important;
+    padding: clamp(0.4rem, 1.5vw, 0.7rem) clamp(0.8rem, 2.5vw, 1.2rem) !important;
+}
+
+/* テーブルやリストの自動調整 */
+.table {
+    font-size: var(--dynamic-small-font);
+}
+
+.table th,
+.table td {
+    padding: clamp(0.3rem, 1.5vw, 0.75rem) !important;
+    font-size: inherit;
+}
+
+.list-group-item {
+    font-size: var(--dynamic-font-size);
+    padding: clamp(0.5rem, 2vw, 1rem) clamp(0.8rem, 2.5vw, 1.25rem) !important;
+}
+
+/* フォーム要素の自動調整 */
+.form-control,
+.form-select {
+    font-size: var(--dynamic-font-size) !important;
+    padding: clamp(0.4rem, 2vw, 0.8rem) clamp(0.6rem, 2.5vw, 1rem) !important;
+}
+
+.form-label {
+    font-size: var(--dynamic-small-font) !important;
+}
+
+/* カードコンポーネントの自動調整 */
+.card-title {
+    font-size: var(--dynamic-title-font) !important;
+}
+
+.card-text,
+.card-body {
+    font-size: var(--dynamic-font-size) !important;
+}
+
+/* バッジやアラートの自動調整 */
+.badge {
+    font-size: clamp(0.6rem, 1.8vw, 0.8rem) !important;
+}
+
+.alert {
+    font-size: var(--dynamic-font-size) !important;
 }
 
 input, textarea {
@@ -29,8 +711,8 @@ body {
     overflow-x: hidden;
 }
 
-/* ナビゲーションバー - スマホ専用シンプル版 */
-@media (max-width: 768px) {
+/* ナビゲーションバー - 縦向きレイアウト専用 */
+@media (orientation: portrait) {
     .navbar {
         padding: 0.4rem 1rem;
         position: fixed;
@@ -138,8 +820,8 @@ body {
     }
 }
 
-/* チャット画面モバイル対応 - 完全リニューアル */
-@media (max-width: 768px) {
+/* チャット画面 - 縦向きレイアウト専用 */
+@media (orientation: portrait) {
     
     /* 背景設定 - 固定された背景 */
     body {
@@ -153,6 +835,7 @@ body {
     .bubble, .bubble::before, .bubble::after,
     body::before, body::after,
     .container-fluid::before, .container-fluid::after {
+        margin-top: 10% !important;
         display: flex !important;
         opacity: 0.5 !important;
         visibility: hidden !important;
@@ -295,7 +978,7 @@ body {
     }
     
     .chat-input-area .input-group {
-        gap: 0.75rem !important;
+        gap: 0 !important;
         align-items: center !important;
         display: flex !important;
         flex-wrap: nowrap !important;
@@ -313,6 +996,7 @@ body {
         min-height: 50px !important;
         max-height: 120px !important;
         flex: 1 !important;
+        max-width: calc(100% - 80px) !important;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
         line-height: 1.4 !important;
         align-self: center !important;
@@ -327,13 +1011,13 @@ body {
     
     .btn-primary {
         /* border-radius: 50% !important; */
-        width: 50px !important;
+        width: 70px !important;
         height: 50px !important;
         padding: 0 !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        font-size: 1.2rem !important;
+        font-size: 1.3rem !important;
         background: #667eea !important;
         border: none !important;
         box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
@@ -341,6 +1025,7 @@ body {
         position: relative !important;
         align-self: center !important;
         margin-bottom: 0 !important;
+        margin-left: 0 !important;
     }
     
     .btn-primary:hover, .btn-primary:active, .btn-primary:focus {
@@ -369,42 +1054,6 @@ body {
         border-radius: 3px;
     }
 }
-    
-    .message-bubble.own {
-        margin-left: auto;
-        margin-right: 0;
-    }
-    
-    .message-bubble.other {
-        margin-left: 0;
-        margin-right: auto;
-    }
-    
-    /* 入力エリア */
-    .chat-input-area {
-        padding: 0.8rem;
-        border-radius: 0 0 15px 15px;
-    }
-    
-    .chat-input-area .input-group {
-        gap: 0.5rem;
-    }
-    
-    .form-control {
-        font-size: 16px; /* iOS のズーム防止 */
-        border-radius: 20px;
-    }
-    
-    .btn {
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        padding: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
 
 /* 非常に小さい画面用（iPhone SE等） */
 @media (max-width: 375px) {
@@ -482,8 +1131,8 @@ body {
     }
 }
 
-/* ログイン画面モバイル対応 */
-@media (max-width: 768px) {
+/* ログイン画面 - 縦向きレイアウト専用 */
+@media (orientation: portrait) {
     .login-container {
         padding: 1rem;
         min-height: 10vh;
@@ -537,16 +1186,16 @@ body {
         border-radius: 15px;
     }
     
-    .btn-primary {
-        padding: 0.8rem;
+    .btn-primary:not(.login-btn) {
+        padding: 1.8rem; 
         border-radius: 15px;
         font-size: 1.1rem;
         font-weight: 600;
     }
 }
 
-/* フレンド画面モバイル対応 */
-@media (max-width: 768px) {
+/* フレンド画面 - 縦向きレイアウト専用 */
+@media (orientation: portrait) {
     .friends-container {
         padding-top: 70px;
     }
@@ -584,8 +1233,8 @@ body {
     }
 }
 
-/* スクロール改善 */
-@media (max-width: 768px) {
+/* スクロール改善 - 縦向きレイアウト専用 */
+@media (orientation: portrait) {
     .chat-messages {
         -webkit-overflow-scrolling: touch;
         scroll-behavior: smooth;
@@ -597,8 +1246,8 @@ body {
     }
 }
 
-/* キーボード表示時の調整 */
-@media (max-width: 768px) {
+/* キーボード表示時の調整 - 縦向きレイアウト専用 */
+@media (orientation: portrait) {
     .chat-input-area {
         position: sticky;
         bottom: 0;
@@ -687,8 +1336,8 @@ body {
    チャットアプリ モバイル専用スタイル
    ====================================== */
 
-/* モバイル用レスポンシブデザイン */
-@media (max-width: 768px) {
+/* 縦向きレスポンシブデザイン */
+@media (orientation: portrait) {
   .container-fluid {
     padding: 10px;
   }
@@ -741,8 +1390,8 @@ body {
   }
 }
 
-/* モバイル専用チャット機能 */
-@media (max-width: 768px) {
+/* 縦向き専用チャット機能 */
+@media (orientation: portrait) {
   /* チャットコンテナのモバイル最適化 */
   #chat-container {
     border-radius: 12px;

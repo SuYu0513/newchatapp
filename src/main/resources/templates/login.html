@@ -18,254 +18,39 @@
     <link rel="shortcut icon" href="/images/app-icon-180.png?v=4">
     <link rel="mask-icon" href="/images/app-icon-180.svg?v=4" color="#f368e0">
     
+    <!-- キャッシュ無効化設定 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="/css/chat-style.css" rel="stylesheet">
-    <link href="/css/kawaii-theme.css" rel="stylesheet">
-    <link href="/css/mobile.css" rel="stylesheet">
-    <style>
-        /* ログイン専用スタイル */
-        .login-container {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem 0;
-        }
-        
-        .login-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
-            border-radius: 25px;
-            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
-            border: none;
-            overflow: hidden;
-            max-width: 450px;
-            width: 100%;
-        }
-        
-        .app-logo {
-            font-size: 4rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: bounce 2s infinite;
-            text-shadow: none;
-        }
-        
-        .app-title {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            font-weight: 700;
-            font-size: 2.5rem;
-            text-shadow: none;
-        }
-        
-        .login-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2rem;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .login-header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: repeating-linear-gradient(
-                45deg,
-                transparent,
-                transparent 10px,
-                rgba(255, 255, 255, 0.1) 10px,
-                rgba(255, 255, 255, 0.1) 20px
-            );
-            animation: slide 20s linear infinite;
-        }
-        
-        @keyframes slide {
-            0% { transform: translate(-50%, -50%) rotate(0deg); }
-            100% { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-        
-        .login-body {
-            padding: 2.5rem;
-        }
-        
-        .form-floating {
-            margin-bottom: 1.5rem;
-        }
-        
-        .form-floating > .form-control {
-            border-radius: 15px;
-            border: 2px solid rgba(102, 126, 234, 0.2);
-            transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.9);
-        }
-        
-        .form-floating > .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
-            transform: scale(1.02);
-            background: white;
-        }
-        
-        .form-floating > label {
-            color: #667eea;
-            font-weight: 500;
-        }
-        
-        .login-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            border-radius: 25px;
-            padding: 1rem 2rem;
-            font-weight: 600;
-            font-size: 1.1rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            width: 100%;
-        }
-        
-        .login-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-            transition: left 0.5s;
-        }
-        
-        .login-btn:hover::before {
-            left: 100%;
-        }
-        
-        .login-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-        }
-        
-        .register-link {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        
-        .register-link::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: -2px;
-            left: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            transition: all 0.3s ease;
-        }
-        
-        .register-link:hover::after {
-            width: 100%;
-            left: 0;
-        }
-        
-        .register-link:hover {
-            color: #764ba2;
-            transform: translateY(-2px);
-        }
-        
-        .cute-divider {
-            text-align: center;
-            margin: 2rem 0;
-            position: relative;
-        }
-        
-        .cute-divider::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, #667eea, transparent);
-        }
-        
-        .cute-divider span {
-            background: white;
-            padding: 0 1rem;
-            color: #667eea;
-            font-weight: 600;
-        }
-        
-        /* アニメーション要素 */
-        .floating-emoji {
-            position: fixed;
-            font-size: 2rem;
-            animation: floatEmoji 8s linear infinite;
-            pointer-events: none;
-            z-index: -1;
-        }
-        
-        @keyframes floatEmoji {
-            0% {
-                transform: translateY(100vh) rotate(0deg);
-                opacity: 0;
-            }
-            10% {
-                opacity: 1;
-            }
-            90% {
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(-10vh) rotate(360deg);
-                opacity: 0;
-            }
-        }
-        
-        @media (max-width: 576px) {
-            .login-container {
-                padding-top: 1rem;
-                padding-bottom: 1rem;
-            }
-            .login-body {
-                padding: 1.5rem;
-            }
-        }
-    </style>
+    <link href="/css/chat-style.css?v=20251110003" rel="stylesheet">
+    <link href="/css/kawaii-theme.css?v=20251110003" rel="stylesheet">
+    <link href="/css/mobile.css?v=20251110003" rel="stylesheet">
+    <link href="/css/pc.css?v=20251110003" rel="stylesheet">
+    <!-- すべてのログインスタイルは外部CSSファイルに移動済み -->
 </head>
 <body>
-    <div class="login-container">
+    <div class="login-kontena">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-12">
-                    <div class="text-center mb-4">
+                    <div class="text-center mb-0">
                         <div class="mb-3">
-                            <i class="fas fa-comments app-logo"></i>
+                            <i class="fas fa-comments apuri-rogo mt-0"></i>
                         </div>
                         <h1 class="app-title mb-2">✨ チャットアプリ</h1>
                         <p class="text-white-50 fs-5">💫 素敵なチャット体験へようこそ</p>
                     </div>
                     
-                    <div class="card login-card mx-auto">
-                        <div class="login-header">
+                                            <div class="card login-kaado mx-auto">
+                        <div class="login-hedda">
                             <h2 class="mb-0 position-relative">
                                 <i class="fas fa-sign-in-alt me-2"></i>🌟 ログイン
                             </h2>
                         </div>
-                        <div class="login-body">
+                        <div class="login-bodii">
                             <!-- 成功メッセージ表示 -->
                             <div th:if="${success}" class="alert alert-success fade-in" th:text="${success}">
                                 <i class="fas fa-check-circle me-1"></i>
@@ -308,7 +93,7 @@
                                 </div>
                                 
                                 <button type="submit" class="btn login-btn sparkle-on-hover">
-                                    <i class="fas fa-sign-in-alt me-2"></i>🚀 ログイン
+                                    <i class="fas fa-sign-in-alt me-2"></i> ログイン
                                 </button>
                             </form>
                             
@@ -427,25 +212,32 @@
         }
         
         // 浮遊絵文字を作成
-        function createFloatingEmojis() {
-            const emojis = ['💫', '⭐', '🌟', '✨', '💖', '🦄', '🌈', '🎈'];
+        // function createFloatingEmojis() {
+        //     const emojis = ['💫', '⭐', '🌟', '✨', '💖', '🦄', '🌈', '🎈'];
             
-            setInterval(() => {
-                const emoji = document.createElement('div');
-                emoji.className = 'floating-emoji';
-                emoji.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
-                emoji.style.left = Math.random() * 100 + '%';
-                emoji.style.animationDuration = (Math.random() * 3 + 5) + 's';
+        //     setInterval(() => {
+        //         const emoji = document.createElement('div');
+        //         emoji.className = 'floating-emoji';
+        //         emoji.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
+        //         emoji.style.left = Math.random() * 100 + '%';
+        //         emoji.style.animationDuration = (Math.random() * 3 + 5) + 's';
                 
-                document.body.appendChild(emoji);
+        //         document.body.appendChild(emoji);
                 
-                setTimeout(() => {
-                    if (emoji.parentNode) {
-                        emoji.parentNode.removeChild(emoji);
-                    }
-                }, 8000);
-            }, 2000);
-        }
+        //         setTimeout(() => {
+        //             if (emoji.parentNode) {
+        //                 emoji.parentNode.removeChild(emoji);
+        //             }
+        //         }, 8000);
+        //     }, 2000);
+        // }
+    </script>
+    
+    <!-- シンプルなキャッシュ対策 -->
+    <script>
+        console.log('Login page loaded - CSS version: 20251110001');
+        // 開発者ツールで確認用
+        console.log('Current mobile.css styles applied');
     </script>
     
     <!-- PWA機能 -->

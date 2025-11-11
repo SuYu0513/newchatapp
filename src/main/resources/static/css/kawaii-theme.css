@@ -476,6 +476,34 @@ body {
     }
 }
 
+/* ホバー時キラキラ効果クラス */
+.sparkle-on-hover {
+    position: relative;
+    overflow: hidden;
+}
+
+.sparkle-on-hover::before {
+    content: '✨';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.2em;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.sparkle-on-hover:hover::before {
+    opacity: 1;
+    animation: sparkle 1s ease-in-out infinite;
+}
+
+.sparkle-on-hover:hover {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), 0 0 40px rgba(255, 215, 0, 0.4);
+    transform: translateY(-2px);
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
     .card-body {

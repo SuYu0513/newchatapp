@@ -13,13 +13,8 @@
     <link href="/css/chat-style.css" rel="stylesheet">
     <link href="/css/kawaii-theme.css" rel="stylesheet">
     <link href="/css/mobile.css" rel="stylesheet">
-    <style>
-        body {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-            min-height: 100vh;
-        }
-        
-        .debug-container {
+    <link href="/css/pc.css" rel="stylesheet">
+    <!-- デバッグログイン専用スタイルは外部CSSファイルに移動済み -->
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -133,22 +128,21 @@
         .debug-link:hover {
             color: #c0392b;
             transform: translateY(-2px);
-        }
-    </style>
+    <!-- すべてのデバッグスタイルは外部CSSファイルに移動済み -->
 </head>
 <body>
-    <div class="debug-container">
+    <div class="debug-kontena">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-12">
-                    <div class="card debug-card mx-auto">
-                        <div class="debug-header">
+                    <div class="card debug-kaado mx-auto">
+                        <div class="debug-hedda">
                             <h2 class="mb-0 position-relative" style="margin-top: 1rem;">
                                 <i class="fas fa-bug me-2"></i>🔧 デバッグモード
                             </h2>
                             <p class="mb-0 mt-2">開発者専用ページ</p>
                         </div>
-                        <div class="debug-body">
+                        <div class="debug-bodii">
                             <div class="debug-warning">
                                 <h6><i class="fas fa-exclamation-triangle me-2"></i>注意</h6>
                                 <p class="mb-0">このページは開発者専用です。本番環境では使用しないでください。</p>
