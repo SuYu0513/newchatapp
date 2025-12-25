@@ -6,6 +6,8 @@ import com.example.chatapp.service.UserProfileService;
 import com.example.chatapp.service.UserService;
 import com.example.chatapp.service.FriendshipService;
 import com.example.chatapp.service.OnlineUserService;
+import com.example.chatapp.service.UserStatisticsService;
+import com.example.chatapp.dto.UserStatisticsDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -38,6 +40,9 @@ public class ProfileController {
     @Autowired
     private OnlineUserService onlineUserService;
 
+    @Autowired
+    private UserStatisticsService userStatisticsService;
+
     /**
      * プロフィール表示
      */
@@ -48,10 +53,16 @@ public class ProfileController {
             .orElseThrow(() -> new RuntimeException("ユーザーが見つかりません"));
         
         UserProfile profile = userProfileService.getOrCreateProfile(user);
+        
+        // 統計情報を取得
+        UserStatisticsDto statistics = userStatisticsService.getUserStatistics(user.getId())
+                .orElse(userStatisticsService.getBasicStatistics(user));
+        
         model.addAttribute("profile", profile);
         model.addAttribute("user", user);
         model.addAttribute("currentUser", user);
         model.addAttribute("isOwnProfile", true);
+        model.addAttribute("statistics", statistics);
         
         return "profile/view";
     }
@@ -90,6 +101,10 @@ public class ProfileController {
         // フレンド関係の状態を取得
         String friendshipStatus = getFriendshipStatus(currentUser, targetUser);
         
+        // 統計情報を取得
+        UserStatisticsDto statistics = userStatisticsService.getUserStatistics(targetUser.getId())
+                .orElse(userStatisticsService.getBasicStatistics(targetUser));
+        
         // デバッグログ
         System.out.println("=== プロフィール表示デバッグ ===");
         System.out.println("現在のユーザー: " + currentUser.getUsername() + " (ID: " + currentUser.getId() + ")");
@@ -102,6 +117,7 @@ public class ProfileController {
         model.addAttribute("currentUser", currentUser);
         model.addAttribute("isOwnProfile", false);
         model.addAttribute("friendshipStatus", friendshipStatus);
+        model.addAttribute("statistics", statistics);
         
         return "profile/view";
     }

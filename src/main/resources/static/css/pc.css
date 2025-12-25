@@ -276,7 +276,7 @@
     50% { transform: scale(1.05); }
 }
 
-.login-hedda {
+/* .login-hedda {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     padding: 3.5rem 2.5rem 2.5rem;
@@ -285,7 +285,7 @@
     overflow: hidden;
 }
 
-.login-hedda::before {
+.login-hedda::before { */
     content: '';
     position: absolute;
     top: -50%;
@@ -302,7 +302,27 @@
 }
 
 .login-bodii {
-    padding: 3rem;
+    padding: clamp(2rem, 5vw, 3rem);
+}
+
+.login-bodii .form-floating {
+    margin-bottom: clamp(1.5rem, 3vw, 2rem);
+}
+
+.login-bodii .form-floating .form-control {
+    border-radius: 15px !important;
+    border: 2px solid #e9ecef;
+    padding: clamp(0.9rem, 2.5vw, 1.2rem) clamp(1rem, 3vw, 1.5rem);
+    font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.login-bodii .form-floating .form-control:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    background: white;
 }
 
 .nyuuryoku-guruupu {
@@ -604,7 +624,6 @@ body {
 }
 
 /* フォーム要素の自動調整 - 横画面用 */
-.form-control,
 .form-select {
     font-size: var(--dynamic-font-size) !important;
     padding: clamp(0.6rem, 1.5vw, 1rem) clamp(0.8rem, 2vw, 1.2rem) !important;

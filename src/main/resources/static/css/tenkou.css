@@ -1,0 +1,174 @@
+/* ======================================
+   天気エフェクト専用CSS
+   5つの天気パターン: 青空、曇り空、雨、雷雨、星空
+   ====================================== */
+
+/* 1. 青空 (Sunny) */
+.login-kontena.sunny {
+    background: linear-gradient(to bottom, #87CEEB 0%, #4A90E2 50%, #1E3A8A 100%);
+    animation: skyGradient 20s ease-in-out infinite;
+}
+
+@keyframes skyGradient {
+    0%, 100% {
+        background: linear-gradient(to bottom, #87CEEB 0%, #4A90E2 50%, #1E3A8A 100%);
+    }
+    50% {
+        background: linear-gradient(to bottom, #A8D8EA 0%, #5BA3E8 50%, #2E4A9A 100%);
+    }
+}
+
+/* 2. 曇り空 (Cloudy) */
+.login-kontena.cloudy {
+    background: linear-gradient(to bottom, #B0BEC5 0%, #78909C 50%, #546E7A 100%);
+}
+
+/* 3. 雨 (Rainy) */
+.login-kontena.rainy {
+    background: linear-gradient(to bottom, #607D8B 0%, #455A64 50%, #263238 100%);
+}
+
+/* 4. 雷雨 (Stormy) */
+.login-kontena.stormy {
+    background: linear-gradient(to bottom, #37474F 0%, #263238 50%, #000000 100%);
+    animation: lightning 4s ease-in-out infinite;
+}
+
+@keyframes lightning {
+    0%, 90%, 92%, 94%, 100% {
+        filter: brightness(1);
+    }
+    91%, 93% {
+        filter: brightness(2);
+        background: linear-gradient(to bottom, #546E7A 0%, #455A64 50%, #263238 100%);
+    }
+}
+
+/* 5. 星空 (Starry) */
+.login-kontena.starry {
+    background: linear-gradient(to bottom, #0F2027 0%, #203A43 50%, #2C5364 100%);
+}
+
+/* ======================================
+   雲のアニメーション（青空・曇り空用）
+   ====================================== */
+.login-kontena.sunny::before,
+.login-kontena.sunny::after,
+.login-kontena.cloudy::before,
+.login-kontena.cloudy::after {
+    content: '';
+    position: absolute;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 100px;
+    filter: blur(40px);
+    pointer-events: none;
+}
+
+.login-kontena.sunny::before,
+.login-kontena.cloudy::before {
+    width: 300px;
+    height: 100px;
+    top: 20%;
+    left: -150px;
+    animation: cloudFloat1 25s ease-in-out infinite;
+}
+
+.login-kontena.sunny::after,
+.login-kontena.cloudy::after {
+    width: 400px;
+    height: 120px;
+    top: 60%;
+    left: -200px;
+    animation: cloudFloat2 35s ease-in-out infinite;
+}
+
+@keyframes cloudFloat1 {
+    0%, 100% {
+        transform: translateX(0);
+        opacity: 0.3;
+    }
+    50% {
+        transform: translateX(calc(100vw + 300px));
+        opacity: 0.6;
+    }
+}
+
+@keyframes cloudFloat2 {
+    0%, 100% {
+        transform: translateX(0);
+        opacity: 0.2;
+    }
+    50% {
+        transform: translateX(calc(100vw + 400px));
+        opacity: 0.5;
+    }
+}
+
+/* ======================================
+   雨のしずく（雨・雷雨用）
+   ====================================== */
+.login-kontena .raindrop {
+    position: absolute;
+    top: -50px;
+    width: 2px;
+    height: 30px;
+    background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.6));
+    animation: rainFall linear infinite;
+    pointer-events: none;
+}
+
+@keyframes rainFall {
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(calc(100vh + 50px));
+        opacity: 0.3;
+    }
+}
+
+/* ======================================
+   星のキラキラ効果（星空用）
+   ====================================== */
+.login-kontena .star {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle 3s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes twinkle {
+    0%, 100% {
+        opacity: 0.3;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.5);
+    }
+}
+
+/* ======================================
+   雷の閃光（雷雨用）
+   ====================================== */
+.login-kontena.stormy .lightning-flash {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0);
+    pointer-events: none;
+    animation: flashEffect 5s ease-in-out infinite;
+}
+
+@keyframes flashEffect {
+    0%, 90%, 92%, 94%, 100% {
+        opacity: 0;
+    }
+    91%, 93% {
+        opacity: 0.3;
+    }
+}

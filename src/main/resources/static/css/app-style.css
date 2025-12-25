@@ -1,0 +1,153 @@
+/* ======================================
+  ログインページ専用CSS
+  Last updated: 2025/12/25
+  ====================================== */
+
+/* ======================================
+   CSS変数定義
+   ====================================== */
+
+:root {
+  /* カラーパレット */
+  --primary-color: #667eea;
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --secondary-color: #f093fb;
+  --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  
+  /* 影効果 */
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+  
+  /* ボーダー半径 */
+  --border-radius-lg: 20px;
+  
+  /* トランジション */
+  --transition-normal: 0.3s ease;
+}
+
+/* ======================================
+   ベーススタイル
+   ====================================== */
+
+html {
+  margin: 0;
+  padding: 0;
+  background: #000;
+  overscroll-behavior: none;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  background: #000;
+  overscroll-behavior: none;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+input, textarea {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* ======================================
+   ログインフォーム関連スタイル（全デバイス共通・動的スケーリング対応）
+   ====================================== */
+
+.login-kontena {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh; /* モバイルブラウザのアドレスバー対応 */
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: clamp(1rem, 4vh, 2rem) 0 0 0;
+    margin: 0;
+    overflow: hidden;
+}
+
+.login-kaado {
+    opacity: 0.3 !important; 
+    background: transparent;
+    backdrop-filter: none;
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
+    overflow: visible;
+    max-width: 450px;
+    width: 90%;
+    margin: 0 auto;
+    position: relative;
+}
+
+.login-kaado::before,
+.login-kaado::after {
+    display: none;
+    opacity: 0.3 !important;
+}
+
+/* .login-hedda {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: clamp(1.5rem, 3vw, 2rem);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+} */
+
+.login-bodii {
+    padding: clamp(2rem, 5vw, 3rem);
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(40px) saturate(180%);
+    border-radius: 30px;
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15),
+                inset 0 0 60px rgba(255, 255, 255, 0.05);
+}
+
+.login-bodii .form-control {
+    background: rgba(255, 255, 255, 0.85) !important;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(10px);
+    color: #333;
+}
+
+.login-bodii .form-control:focus {
+    background: rgba(255, 255, 255, 0.92) !important;
+    border-color: rgba(102, 126, 234, 0.6);
+    box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.15);
+}
+
+.login-bodii .form-floating label {
+    color: rgba(255, 255, 255, 0.95);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    font-weight: 500;
+}
+
+.login-bodii .form-floating {
+    margin-bottom: clamp(1.5rem, 3vw, 2rem);
+}
+
+.login-bodii .form-floating .form-control {
+    border-radius: 15px !important;
+    border: 2px solid #e9ecef;
+    padding: clamp(0.9rem, 2.5vw, 1.2rem) clamp(1rem, 3vw, 1.5rem);
+    font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.login-bodii .form-floating .form-control:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    background: white;
+}

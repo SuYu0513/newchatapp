@@ -7,7 +7,9 @@
     <title>プロフィール編集 - チャットアプリ</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="/css/chat-style.css" rel="stylesheet">
+    <link href="/css/common.css" rel="stylesheet">
+    <link href="/css/profile-edit.css" rel="stylesheet">
+    <link href="/css/create-profile.css" rel="stylesheet">
     <style>
         .avatar-preview {
             width: 150px;
@@ -279,108 +281,103 @@
                             </div>
                             
                             <!-- 興味・関心 -->
-                            <div class="mb-3">
-                                <label for="interests" class="form-label">
+                            <div class="mb-4">
+                                <label class="form-label">
                                     <i class="fas fa-heart me-1"></i>興味・関心
                                 </label>
-                                <input type="text" 
-                                       class="form-control" 
-                                       id="interests" 
-                                       name="interests" 
-                                       th:value="${profile.interests}"
-                                       placeholder="例: 読書, 映画鑑賞, 料理, ゲーム, 旅行"
-                                       maxlength="200">
-                                <small class="text-muted">カンマ区切りで入力してください</small>
+                                <div class="tag-input-area mb-2">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="interestsInput"
+                                           placeholder="興味・関心を入力..."
+                                           maxlength="30">
+                                    <button type="button" class="btn" onclick="addTag('interests')">
+                                        <i class="fas fa-plus me-1"></i>追加
+                                    </button>
+                                </div>
+                                <div id="interestsTags" class="tags-container"></div>
+                                <div id="interestsCounter" class="tag-counter">0 / 30</div>
+                                <input type="hidden" id="interests" name="interests" th:value="${profile.interests}">
                             </div>
                             
                             <!-- 趣味 -->
-                            <div class="mb-3">
-                                <label for="hobbies" class="form-label">
+                            <div class="mb-4">
+                                <label class="form-label">
                                     <i class="fas fa-gamepad me-1"></i>趣味
                                 </label>
-                                <input type="text" 
-                                       class="form-control" 
-                                       id="hobbies" 
-                                       name="hobbies" 
-                                       th:value="${profile.hobbies}"
-                                       placeholder="例: サッカー, ピアノ, 写真撮影, 絵画"
-                                       maxlength="200">
-                                <small class="text-muted">カンマ区切りで入力してください</small>
+                                <div class="tag-input-area mb-2">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="hobbiesInput"
+                                           placeholder="趣味を入力..."
+                                           maxlength="30">
+                                    <button type="button" class="btn" onclick="addTag('hobbies')">
+                                        <i class="fas fa-plus me-1"></i>追加
+                                    </button>
+                                </div>
+                                <div id="hobbiesTags" class="tags-container"></div>
+                                <div id="hobbiesCounter" class="tag-counter">0 / 30</div>
+                                <input type="hidden" id="hobbies" name="hobbies" th:value="${profile.hobbies}">
                             </div>
                             
                             <!-- 好きなもの -->
-                            <div class="mb-3">
-                                <label for="favoriteThings" class="form-label">
+                            <div class="mb-4">
+                                <label class="form-label">
                                     <i class="fas fa-star me-1"></i>好きなもの
                                 </label>
-                                <input type="text" 
-                                       class="form-control" 
-                                       id="favoriteThings" 
-                                       name="favoriteThings" 
-                                       th:value="${profile.favoriteThings}"
-                                       placeholder="例: コーヒー, 猫, アニメ, 海"
-                                       maxlength="200">
-                                <small class="text-muted">カンマ区切りで入力してください</small>
-                            </div>
-                            
-                            <!-- 音楽ジャンル -->
-                            <div class="mb-3">
-                                <label for="musicGenres" class="form-label">
-                                    <i class="fas fa-music me-1"></i>好きな音楽ジャンル
-                                </label>
-                                <input type="text" 
-                                       class="form-control" 
-                                       id="musicGenres" 
-                                       name="musicGenres" 
-                                       th:value="${profile.musicGenres}"
-                                       placeholder="例: ポップス, ロック, ジャズ, クラシック"
-                                       maxlength="200">
-                                <small class="text-muted">カンマ区切りで入力してください</small>
-                            </div>
-                            
-                            <!-- 映画ジャンル -->
-                            <div class="mb-3">
-                                <label for="movieGenres" class="form-label">
-                                    <i class="fas fa-film me-1"></i>好きな映画ジャンル
-                                </label>
-                                <input type="text" 
-                                       class="form-control" 
-                                       id="movieGenres" 
-                                       name="movieGenres" 
-                                       th:value="${profile.movieGenres}"
-                                       placeholder="例: アクション, コメディ, ドラマ, アニメ"
-                                       maxlength="200">
-                                <small class="text-muted">カンマ区切りで入力してください</small>
+                                <div class="tag-input-area mb-2">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="favoriteThingsInput"
+                                           placeholder="好きなものを入力..."
+                                           maxlength="30">
+                                    <button type="button" class="btn" onclick="addTag('favoriteThings')">
+                                        <i class="fas fa-plus me-1"></i>追加
+                                    </button>
+                                </div>
+                                <div id="favoriteThingsTags" class="tags-container"></div>
+                                <div id="favoriteThingsCounter" class="tag-counter">0 / 30</div>
+                                <input type="hidden" id="favoriteThings" name="favoriteThings" th:value="${profile.favoriteThings}">
                             </div>
                             
                             <!-- 話せる言語 -->
-                            <div class="mb-3">
-                                <label for="languages" class="form-label">
+                            <div class="mb-4">
+                                <label class="form-label">
                                     <i class="fas fa-globe me-1"></i>話せる言語
                                 </label>
-                                <input type="text" 
-                                       class="form-control" 
-                                       id="languages" 
-                                       name="languages" 
-                                       th:value="${profile.languages}"
-                                       placeholder="例: 日本語, 英語, 中国語, 韓国語"
-                                       maxlength="100">
-                                <small class="text-muted">カンマ区切りで入力してください</small>
+                                <div class="tag-input-area mb-2">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="languagesInput"
+                                           placeholder="言語を入力..."
+                                           maxlength="30">
+                                    <button type="button" class="btn" onclick="addTag('languages')">
+                                        <i class="fas fa-plus me-1"></i>追加
+                                    </button>
+                                </div>
+                                <div id="languagesTags" class="tags-container"></div>
+                                <div id="languagesCounter" class="tag-counter">0 / 30</div>
+                                <input type="hidden" id="languages" name="languages" th:value="${profile.languages}">
                             </div>
                             
                             <!-- 性格特性 -->
-                            <div class="mb-3">
-                                <label for="personalityTraits" class="form-label">
+                            <div class="mb-4">
+                                <label class="form-label">
                                     <i class="fas fa-user-circle me-1"></i>性格特性
                                 </label>
-                                <input type="text" 
-                                       class="form-control" 
-                                       id="personalityTraits" 
-                                       name="personalityTraits" 
-                                       th:value="${profile.personalityTraits}"
-                                       placeholder="例: 明るい, 優しい, 面白い, 真面目"
-                                       maxlength="200">
-                                <small class="text-muted">カンマ区切りで入力してください</small>
+                                <div class="tag-input-area mb-2">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="personalityTraitsInput"
+                                           placeholder="性格特性を入力..."
+                                           maxlength="30">
+                                    <button type="button" class="btn" onclick="addTag('personalityTraits')">
+                                        <i class="fas fa-plus me-1"></i>追加
+                                    </button>
+                                </div>
+                                <div id="personalityTraitsTags" class="tags-container"></div>
+                                <div id="personalityTraitsCounter" class="tag-counter">0 / 30</div>
+                                <input type="hidden" id="personalityTraits" name="personalityTraits" th:value="${profile.personalityTraits}">
                             </div>
                         </div>
                     </div>
@@ -588,6 +585,105 @@
                     submitBtn.disabled = false;
                 }, 10000);
             });
+            
+            // タグ管理システム
+            const MAX_TAGS = 30;
+            const tagSets = {
+                interests: new Set(),
+                hobbies: new Set(),
+                favoriteThings: new Set(),
+                languages: new Set(),
+                personalityTraits: new Set()
+            };
+            
+            // 既存のタグを読み込む
+            function loadExistingTags() {
+                ['interests', 'hobbies', 'favoriteThings', 'languages', 'personalityTraits'].forEach(fieldName => {
+                    const hiddenInput = document.getElementById(fieldName);
+                    if (hiddenInput && hiddenInput.value) {
+                        const tags = hiddenInput.value.split(',').map(t => t.trim()).filter(t => t);
+                        tags.forEach(tag => tagSets[fieldName].add(tag));
+                        updateTagsDisplay(fieldName);
+                    }
+                });
+            }
+            
+            // タグ追加
+            function addTag(fieldName) {
+                const input = document.getElementById(fieldName + 'Input');
+                const tagName = input.value.trim();
+                
+                if (!tagName) {
+                    return;
+                }
+                
+                if (tagSets[fieldName].size >= MAX_TAGS) {
+                    alert(`タグは最大${MAX_TAGS}個までです`);
+                    return;
+                }
+                
+                if (tagSets[fieldName].has(tagName)) {
+                    alert('このタグは既に追加されています');
+                    return;
+                }
+                
+                tagSets[fieldName].add(tagName);
+                input.value = '';
+                updateTagsDisplay(fieldName);
+            }
+            
+            // タグ削除
+            function removeTag(fieldName, tagName) {
+                tagSets[fieldName].delete(tagName);
+                updateTagsDisplay(fieldName);
+            }
+            
+            // タグ表示更新
+            function updateTagsDisplay(fieldName) {
+                const container = document.getElementById(fieldName + 'Tags');
+                const counter = document.getElementById(fieldName + 'Counter');
+                const hiddenInput = document.getElementById(fieldName);
+                
+                // コンテナをクリア
+                container.innerHTML = '';
+                
+                // タグを表示
+                tagSets[fieldName].forEach(tagName => {
+                    const tagElement = document.createElement('div');
+                    tagElement.className = 'tag selected';
+                    tagElement.innerHTML = `
+                        <span>${tagName}</span>
+                        <i class="fas fa-times" onclick="removeTag('${fieldName}', '${tagName}')"></i>
+                    `;
+                    container.appendChild(tagElement);
+                });
+                
+                // カウンター更新
+                const count = tagSets[fieldName].size;
+                counter.textContent = `${count} / ${MAX_TAGS}`;
+                counter.classList.toggle('limit', count >= MAX_TAGS);
+                
+                // 隠しフィールド更新
+                hiddenInput.value = Array.from(tagSets[fieldName]).join(',');
+            }
+            
+            // Enterキーでタグ追加
+            ['interests', 'hobbies', 'favoriteThings', 'languages', 'personalityTraits'].forEach(fieldName => {
+                const input = document.getElementById(fieldName + 'Input');
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addTag(fieldName);
+                    }
+                });
+            });
+            
+            // グローバル関数として定義
+            window.addTag = addTag;
+            window.removeTag = removeTag;
+            
+            // 初期化
+            loadExistingTags();
         });
     </script>
 </body>

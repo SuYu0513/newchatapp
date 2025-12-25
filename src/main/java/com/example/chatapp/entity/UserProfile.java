@@ -68,12 +68,6 @@ public class UserProfile {
     @Column(name = "chat_style")
     private ChatStyle chatStyle;
 
-    @Column(name = "music_genres", columnDefinition = "TEXT")
-    private String musicGenres; // カンマ区切りの音楽ジャンル
-
-    @Column(name = "movie_genres", columnDefinition = "TEXT")
-    private String movieGenres; // カンマ区切りの映画ジャンル
-
     @Column(name = "languages", columnDefinition = "TEXT")
     private String languages; // カンマ区切りの話せる言語
 
@@ -237,22 +231,6 @@ public class UserProfile {
 
     public void setChatStyle(ChatStyle chatStyle) {
         this.chatStyle = chatStyle;
-    }
-
-    public String getMusicGenres() {
-        return musicGenres;
-    }
-
-    public void setMusicGenres(String musicGenres) {
-        this.musicGenres = musicGenres;
-    }
-
-    public String getMovieGenres() {
-        return movieGenres;
-    }
-
-    public void setMovieGenres(String movieGenres) {
-        this.movieGenres = movieGenres;
     }
 
     public String getLanguages() {

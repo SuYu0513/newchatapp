@@ -127,14 +127,6 @@ public class RandomMatchingService {
         score += calculateTextSimilarity(profile1.getFavoriteThings(), profile2.getFavoriteThings()) * 10.0;
         factors++;
 
-        // 音楽ジャンルの一致度
-        score += calculateTextSimilarity(profile1.getMusicGenres(), profile2.getMusicGenres()) * 10.0;
-        factors++;
-
-        // 映画ジャンルの一致度
-        score += calculateTextSimilarity(profile1.getMovieGenres(), profile2.getMovieGenres()) * 10.0;
-        factors++;
-
         // 話せる言語の一致度
         score += calculateTextSimilarity(profile1.getLanguages(), profile2.getLanguages()) * 5.0;
         factors++;

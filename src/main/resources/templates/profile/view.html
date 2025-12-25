@@ -612,7 +612,7 @@
                         <div class="row text-center">
                             <div class="col-6">
                                 <div class="stats-card">
-                                    <div class="stats-number">0</div>
+                                    <div class="stats-number" th:text="${statistics != null ? statistics.friendCount : 0}">0</div>
                                     <small class="text-muted fw-bold">
                                         <i class="fas fa-user-friends me-1"></i>フレンド
                                     </small>
@@ -620,9 +620,27 @@
                             </div>
                             <div class="col-6">
                                 <div class="stats-card">
-                                    <div class="stats-number">0</div>
+                                    <div class="stats-number" th:text="${statistics != null ? statistics.totalChatMessages : 0}">0</div>
                                     <small class="text-muted fw-bold">
-                                        <i class="fas fa-comment-dots me-1"></i>チャット数
+                                        <i class="fas fa-comment-dots me-1"></i>メッセージ
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row text-center mt-3">
+                            <div class="col-6">
+                                <div class="stats-card">
+                                    <div class="stats-number" th:text="${statistics != null ? statistics.totalChatRooms : 0}">0</div>
+                                    <small class="text-muted fw-bold">
+                                        <i class="fas fa-comments me-1"></i>チャットルーム
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stats-card">
+                                    <div class="stats-number" th:text="${statistics != null ? statistics.daysActive : 1}">1</div>
+                                    <small class="text-muted fw-bold">
+                                        <i class="fas fa-calendar-day me-1"></i>アクティブ日数
                                     </small>
                                 </div>
                             </div>
@@ -631,7 +649,13 @@
                         <div class="text-center">
                             <small class="text-muted">
                                 <i class="fas fa-calendar-plus me-1"></i>
-                                参加日: <span th:text="${#temporals.format(profile.createdAt, 'yyyy/MM/dd')}" class="fw-bold">2024/01/01</span>
+                                参加日: <span th:text="${statistics != null and statistics.joinDate != null ? #temporals.format(statistics.joinDate, 'yyyy/MM/dd') : #temporals.format(profile.createdAt, 'yyyy/MM/dd')}" class="fw-bold">2024/01/01</span>
+                            </small>
+                        </div>
+                        <div class="text-center mt-2" th:if="${statistics != null and statistics.lastActiveDate != null}">
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                最終活動: <span th:text="${#temporals.format(statistics.lastActiveDate, 'yyyy/MM/dd HH:mm')}" class="fw-bold">-</span>
                             </small>
                         </div>
                     </div>

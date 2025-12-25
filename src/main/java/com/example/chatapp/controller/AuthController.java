@@ -1,6 +1,7 @@
 package com.example.chatapp.controller;
 
 import com.example.chatapp.dto.UserRegistrationDto;
+import com.example.chatapp.entity.User;
 import com.example.chatapp.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -58,18 +59,21 @@ public class AuthController {
     @PostMapping("/register")
     public String registerUser(@Valid @ModelAttribute("user") UserRegistrationDto userDto,
                              BindingResult result,
-                             Model model) {
+                             Model model,
+                             HttpSession session) {
         if (result.hasErrors()) {
             return "register";
         }
 
         try {
-            userService.registerUser(
+            User user = userService.registerUser(
                 userDto.getUsername(),
                 userDto.getPassword(),
                 userDto.getEmail()
             );
-            return "redirect:/login?success=true";
+            // セッションに新規ユーザーIDを保存してプロフィール作成画面へ
+            session.setAttribute("newUserId", user.getId());
+            return "redirect:/profile/create";
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
             return "register";

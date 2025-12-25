@@ -71,8 +71,6 @@ public class UserProfileService {
         existingProfile.setInterests(updatedProfile.getInterests());
         existingProfile.setHobbies(updatedProfile.getHobbies());
         existingProfile.setFavoriteThings(updatedProfile.getFavoriteThings());
-        existingProfile.setMusicGenres(updatedProfile.getMusicGenres());
-        existingProfile.setMovieGenres(updatedProfile.getMovieGenres());
         existingProfile.setLanguages(updatedProfile.getLanguages());
         existingProfile.setPersonalityTraits(updatedProfile.getPersonalityTraits());
         

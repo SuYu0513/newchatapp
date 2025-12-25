@@ -4,7 +4,10 @@ import com.example.chatapp.dto.MessageDto;
 import com.example.chatapp.service.MessageService;
 import com.example.chatapp.service.ChatRoomService;
 import com.example.chatapp.service.OnlineUserService;
+import com.example.chatapp.service.UserStatisticsService;
+import com.example.chatapp.service.UserService;
 import com.example.chatapp.entity.Message;
+import com.example.chatapp.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -41,6 +44,12 @@ public class ChatController {
     
     @Autowired
     private OnlineUserService onlineUserService;
+    
+    @Autowired
+    private UserStatisticsService userStatisticsService;
+    
+    @Autowired
+    private UserService userService;
 
     @Value("${app.debug.enabled:false}")
     private boolean debugEnabled;
@@ -193,6 +202,16 @@ public class ChatController {
                 username, 
                 chatRoomId
             );
+            
+            // 統計情報を更新（メッセージ送信数）
+            try {
+                User user = userService.findByUsername(username).orElse(null);
+                if (user != null) {
+                    userStatisticsService.incrementMessageCount(user.getId());
+                }
+            } catch (Exception e) {
+                System.err.println("統計情報更新エラー: " + e.getMessage());
+            }
             
             if (debugEnabled) {
                 System.out.println("メッセージ保存成功: ID=" + savedMessage.getId());

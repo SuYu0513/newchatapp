@@ -2,11 +2,11 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-visual-viewport">
     <title>🌟 ログイン - チャットアプリ</title>
     <!-- PWA設定 -->
     <link rel="manifest" href="/manifest.json?v=4">
-    <meta name="theme-color" content="#f368e0">
+    <meta name="theme-color" content="#000000">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -16,7 +16,7 @@
     <link rel="icon" type="image/png" href="/images/app-icon-180.png?v=4">
     <link rel="icon" type="image/svg+xml" href="/images/app-icon-180.svg?v=4">
     <link rel="shortcut icon" href="/images/app-icon-180.png?v=4">
-    <link rel="mask-icon" href="/images/app-icon-180.svg?v=4" color="#f368e0">
+    <link rel="mask-icon" href="/images/app-icon-180.svg?v=4" color="#000000">
     
     <!-- キャッシュ無効化設定 -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -25,31 +25,37 @@
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="/css/chat-style.css?v=20251110003" rel="stylesheet">
-    <link href="/css/kawaii-theme.css?v=20251110003" rel="stylesheet">
-    <link href="/css/mobile.css?v=20251110003" rel="stylesheet">
-    <link href="/css/pc.css?v=20251110003" rel="stylesheet">
-    <!-- すべてのログインスタイルは外部CSSファイルに移動済み -->
+    <link href="/css/app-style.css?v=20251225003" rel="stylesheet">
+    <link href="/css/tenkou.css?v=20251225003" rel="stylesheet">
+    <!-- 統合CSSファイルを使用（PC・モバイル対応） -->
 </head>
 <body>
+    <!-- アプリインストールボタン（右上固定） -->
+    <button id="install-button" style="display: none; position: fixed; top: 1rem; right: 1rem; z-index: 9999; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 2px solid rgba(102, 126, 234, 0.5); border-radius: 50px; padding: 0.5rem 1rem; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); transition: all 0.3s ease;" 
+            onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(102, 126, 234, 0.4)';" 
+            onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(0, 0, 0, 0.2)';">
+        <i class="fas fa-download me-1" style="color: #667eea;"></i>
+        <span style="color: #667eea; font-weight: 600;">インストール</span>
+    </button>
+    
     <div class="login-kontena">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-12">
-                    <div class="text-center mb-0">
-                        <div class="mb-3">
-                            <i class="fas fa-comments apuri-rogo mt-0"></i>
+        <div class="container" style="padding: 0;">
+            <div class="row justify-content-center" style="margin: 0;">
+                <div class="col-12" style="padding: 0;">
+                    <div class="text-center" style="margin-bottom: 1rem;">
+                        <div style="margin-bottom: 0.5rem;">
+                            <i class="fas fa-comments apuri-rogo" style="margin-top: 0;"></i>
                         </div>
-                        <h1 class="app-title mb-2">✨ チャットアプリ</h1>
-                        <p class="text-white-50 fs-5">💫 素敵なチャット体験へようこそ</p>
+                        <h1 class="app-title" style="margin-bottom: 0.25rem;">✨ チャットアプリV2</h1>
+                        <!-- <p class="text-white-50 fs-5" style="margin-bottom: 0.5rem;">💫 素敵なチャット体験へようこそ</p> -->
                     </div>
                     
                                             <div class="card login-kaado mx-auto">
-                        <div class="login-hedda">
+                        <!-- <div class="login-hedda">
                             <h2 class="mb-0 position-relative">
                                 <i class="fas fa-sign-in-alt me-2"></i>🌟 ログイン
                             </h2>
-                        </div>
+                        </div> -->
                         <div class="login-bodii">
                             <!-- 成功メッセージ表示 -->
                             <div th:if="${success}" class="alert alert-success fade-in" th:text="${success}">
@@ -146,7 +152,7 @@
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Kawaii Theme JavaScript -->
-    <script src="/js/kawaii-theme.js"></script>
+    <!--<script src="/js/kawaii-theme.js"></script>-->
     <script>
         function openNewTab() {
             // 新しいタブでマルチセッションログインページを開く
@@ -170,8 +176,11 @@
         
         // ログイン専用初期化
         function initPageSpecific() {
-            // 浮遊絵文字を作成
-            createFloatingEmojis();
+            // ランダムな天気エフェクトを選択
+            selectRandomWeather();
+            
+            // PWAインストールボタンの設定
+            setupInstallButton();
             
             // フォームフィールドにフォーカス効果
             const inputs = document.querySelectorAll('.form-control');
@@ -210,6 +219,215 @@
                 });
             }
         }
+        
+        // ランダムな天気エフェクトを選択
+        function selectRandomWeather() {
+            const weathers = ['sunny', 'cloudy', 'rainy', 'stormy', 'starry'];
+            const randomWeather = weathers[Math.floor(Math.random() * weathers.length)];
+            
+            const container = document.querySelector('.login-kontena');
+            if (!container) return;
+            
+            // 天気クラスを適用
+            container.classList.add(randomWeather);
+            
+            // theme-colorを天気に応じて変更
+            const themeColors = {
+                sunny: '#4A90E2',
+                cloudy: '#78909C',
+                rainy: '#455A64',
+                stormy: '#263238',
+                starry: '#203A43'
+            };
+            document.querySelector('meta[name="theme-color"]').setAttribute('content', themeColors[randomWeather]);
+            
+            // 天気に応じたエフェクトを生成
+            switch(randomWeather) {
+                case 'sunny':
+                case 'cloudy':
+                    // 雲は CSS の ::before ::after で表示される
+                    break;
+                    
+                case 'rainy':
+                    createRain(100);
+                    break;
+                    
+                case 'stormy':
+                    createRain(150);
+                    createLightning();
+                    break;
+                    
+                case 'starry':
+                    createStars(80);
+                    break;
+            }
+            
+            console.log('🌤️ Selected weather:', randomWeather);
+        }
+        
+        // 雨を生成
+        function createRain(count) {
+            const container = document.querySelector('.login-kontena');
+            if (!container) return;
+            
+            for (let i = 0; i < count; i++) {
+                const drop = document.createElement('div');
+                drop.className = 'raindrop';
+                drop.style.left = Math.random() * 100 + '%';
+                drop.style.top = '-50px';
+                drop.style.animationDuration = (Math.random() * 0.5 + 0.5) + 's';
+                drop.style.animationDelay = Math.random() * 2 + 's';
+                container.appendChild(drop);
+            }
+        }
+        
+        // 星を生成
+        function createStars(count) {
+            const container = document.querySelector('.login-kontena');
+            if (!container) return;
+            
+            for (let i = 0; i < count; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                
+                // 大きい星をランダムに配置
+                if (Math.random() > 0.8) {
+                    star.style.width = '3px';
+                    star.style.height = '3px';
+                }
+                
+                container.appendChild(star);
+            }
+        }
+        
+        // 雷の閃光を生成
+        function createLightning() {
+            const container = document.querySelector('.login-kontena');
+            if (!container) return;
+            
+            const flash = document.createElement('div');
+            flash.className = 'lightning-flash';
+            container.appendChild(flash);
+        }
+        
+        // PWAインストールボタンの設定
+        let deferredPrompt;
+        
+        function setupInstallButton() {
+            const installButton = document.getElementById('install-button');
+            
+            // PWA既にインストール済みかチェック
+            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+                // 既にアプリとして実行中
+                return;
+            }
+            
+            // iOS（Safari）かチェック
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const isInStandaloneMode = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+            
+            if (isIOS && !isInStandaloneMode) {
+                // iOS用のインストール案内を表示
+                installButton.style.display = 'block';
+                installButton.innerHTML = '<i class="fas fa-mobile-alt me-1" style="color: #667eea;"></i><span style="color: #667eea; font-weight: 600;">インストール</span>';
+                
+                installButton.addEventListener('click', () => {
+                    showIOSInstallGuide();
+                });
+                return;
+            }
+            
+            // Android/Chrome用のbeforeinstallprompt
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                // インストールボタンを表示
+                installButton.style.display = 'block';
+            });
+            
+            // インストールボタンクリック時
+            installButton.addEventListener('click', async () => {
+                if (!deferredPrompt) return;
+                
+                // インストールプロンプトを表示
+                deferredPrompt.prompt();
+                
+                // ユーザーの選択を待つ
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response: ${outcome}`);
+                
+                // プロンプトを使い切ったのでクリア
+                deferredPrompt = null;
+                installButton.style.display = 'none';
+            });
+            
+            // アプリがインストールされたら
+            window.addEventListener('appinstalled', () => {
+                installButton.style.display = 'none';
+                console.log('PWA installed successfully!');
+            });
+        }
+        
+        // iOS用インストールガイド表示
+        function showIOSInstallGuide() {
+            const guide = document.createElement('div');
+            guide.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(255, 255, 255, 0.98);
+                backdrop-filter: blur(20px);
+                border-radius: 20px;
+                padding: 2rem;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+                z-index: 10000;
+                max-width: 90%;
+                width: 400px;
+                text-align: center;
+            `;
+            
+            guide.innerHTML = `
+                <h5 style="color: #667eea; margin-bottom: 1rem;">📱 アプリとしてインストール</h5>
+                <p style="color: #666; margin-bottom: 1.5rem; line-height: 1.6;">
+                    Safari の下部にある<br>
+                    <strong style="color: #667eea;">共有ボタン <i class="fas fa-share" style="font-size: 1.2rem;"></i></strong> をタップ<br>
+                    ↓<br>
+                    <strong style="color: #667eea;">ホーム画面に追加</strong> を選択
+                </p>
+                <button onclick="this.parentElement.remove()" 
+                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                               color: white; border: none; border-radius: 25px; 
+                               padding: 0.75rem 2rem; font-weight: 600; cursor: pointer;">
+                    わかりました
+                </button>
+            `;
+            
+            // 背景オーバーレイ
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 9999;
+            `;
+            overlay.onclick = () => {
+                overlay.remove();
+                guide.remove();
+            };
+            
+            document.body.appendChild(overlay);
+            document.body.appendChild(guide);
+        }
+        
+        // ページ読み込み時に初期化
+        window.addEventListener('DOMContentLoaded', initPageSpecific);
         
         // 浮遊絵文字を作成
         // function createFloatingEmojis() {
