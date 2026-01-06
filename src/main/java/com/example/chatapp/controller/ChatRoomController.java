@@ -49,7 +49,7 @@ public class ChatRoomController {
             model.addAttribute("availableRooms", availableRooms);
             model.addAttribute("username", principal.getName());
         }
-        return "room-list";
+        return "rooms"; // 新しいルーム画面を使用
     }
 
     /**

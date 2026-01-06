@@ -85,7 +85,7 @@ body {
     border-radius: 0;
     height: 350px;
     max-height: 350px;
-    overflow-y: auto;
+    overflow: scroll;
     padding: 1.5rem;
     scroll-behavior: smooth;
 }

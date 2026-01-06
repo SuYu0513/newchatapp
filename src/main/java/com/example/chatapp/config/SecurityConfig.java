@@ -45,6 +45,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 // 完全に公開されるリソース（認証不要）
                 .requestMatchers("/login", "/register").permitAll()
+                // プロフィール作成（新規登録直後のみ）
+                .requestMatchers("/profile/create").permitAll()
                 // アイコンジェネレーター（認証不要）
                 .requestMatchers("/icon-generator.html").permitAll()
                 // 静的リソース（認証不要だが制限）
@@ -62,24 +64,22 @@ public class SecurityConfig {
                 .usernameParameter("username")
                 .passwordParameter("password")
                 .successHandler(authenticationSuccessHandler)
+                .defaultSuccessUrl("/home", true)
                 .failureUrl("/login?error=true")
                 .permitAll()
+            )
+            .rememberMe(remember -> remember
+                .key("uniqueAndSecretKey")
+                .rememberMeParameter("remember-me")
+                .tokenValiditySeconds(30 * 24 * 60 * 60) // 30日間有効
+                .userDetailsService(userDetailsService)
+                .alwaysRemember(true) // チェックボックスに関係なく常に有効
             )
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessHandler(logoutSuccessHandler)
+                .deleteCookies("JSESSIONID", "remember-me")
                 .permitAll()
-            )
-            // エラーページも認証を要求（自動的にloginにリダイレクト）
-            .exceptionHandling(exceptions -> exceptions
-                .authenticationEntryPoint((_, response, _) -> {
-                    // 未認証ユーザーは必ずloginページにリダイレクト
-                    response.sendRedirect("/login");
-                })
-                .accessDeniedHandler((_, response, _) -> {
-                    // アクセス拒否もloginページにリダイレクト
-                    response.sendRedirect("/login");
-                })
             )
             .csrf(csrf -> csrf.disable()) // 一時的にCSRF保護を無効化
             .headers(headers -> headers

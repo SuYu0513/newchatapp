@@ -74,10 +74,11 @@ input, textarea {
     overflow: hidden;
 }
 
+
 .login-kaado {
     opacity: 0.3 !important; 
     background: transparent;
-    backdrop-filter: none;
+    backdrop-filter: blur(10px) saturate(180%);
     border-radius: 0;
     box-shadow: none;
     border: none;
@@ -105,8 +106,8 @@ input, textarea {
 
 .login-bodii {
     padding: clamp(2rem, 5vw, 3rem);
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(40px) saturate(180%);
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px) saturate(180%);
     border-radius: 30px;
     border: 1.5px solid rgba(255, 255, 255, 0.4);
     box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15),

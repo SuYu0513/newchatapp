@@ -31,3 +31,24 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Database ###
+*.db
+*.sqlite
+*.sqlite3
+chatapp.db
+
+### Logs ###
+logs/
+*.log
+
+### Uploads ###
+src/main/resources/static/uploads/
+uploads/
+
+### SQL files (開発用) ###
+*.sql
+
+### Temporary files ###
+password_reset_steps.txt
+test

@@ -63,7 +63,9 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
             e.printStackTrace();
         }
         
-        // デフォルトのリダイレクト先にリダイレクト
-        response.sendRedirect("/chat");
+        // ホーム画面にリダイレクト
+        System.out.println("=== /home へリダイレクトします ===");
+        response.sendRedirect("/home");
+        System.out.println("=== リダイレクト完了 ===");
     }
 }

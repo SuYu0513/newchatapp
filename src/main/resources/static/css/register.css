@@ -1,12 +1,12 @@
 /* ======================================
-   新規登録画面専用CSS
+   新規登録画面専用CSS - 月明かりの星空テーマ
    ====================================== */
 
 /* ベーススタイル */
 html {
   margin: 0;
   padding: 0;
-  background: #000;
+  background: #0a0e27;
   overscroll-behavior: none;
 }
 
@@ -15,11 +15,11 @@ body {
   min-height: 100vh;
   margin: 0;
   padding: 0;
-  background: #000;
+  background: #0a0e27;
   overscroll-behavior: none;
 }
 
-/* 新規登録コンテナ */
+/* 新規登録コンテナ - 月明かりの星空背景 */
 .register-kontena {
     position: fixed;
     top: 0;
@@ -32,7 +32,20 @@ body {
     justify-content: center;
     padding: clamp(1rem, 4vh, 2rem) 0 0 0;
     margin: 0;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
+    /* 深い青黒のグラデーション背景 */
+    background: linear-gradient(to bottom, 
+        #0a0e27 0%,      /* 深い青黒 */
+        #1a1f3a 25%,     /* ミッドナイトブルー */
+        #0f1929 50%,     /* 暗い青 */
+        #1e2740 75%,     /* やや明るい青紫 */
+        #0d1321 100%     /* 深い黒青 */
+    );
+    /* 月明かりの光を表現 */
+    background-image: 
+        radial-gradient(ellipse at 20% 10%, rgba(135, 206, 250, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(176, 224, 230, 0.1) 0%, transparent 40%);
 }
 
 /* 新規登録カード */
@@ -53,6 +66,8 @@ body {
 .register-title-area {
     text-align: center;
     margin-bottom: 1rem;
+    position: relative;
+    z-index: 10;
 }
 
 .register-title-area h1 {
@@ -69,99 +84,122 @@ body {
     text-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
 }
 
-/* フォームボディ */
+/* フォームボディ - 半透明の霧がかったガラス */
 .register-bodii {
     padding: clamp(2rem, 5vw, 3rem);
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(40px) saturate(180%);
+    background: rgba(15, 25, 50, 0.4);
+    backdrop-filter: blur(30px) saturate(150%);
     border-radius: 30px;
-    border: 1.5px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15),
-                inset 0 0 60px rgba(255, 255, 255, 0.05);
+    border: 1.5px solid rgba(176, 224, 230, 0.3);
+    box-shadow: 0 8px 32px rgba(135, 206, 250, 0.2),
+                inset 0 0 60px rgba(135, 206, 250, 0.05),
+                0 0 100px rgba(135, 206, 250, 0.1);
+    position: relative;
+    z-index: 10;
 }
 
-/* フォームラベル */
+/* フォームラベル - 月光に照らされた文字 */
 .register-bodii .form-label {
-    color: rgba(255, 255, 255, 0.95);
+    color: rgba(220, 240, 255, 0.95);
     font-weight: 500;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    text-shadow: 0 0 10px rgba(135, 206, 250, 0.5);
     margin-bottom: 0.5rem;
 }
 
-/* フォームコントロール */
+/* フォームコントロール - 月明かりを受けた入力欄 */
 .register-bodii .form-control {
-    background: rgba(255, 255, 255, 0.85) !important;
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    background: rgba(20, 30, 60, 0.6) !important;
+    border: 1px solid rgba(135, 206, 250, 0.4);
     backdrop-filter: blur(10px);
-    color: #333;
+    color: #e0f0ff;
     border-radius: 15px;
     padding: clamp(0.6rem, 2vw, 0.75rem) clamp(0.8rem, 3vw, 1rem);
     font-size: clamp(0.9rem, 2.5vw, 1rem);
     transition: all 0.3s ease;
 }
 
+.register-bodii .form-control::placeholder {
+    color: rgba(176, 224, 230, 0.5);
+}
+
 .register-bodii .form-control:focus {
-    background: rgba(255, 255, 255, 0.92) !important;
-    border-color: rgba(102, 126, 234, 0.6);
-    box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.15);
+    background: rgba(25, 35, 70, 0.7) !important;
+    border-color: rgba(135, 206, 250, 0.8);
+    box-shadow: 0 0 0 0.25rem rgba(135, 206, 250, 0.25),
+                0 0 20px rgba(135, 206, 250, 0.4);
     transform: scale(1.02);
+    color: #ffffff;
 }
 
 /* エラーメッセージ */
 .register-bodii .text-danger {
-    color: #ff6b6b !important;
+    color: #ffb3ba !important;
     font-size: 0.85rem;
     margin-top: 0.25rem;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    text-shadow: 0 0 5px rgba(255, 179, 186, 0.5);
 }
 
 .register-bodii .alert-danger {
-    background: rgba(255, 107, 107, 0.15);
-    border: 1px solid rgba(255, 107, 107, 0.4);
-    color: white;
+    background: rgba(139, 0, 0, 0.3);
+    border: 1px solid rgba(255, 107, 107, 0.5);
+    color: #ffcccb;
     backdrop-filter: blur(10px);
     border-radius: 15px;
+    box-shadow: 0 0 15px rgba(255, 107, 107, 0.3);
 }
 
-/* ボタン */
+/* ボタン - 月の輝きをイメージ */
 .register-bodii .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
+    background: linear-gradient(135deg, 
+        #4a7ba7 0%,      /* 月光の青 */
+        #87ceeb 50%,     /* 空色 */
+        #5f9fd6 100%     /* 深い空色 */
+    );
+    border: 1px solid rgba(135, 206, 250, 0.5);
     border-radius: 50px;
     padding: clamp(0.7rem, 2.5vw, 0.9rem) clamp(1.5rem, 4vw, 2rem);
     font-size: clamp(1rem, 3vw, 1.1rem);
     font-weight: 600;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(135, 206, 250, 0.5),
+                0 0 30px rgba(135, 206, 250, 0.3);
     transition: all 0.3s ease;
     text-transform: uppercase;
     letter-spacing: 1px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .register-bodii .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    box-shadow: 0 6px 20px rgba(135, 206, 250, 0.7),
+                0 0 40px rgba(135, 206, 250, 0.5);
+    background: linear-gradient(135deg, 
+        #5a8bc0 0%, 
+        #a0d8f0 50%, 
+        #6fb0e6 100%
+    );
 }
 
 .register-bodii .btn-primary:active {
     transform: translateY(0);
 }
 
-/* リンク */
+/* リンク - 星の輝き */
 .register-bodii a {
-    color: rgba(255, 255, 255, 0.95);
+    color: rgba(176, 224, 230, 0.95);
     text-decoration: none;
     font-weight: 600;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    text-shadow: 0 0 8px rgba(135, 206, 250, 0.6);
     transition: all 0.3s ease;
 }
 
 .register-bodii a:hover {
-    color: #667eea;
-    text-shadow: 0 2px 8px rgba(102, 126, 234, 0.5);
+    color: #87ceeb;
+    text-shadow: 0 0 15px rgba(135, 206, 250, 0.9);
 }
 
 .register-bodii .text-center {
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(220, 240, 255, 0.9);
 }
 
 /* レスポンシブ調整 */
@@ -172,5 +210,109 @@ body {
     
     .register-kaado {
         width: 95%;
+    }
+}
+/* ======================================
+   月明かりの星空エフェクト
+   ====================================== */
+
+/* 星空背景（強化版） */
+.register-kontena.starry {
+    background: linear-gradient(to bottom, 
+        #0a0e27 0%,
+        #1a1f3a 25%,
+        #0f1929 50%,
+        #1e2740 75%,
+        #0d1321 100%
+    );
+    background-image: 
+        radial-gradient(ellipse at 20% 10%, rgba(135, 206, 250, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(176, 224, 230, 0.1) 0%, transparent 40%);
+}
+
+/* 星のキラキラ効果 - 青白い輝き */
+.register-kontena .star {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: #e0f0ff;
+    border-radius: 50%;
+    animation: twinkle 3s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+    box-shadow: 0 0 3px rgba(224, 240, 255, 0.8), 
+                0 0 6px rgba(135, 206, 250, 0.6),
+                0 0 10px rgba(135, 206, 250, 0.4);
+}
+
+/* 大きめの星 */
+.register-kontena .star.large {
+    width: 3px;
+    height: 3px;
+    box-shadow: 0 0 4px rgba(224, 240, 255, 1), 
+                0 0 8px rgba(135, 206, 250, 0.8),
+                0 0 15px rgba(135, 206, 250, 0.5);
+}
+
+@keyframes twinkle {
+    0%, 100% {
+        opacity: 0.3;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.5);
+    }
+}
+
+/* 月の表現 */
+.register-kontena::before {
+    content: '';
+    position: absolute;
+    top: 10%;
+    right: 15%;
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle at 35% 35%, 
+        #f5f5dc 0%,
+        #e8e8d0 40%,
+        rgba(224, 224, 200, 0.8) 70%,
+        rgba(200, 200, 180, 0.3) 100%
+    );
+    border-radius: 50%;
+    box-shadow: 0 0 40px rgba(245, 245, 220, 0.6),
+                0 0 80px rgba(245, 245, 220, 0.3),
+                inset -10px -10px 20px rgba(200, 200, 180, 0.3);
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* 月の光のオーラ */
+.register-kontena::after {
+    content: '';
+    position: absolute;
+    top: 5%;
+    right: 10%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, 
+        rgba(245, 245, 220, 0.15) 0%,
+        rgba(176, 224, 230, 0.1) 30%,
+        transparent 70%
+    );
+    border-radius: 50%;
+    z-index: 1;
+    pointer-events: none;
+    animation: moonGlow 4s ease-in-out infinite;
+}
+
+@keyframes moonGlow {
+    0%, 100% {
+        opacity: 0.6;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.1);
     }
 }

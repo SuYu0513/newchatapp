@@ -27,12 +27,17 @@ public class UserService {
     private FriendCodeService friendCodeService;
 
     public User registerUser(String username, String password, String email) {
-        // ユーザー名とメールアドレスの重複チェック
-        if (userRepository.existsByUsername(username)) {
-            throw new RuntimeException("このユーザー名は既に使用されています");
-        }
+        // メールアドレスの重複チェック
         if (userRepository.existsByEmail(email)) {
             throw new RuntimeException("このメールアドレスは既に使用されています");
+        }
+        
+        // パスワードの重複チェック（全ユーザーのパスワードと照合）
+        List<User> allUsers = userRepository.findAll();
+        for (User existingUser : allUsers) {
+            if (passwordEncoder.matches(password, existingUser.getPassword())) {
+                throw new RuntimeException("このパスワードは既に使用されています");
+            }
         }
 
         // パスワードをハッシュ化

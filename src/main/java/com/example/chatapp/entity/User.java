@@ -21,7 +21,7 @@ public class User {
     
     @NotBlank(message = "ユーザー名は必須です")
     @Size(min = 3, max = 50, message = "ユーザー名は3文字以上50文字以下で入力してください")
-    @Column(unique = true, nullable = false, length = 50)
+    @Column(nullable = false, length = 50)
     private String username;
     
     @NotBlank(message = "パスワードは必須です")

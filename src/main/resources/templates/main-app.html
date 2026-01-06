@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-visual-viewport">
+    <title>チャットアプリ</title>
+    
+    <!-- PWA設定 -->
+    <link rel="manifest" href="/manifest.json?v=4">
+    <meta name="theme-color" content="#667eea">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/common.css" rel="stylesheet">
+    <link href="/css/main-app.css?v=20260106004" rel="stylesheet">
+</head>
+<body>
+    <!-- メインコンテナ -->
+    <div class="app-container">
+        
+        <!-- ホーム画面 -->
+        <section class="app-section active" id="home-section">
+            <div class="section-content">
+                <!-- 成功メッセージ -->
+                <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-1"></i>
+                    <span th:text="${success}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                
+                <!-- 投稿リスト -->
+                <div class="posts-container">
+                    <div th:if="${posts == null or posts.isEmpty()}" class="no-posts">
+                        <i class="fas fa-inbox fa-3x mb-3 text-muted"></i>
+                        <p class="text-muted">まだ投稿がありません</p>
+                    </div>
+                    
+                    <div th:each="post : ${posts}" class="post-card">
+                        <div class="post-header">
+                            <div class="post-user-info">
+                                <img th:if="${post.user.profile != null and post.user.profile.avatar != null}" 
+                                     th:src="@{'/uploads/avatars/' + post.user.profile.avatar}" 
+                                     class="post-avatar" 
+                                     alt="アイコン">
+                                <img th:if="${post.user.profile == null or post.user.profile.avatar == null}" 
+                                     src="/images/default-avatar.png" 
+                                     class="post-avatar" 
+                                     alt="アイコン">
+                                <div class="post-user-details">
+                                    <span class="post-username" th:text="${post.user.username}">ユーザー名</span>
+                                    <span class="post-time" th:text="${#temporals.format(post.createdAt, 'yyyy年MM月dd日 HH:mm')}">投稿日時</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <p th:text="${post.content}">投稿内容</p>
+                            
+                            <!-- メディア表示 -->
+                            <div th:if="${post.mediaPath != null and !post.mediaPath.isEmpty()}" class="post-media-grid">
+                                <div th:each="mediaUrl : ${#strings.arraySplit(post.mediaPath, ',')}" class="post-media-item">
+                                    <!-- 画像の場合 -->
+                                    <img th:if="${#strings.endsWith(mediaUrl, '.jpg') or #strings.endsWith(mediaUrl, '.jpeg') or #strings.endsWith(mediaUrl, '.png') or #strings.endsWith(mediaUrl, '.gif') or #strings.endsWith(mediaUrl, '.webp')}"
+                                         th:src="${mediaUrl}" 
+                                         alt="投稿画像"
+                                         class="post-media-image">
+                                    <!-- 動画の場合 -->
+                                    <video th:if="${#strings.endsWith(mediaUrl, '.mp4') or #strings.endsWith(mediaUrl, '.webm') or #strings.endsWith(mediaUrl, '.mov')}"
+                                           th:src="${mediaUrl}" 
+                                           controls
+                                           class="post-media-video"></video>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 投稿作成画面 -->
+        <section class="app-section" id="create-post-section">
+            <div class="section-content">
+                <div class="create-post-header">
+                    <button class="btn-back" id="btnBackFromPost">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h1>新規投稿</h1>
+                    <div></div>
+                </div>
+                
+                <form th:action="@{/home/post}" method="post" enctype="multipart/form-data" class="create-post-form" id="createPostForm">
+                    <div class="form-group">
+                        <label for="postContent" class="form-label">
+                            <i class="fas fa-pen me-2"></i>投稿内容
+                        </label>
+                        <textarea id="postContent" name="content" class="form-textarea" 
+                                  placeholder="今何してる？" 
+                                  maxlength="1000" 
+                                  rows="8"
+                                  required></textarea>
+                        <div class="char-counter-container">
+                            <span class="char-counter" id="charCounter">0 / 1000</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="mediaUpload" class="form-label">
+                            <i class="fas fa-image me-2"></i>写真・動画
+                        </label>
+                        <div class="upload-area" id="uploadArea">
+                            <input type="file" id="mediaUpload" name="media" 
+                                   accept="image/*,video/*" 
+                                   multiple 
+                                   class="file-input">
+                            <label for="mediaUpload" class="upload-label">
+                                <i class="fas fa-cloud-upload-alt fa-3x mb-3"></i>
+                                <p class="mb-0">タップして写真・動画を選択</p>
+                                <small class="text-muted">または、ここにドラッグ＆ドロップ</small>
+                            </label>
+                        </div>
+                        <div class="preview-container" id="previewContainer"></div>
+                    </div>
+                    
+                    <button type="submit" class="btn-submit-post">
+                        <i class="fas fa-paper-plane me-2"></i>投稿する
+                    </button>
+                </form>
+            </div>
+        </section>
+        
+        <!-- ルーム画面 -->
+        <section class="app-section" id="room-section">
+            <div class="section-content">
+                <div class="rooms-header">
+                    <h1>🚪 ルーム</h1>
+                    <div class="header-tabs">
+                        <button class="tab-btn active" data-tab="joined">
+                            <i class="fas fa-door-open me-1"></i>参加中
+                        </button>
+                        <button class="tab-btn" data-tab="available">
+                            <i class="fas fa-search me-1"></i>参加可能
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 参加中のルーム -->
+                <div class="tab-content active" id="joined-tab">
+                    <div class="rooms-list">
+                        <div th:if="${userRooms == null or userRooms.isEmpty()}" class="no-rooms">
+                            <i class="fas fa-door-closed fa-3x mb-3 text-muted"></i>
+                            <p class="text-muted">参加しているルームがありません</p>
+                        </div>
+                        
+                        <div th:each="room : ${userRooms}" class="room-card" th:onclick="'location.href=\'/chat?room=' + ${room.id} + '\''">
+                            <div class="room-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="room-info">
+                                <h3 class="room-name" th:text="${room.name}">ルーム名</h3>
+                                <p class="room-type" th:text="${room.type.name() == 'GROUP' ? 'グループ' : 'プライベート'}">タイプ</p>
+                            </div>
+                            <div class="room-arrow">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 参加可能なルーム -->
+                <div class="tab-content" id="available-tab">
+                    <div class="rooms-list">
+                        <div th:if="${availableRooms == null or availableRooms.isEmpty()}" class="no-rooms">
+                            <i class="fas fa-inbox fa-3x mb-3 text-muted"></i>
+                            <p class="text-muted">参加可能なルームがありません</p>
+                        </div>
+                        
+                        <div th:each="room : ${availableRooms}" class="room-card">
+                            <div class="room-icon">
+                                <i class="fas fa-door-open"></i>
+                            </div>
+                            <div class="room-info">
+                                <h3 class="room-name" th:text="${room.name}">ルーム名</h3>
+                                <p class="room-type" th:text="${room.type.name() == 'GROUP' ? 'グループ' : 'プライベート'}">タイプ</p>
+                            </div>
+                            <button class="btn-join" th:data-room-id="${room.id}">
+                                <i class="fas fa-sign-in-alt me-1"></i>参加
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ルーム作成ボタン -->
+                <a href="/rooms/create" class="btn-create-room">
+                    <i class="fas fa-plus"></i>
+                </a>
+            </div>
+        </section>
+        
+        <!-- マッチ画面 -->
+        <section class="app-section" id="match-section">
+            <div class="section-content">
+                <div class="welcome-section">
+                    <h1>🎲 マッチ</h1>
+                    <p class="text-white-50">準備中...</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- チャット画面 -->
+        <section class="app-section" id="chat-section">
+            <div class="section-content">
+                <div class="welcome-section">
+                    <h1>💬 チャット</h1>
+                    <p class="text-white-50">準備中...</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- マイページ画面 -->
+        <section class="app-section" id="mypage-section">
+            <div class="section-content">
+                <div class="welcome-section">
+                    <h1>👤 マイページ</h1>
+                    <p class="text-white-50">準備中...</p>
+                </div>
+            </div>
+        </section>
+        
+    </div>
+    
+    <!-- 投稿ボタン（フッターの上） -->
+    <button class="btn-create-post" id="btnCreatePost">
+        <i class="fas fa-plus"></i>
+    </button>
+    
+    <!-- フッターナビゲーション -->
+    <footer class="bottom-nav">
+        <button class="nav-item active" data-section="home">
+            <i class="fas fa-home"></i>
+            <span>ホーム</span>
+        </button>
+        <button class="nav-item" data-section="room">
+            <i class="fas fa-door-open"></i>
+            <span>ルーム</span>
+        </button>
+        <button class="nav-item" data-section="match">
+            <i class="fas fa-random"></i>
+            <span>マッチ</span>
+        </button>
+        <button class="nav-item" data-section="chat">
+            <i class="fas fa-comments"></i>
+            <span>チャット</span>
+        </button>
+        <button class="nav-item" data-section="mypage">
+            <i class="fas fa-user"></i>
+            <span>マイページ</span>
+        </button>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 星を生成
+        function createStars() {
+            const container = document.querySelector('.app-container');
+            const starCount = 100; // 星の数
+            
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = Math.random() > 0.8 ? 'star large' : 'star';
+                
+                // ランダムな位置
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                
+                // ランダムなアニメーション遅延
+                star.style.animationDelay = Math.random() * 3 + 's';
+                star.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                
+                container.appendChild(star);
+            }
+        }
+        
+        // ページ読み込み時に星を生成
+        createStars();
+        
+        // セクション切り替え
+        const navItems = document.querySelectorAll('.nav-item');
+        const sections = document.querySelectorAll('.app-section');
+        const createPostBtn = document.getElementById('btnCreatePost');
+        
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const sectionName = item.dataset.section;
+                
+                // 全てのナビゲーションアイテムとセクションから active を削除
+                navItems.forEach(nav => nav.classList.remove('active'));
+                sections.forEach(section => section.classList.remove('active'));
+                
+                // クリックされたアイテムと対応するセクションに active を追加
+                item.classList.add('active');
+                document.getElementById(sectionName + '-section').classList.add('active');
+                
+                // ホーム画面の場合のみ＋ボタンを表示
+                if (sectionName === 'home') {
+                    createPostBtn.style.display = 'flex';
+                } else {
+                    createPostBtn.style.display = 'none';
+                }
+            });
+        });
+        
+        // ルームタブ切り替え
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabName = btn.dataset.tab;
+                
+                tabBtns.forEach(b => b.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                btn.classList.add('active');
+                document.getElementById(tabName + '-tab').classList.add('active');
+            });
+        });
+        
+        // 参加ボタン
+        document.querySelectorAll('.btn-join').forEach(btn => {
+            btn.addEventListener('click', async function(e) {
+                e.stopPropagation();
+                const roomId = this.dataset.roomId;
+                
+                try {
+                    const response = await fetch(`/rooms/${roomId}/join`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        window.location.href = data.redirectUrl;
+                    } else {
+                        alert(data.message);
+                    }
+                } catch (error) {
+                    alert('エラーが発生しました');
+                }
+            });
+        });
+        
+        // 投稿ボタン - 投稿画面へ遷移
+        const btnCreatePost = document.getElementById('btnCreatePost');
+        const btnBackFromPost = document.getElementById('btnBackFromPost');
+        const createPostSection = document.getElementById('create-post-section');
+        const homeSection = document.getElementById('home-section');
+        
+        if (btnCreatePost) {
+            btnCreatePost.addEventListener('click', () => {
+                sections.forEach(section => section.classList.remove('active'));
+                createPostSection.classList.add('active');
+            });
+        }
+        
+        if (btnBackFromPost) {
+            btnBackFromPost.addEventListener('click', () => {
+                createPostSection.classList.remove('active');
+                homeSection.classList.add('active');
+                navItems.forEach(nav => nav.classList.remove('active'));
+                navItems[0].classList.add('active');
+            });
+        }
+        
+        // 文字カウンター
+        const postContent = document.getElementById('postContent');
+        const charCounter = document.getElementById('charCounter');
+        
+        if (postContent && charCounter) {
+            postContent.addEventListener('input', function() {
+                const length = this.value.length;
+                charCounter.textContent = length + ' / 1000';
+                
+                if (length > 900) {
+                    charCounter.style.color = '#dc3545';
+                } else if (length > 800) {
+                    charCounter.style.color = '#ffc107';
+                } else {
+                    charCounter.style.color = '#6c757d';
+                }
+            });
+        }
+        
+        // ファイルアップロード - プレビュー機能
+        const mediaUpload = document.getElementById('mediaUpload');
+        const uploadArea = document.getElementById('uploadArea');
+        const previewContainer = document.getElementById('previewContainer');
+        
+        if (mediaUpload && previewContainer) {
+            mediaUpload.addEventListener('change', function(e) {
+                previewFiles(e.target.files);
+            });
+            
+            // ドラッグ＆ドロップ
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                previewFiles(e.dataTransfer.files);
+                mediaUpload.files = e.dataTransfer.files;
+            });
+        }
+        
+        function previewFiles(files) {
+            previewContainer.innerHTML = '';
+            
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const previewItem = document.createElement('div');
+                    previewItem.className = 'preview-item';
+                    
+                    if (file.type.startsWith('image/')) {
+                        previewItem.innerHTML = `
+                            <img src="${e.target.result}" alt="プレビュー">
+                            <button type="button" class="btn-remove-preview" onclick="this.parentElement.remove()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        `;
+                    } else if (file.type.startsWith('video/')) {
+                        previewItem.innerHTML = `
+                            <video src="${e.target.result}" controls></video>
+                            <button type="button" class="btn-remove-preview" onclick="this.parentElement.remove()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        `;
+                    }
+                    
+                    previewContainer.appendChild(previewItem);
+                };
+                
+                reader.readAsDataURL(file);
+            });
+        }
+    </script>
+</body>
+</html>
