@@ -37,15 +37,27 @@ public class ProfileCreationController {
     
     @GetMapping("/create")
     public String showProfileCreationPage(HttpSession session, Model model) {
+        System.out.println("=== プロフィール作成画面 GET ===");
+        System.out.println("セッションID: " + session.getId());
+        
         Long userId = (Long) session.getAttribute("newUserId");
+        System.out.println("セッションから取得したnewUserId: " + userId);
+        
         if (userId == null) {
+            System.out.println("newUserIdがnullのためログイン画面にリダイレクト");
+            System.out.println("================================");
             return "redirect:/login";
         }
         
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
+            System.out.println("ユーザーが見つからないためログイン画面にリダイレクト");
+            System.out.println("================================");
             return "redirect:/login";
         }
+        
+        System.out.println("ユーザー発見: " + user.getUsername());
+        System.out.println("================================");
         
         // 人気の「好きなもの」タグトップ10を取得
         List<FavoriteTag> topTags = favoriteTagRepository.findTop10ByOrderByUsageCountDesc(PageRequest.of(0, 10));
@@ -118,7 +130,7 @@ public class ProfileCreationController {
         // セッションから一時データをクリア
         session.removeAttribute("newUserId");
         
-        // チャットルーム一覧画面にリダイレクト
-        return "redirect:/room-list";
+        // ログイン後と同じホーム画面にリダイレクト
+        return "redirect:/home";
     }
 }

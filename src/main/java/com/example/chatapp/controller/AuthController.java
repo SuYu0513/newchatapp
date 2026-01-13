@@ -71,8 +71,18 @@ public class AuthController {
                 userDto.getPassword(),
                 userDto.getEmail()
             );
+            
+            System.out.println("=== 新規登録完了 ===");
+            System.out.println("ユーザーID: " + user.getId());
+            System.out.println("ユーザー名: " + user.getUsername());
+            
             // セッションに新規ユーザーIDを保存してプロフィール作成画面へ
             session.setAttribute("newUserId", user.getId());
+            
+            System.out.println("セッションID: " + session.getId());
+            System.out.println("セッションに保存したnewUserId: " + session.getAttribute("newUserId"));
+            System.out.println("=====================");
+            
             return "redirect:/profile/create";
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());

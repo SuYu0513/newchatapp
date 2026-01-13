@@ -20,7 +20,7 @@ public class User {
     private Long id;
     
     @NotBlank(message = "ユーザー名は必須です")
-    @Size(min = 3, max = 50, message = "ユーザー名は3文字以上50文字以下で入力してください")
+    @Size(min = 1, max = 50, message = "ユーザー名は1文字以上50文字以下で入力してください")
     @Column(nullable = false, length = 50)
     private String username;
     

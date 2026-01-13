@@ -426,6 +426,40 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        /* ハンバーガーメニューのスタイル */
+        .hamburger-menu {
+            color: white !important;
+            font-size: 1.5rem;
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+        }
+        
+        .hamburger-menu:hover {
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+        
+        .dropdown-menu {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        
+        .dropdown-item {
+            color: #333;
+            padding: 0.75rem 1.5rem;
+        }
+        
+        .dropdown-item:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+        
+        .dropdown-item i {
+            color: #667eea;
+        }
     </style>
 </head>
 <body>
@@ -465,7 +499,21 @@
                 <a class="nav-link active" th:href="@{/profile}">
                     <i class="fas fa-user me-1"></i>プロフィール
                 </a>
-                <a class="nav-link" th:href="@{/logout}">
+                <!-- 自分のプロフィールの場合のみハンバーガーメニュー表示 -->
+                <div th:if="${isOwnProfile}" class="dropdown">
+                    <button class="btn btn-link nav-link hamburger-menu" type="button" id="profileMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileMenu">
+                        <li>
+                            <a class="dropdown-item" th:href="@{/logout}">
+                                <i class="fas fa-sign-out-alt me-2"></i>ログアウト
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- 他のユーザーのプロフィールの場合は従来のログアウトリンク -->
+                <a th:if="${!isOwnProfile}" class="nav-link" th:href="@{/logout}">
                     <i class="fas fa-sign-out-alt me-1"></i>ログアウト
                 </a>
             </div>

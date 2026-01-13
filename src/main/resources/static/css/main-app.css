@@ -32,7 +32,7 @@ body {
 /* アプリコンテナ */
 .app-container {
     min-height: 100vh;
-    padding-bottom: 80px;
+    padding-bottom: 120px;
     position: relative;
 }
 
@@ -122,6 +122,40 @@ body {
     font-size: 1.2rem;
     opacity: 0.95;
     text-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* ハンバーガーメニュー */
+.hamburger-btn {
+    padding: 0.5rem;
+    text-decoration: none;
+    transition: opacity 0.3s;
+}
+
+.hamburger-btn:hover {
+    opacity: 0.8;
+}
+
+.dropdown-menu { 
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    min-width: 180px;
+}
+
+.dropdown-item {
+    color: #333;
+    padding: 0.75rem 1.5rem;
+}
+
+.dropdown-item:hover {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+}
+
+.dropdown-item i {
+    color: #667eea;
 }
 
 /* ======================================
@@ -234,6 +268,28 @@ body {
     object-fit: cover;
     border: 3px solid #667eea;
 }
+
+/* デフォルトアイコン（上半身マーク） */
+.default-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+    flex-shrink: 0;
+}
+
+/* 10色のバリエーション */
+.default-avatar[data-color="0"] { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.default-avatar[data-color="1"] { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+.default-avatar[data-color="2"] { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+.default-avatar[data-color="3"] { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+.default-avatar[data-color="4"] { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+.default-avatar[data-color="5"] { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); }
+.default-avatar[data-color="6"] { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); }
+.default-avatar[data-color="7"] { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); }
+.default-avatar[data-color="8"] { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); }
+.default-avatar[data-color="9"] { background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%); }
 
 .post-user-details {
     display: flex;
@@ -845,5 +901,209 @@ body {
         left: 50%;
         transform: translateX(-50%);
         border-radius: 20px 20px 0 0;
+    }
+}
+
+/* ======================================
+   マイページ
+   ====================================== */
+.mypage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 0 0.5rem;
+}
+
+.mypage-header h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: bold;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* マイページのハンバーガーメニューを右上に配置 */
+#mypage-section .dropdown {
+    position: absolute;
+    top: 2rem;
+    right: 1rem;
+    z-index: 1000;
+}
+
+.hamburger-btn {
+    padding: 0.5rem;
+    text-decoration: none;
+}
+
+.hamburger-btn:hover {
+    opacity: 0.8;
+}
+
+/* プロフィールセクション */
+.profile-section {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.profile-main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* プロフィール上部（アイコン+基本情報） */
+.profile-main-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+}
+
+/* プロフィールアイコン */
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: white;
+    flex-shrink: 0;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* ユーザー名からの色生成 */
+.profile-avatar[data-color="0"] { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.profile-avatar[data-color="1"] { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+.profile-avatar[data-color="2"] { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+.profile-avatar[data-color="3"] { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+.profile-avatar[data-color="4"] { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+.profile-avatar[data-color="5"] { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); }
+.profile-avatar[data-color="6"] { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); }
+.profile-avatar[data-color="7"] { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); }
+.profile-avatar[data-color="8"] { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); }
+.profile-avatar[data-color="9"] { background: linear-gradient(135deg, #ff6e7f 0%, #bfe9ff 100%); }
+
+/* プロフィール基本情報（上部） */
+.profile-info-top {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* プロフィール詳細情報（下部：自己紹介+タグ） */
+.profile-info-bottom {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.profile-username {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: white;
+    margin: 0;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.profile-friendcode {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+}
+
+/* プロフィール自己紹介 */
+.profile-bio {
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1.6;
+    margin: 0.5rem 0 0 0;
+    padding: 0.75rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    border-left: 3px solid rgba(102, 126, 234, 0.5);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.profile-bio.text-muted {
+    font-style: italic;
+    opacity: 0.6;
+    border-left-color: rgba(255, 255, 255, 0.2);
+}
+
+/* プロフィール好きなものタグ（横スクロール） */
+.profile-tags-container {
+    margin-top: 0.75rem;
+    width: 100%;
+}
+
+.profile-tags-scroll {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.5rem 0;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+.profile-tags-scroll::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+.profile-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 0.9rem;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
+    border: 1px solid rgba(102, 126, 234, 0.4);
+    border-radius: 20px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.85rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.profile-tag:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.5), rgba(118, 75, 162, 0.5));
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 576px) {
+    .profile-section {
+        padding: 1.5rem;
+    }
+    
+    .profile-avatar {
+        width: 60px;
+        height: 60px;
+        font-size: 2rem;
+    }
+    
+    .profile-username {
+        font-size: 1.5rem;
+    }
+    
+    .profile-friendcode {
+        font-size: 0.8rem;
     }
 }

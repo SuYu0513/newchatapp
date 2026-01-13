@@ -36,7 +36,7 @@ build/
 *.db
 *.sqlite
 *.sqlite3
-chatapp.db
+chatapp_STG1.db
 
 ### Logs ###
 logs/

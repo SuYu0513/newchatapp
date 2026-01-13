@@ -1,6 +1,8 @@
 package com.example.chatapp.controller;
 
 import com.example.chatapp.entity.User;
+import com.example.chatapp.entity.UserProfile;
+import com.example.chatapp.repository.UserProfileRepository;
 import com.example.chatapp.service.PostService;
 import com.example.chatapp.service.UserService;
 import com.example.chatapp.service.ChatRoomService;
@@ -34,6 +36,9 @@ public class HomeController {
     
     @Autowired
     private ChatRoomService chatRoomService;
+    
+    @Autowired
+    private UserProfileRepository userProfileRepository;
 
     @GetMapping("/home")
     public String home(Authentication authentication, Model model) {
@@ -43,6 +48,19 @@ public class HomeController {
             System.out.println("認証済みユーザー: " + username);
             model.addAttribute("username", username);
             model.addAttribute("posts", postService.getAllPosts());
+            
+            // ユーザー情報を追加（マイページ用）
+            Optional<User> userOpt = userService.findByUsername(username);
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                model.addAttribute("user", user);
+                
+                // プロフィール情報を追加
+                Optional<UserProfile> profileOpt = userProfileRepository.findByUser(user);
+                if (profileOpt.isPresent()) {
+                    model.addAttribute("profile", profileOpt.get());
+                }
+            }
             
             // ルーム情報も追加
             model.addAttribute("userRooms", chatRoomService.getUserChatRooms(username));
