@@ -1,7 +1,6 @@
 package com.example.chatapp.controller;
 
 import com.example.chatapp.entity.User;
-import com.example.chatapp.entity.Friendship;
 import com.example.chatapp.entity.ChatRoom;
 import com.example.chatapp.entity.UserProfile;
 import com.example.chatapp.service.UserService;
@@ -20,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 @Controller
@@ -59,28 +59,25 @@ public class FriendController {
         User currentUser = userOpt.get();
         
         try {
-            // フレンド一覧を取得
+            // フレンド一覧を取得（相互フォロー）
             List<User> friends = friendshipService.getFriends(currentUser);
             
-            // 送信した申請一覧（PENDING状態）
-            List<Friendship> sentRequestsEntities = friendshipService.getPendingRequestsBySender(currentUser);
-            List<User> sentRequests = sentRequestsEntities.stream()
-                .map(Friendship::getAddressee)
+            // フォロー中のユーザー（相互フォローでない）
+            List<User> sentRequests = friendshipService.getFollowing(currentUser).stream()
+                .filter(user -> !friendshipService.areFriends(currentUser, user))
                 .collect(Collectors.toList());
             
-            // 受信した申請一覧（PENDING状態）
-            List<Friendship> receivedRequestsEntities = friendshipService.getPendingRequestsByAddressee(currentUser);
-            List<User> receivedRequests = receivedRequestsEntities.stream()
-                .map(Friendship::getRequester)
+            // フォロワー（相互フォローでない）
+            List<User> receivedRequests = friendshipService.getFollowers(currentUser).stream()
+                .filter(user -> !friendshipService.areFriends(currentUser, user))
                 .collect(Collectors.toList());
             
-            // ブロック済みユーザー一覧
-            List<User> blockedUsers = friendshipService.getBlockedUsers(currentUser);
+            // 空のリストを設定（後で実装予定）
+            List<User> blockedUsers = new ArrayList<>();
             
             model.addAttribute("friends", friends);
             model.addAttribute("sentRequests", sentRequests);
             model.addAttribute("receivedRequests", receivedRequests);
-            model.addAttribute("receivedRequestsEntities", receivedRequestsEntities);
             model.addAttribute("blockedUsers", blockedUsers);
             model.addAttribute("currentUser", currentUser);
             
@@ -133,15 +130,11 @@ public class FriendController {
                 return ResponseEntity.badRequest().body(response);
             }
             
-            Friendship friendship = friendshipService.sendFriendRequest(requesterOpt.get(), targetOpt.get());
+            // フォロー機能に変更
+            friendshipService.follow(requesterOpt.get(), targetOpt.get());
             
-            if (friendship != null) {
-                response.put("success", true);
-                response.put("message", "フレンド申請を送信しました");
-            } else {
-                response.put("success", false);
-                response.put("message", "フレンド申請の送信に失敗しました");
-            }
+            response.put("success", true);
+            response.put("message", "フォローしました");
             
         } catch (Exception e) {
             response.put("success", false);
@@ -183,15 +176,11 @@ public class FriendController {
                 return ResponseEntity.badRequest().body(response);
             }
             
-            Friendship friendship = friendshipService.acceptFriendRequest(requesterOpt.get(), currentUserOpt.get());
+            // 相手をフォローバック（相互フォロー＝友達）
+            friendshipService.follow(currentUserOpt.get(), requesterOpt.get());
             
-            if (friendship != null) {
-                response.put("success", true);
-                response.put("message", "フレンド申請を承認しました");
-            } else {
-                response.put("success", false);
-                response.put("message", "フレンド申請の承認に失敗しました");
-            }
+            response.put("success", true);
+            response.put("message", "フォローバックしました（友達になりました）");
             
         } catch (Exception e) {
             response.put("success", false);
@@ -233,15 +222,9 @@ public class FriendController {
                 return ResponseEntity.badRequest().body(response);
             }
             
-            Friendship friendship = friendshipService.declineFriendRequest(requesterOpt.get(), currentUserOpt.get());
-            
-            if (friendship != null) {
-                response.put("success", true);
-                response.put("message", "フレンド申請を拒否しました");
-            } else {
-                response.put("success", false);
-                response.put("message", "フレンド申請の拒否に失敗しました");
-            }
+            // フォローを削除（何もしないのと同じ効果）
+            response.put("success", true);
+            response.put("message", "フォローリクエストを無視しました");
             
         } catch (Exception e) {
             response.put("success", false);
@@ -283,7 +266,9 @@ public class FriendController {
                 return ResponseEntity.badRequest().body(response);
             }
             
-            friendshipService.removeFriendByUsers(currentUserOpt.get(), friendOpt.get());
+            // 相互フォローを解除（両方向）
+            friendshipService.unfollow(currentUserOpt.get(), friendOpt.get());
+            friendshipService.unfollow(friendOpt.get(), currentUserOpt.get());
             
             response.put("success", true);
             response.put("message", "フレンドを削除しました");
@@ -338,32 +323,16 @@ public class FriendController {
             System.out.println("現在のユーザー: " + currentUser.getUsername() + " (ID: " + currentUser.getId() + ")");
             System.out.println("対象ユーザー: " + targetUser.getUsername() + " (ID: " + targetUser.getId() + ")");
             
-            // 自分が送信したPENDING状態の申請を検索して削除
-            Optional<Friendship> pendingRequest = friendshipService.getFriendshipBetween(currentUser, targetUser);
-            
-            if (pendingRequest.isPresent()) {
-                Friendship friendship = pendingRequest.get();
-                
-                // 自分が送信者で、状態がPENDINGであることを確認
-                if (friendship.getRequester().equals(currentUser) && 
-                    friendship.getStatus() == Friendship.FriendshipStatus.PENDING) {
-                    
-                    // 専用メソッドで申請を取り消し
-                    friendshipService.cancelFriendRequest(currentUser, targetUser);
-                    
-                    response.put("success", true);
-                    response.put("message", "フレンド申請を取り消しました");
-                    System.out.println("申請取り消し成功");
-                } else {
-                    response.put("success", false);
-                    response.put("message", "取り消せる申請が見つかりません");
-                    System.out.println("取り消せる申請なし - Requester: " + friendship.getRequester().getUsername() + 
-                                     ", Status: " + friendship.getStatus());
-                }
+            // フォローを解除
+            if (friendshipService.isFollowing(currentUser, targetUser)) {
+                friendshipService.unfollow(currentUser, targetUser);
+                response.put("success", true);
+                response.put("message", "フォローを解除しました");
+                System.out.println("フォロー解除成功");
             } else {
                 response.put("success", false);
-                response.put("message", "申請が見つかりません");
-                System.out.println("申請が見つかりません");
+                response.put("message", "フォロー関係が見つかりません");
+                System.out.println("フォロー関係が見つかりません");
             }
             
         } catch (Exception e) {
@@ -408,15 +377,9 @@ public class FriendController {
                 return ResponseEntity.badRequest().body(response);
             }
             
-            Friendship friendship = friendshipService.blockUser(currentUserOpt.get(), targetUserOpt.get());
-            
-            if (friendship != null) {
-                response.put("success", true);
-                response.put("message", "ユーザーをブロックしました");
-            } else {
-                response.put("success", false);
-                response.put("message", "ユーザーのブロックに失敗しました");
-            }
+            // ブロック機能は後で実装
+            response.put("success", false);
+            response.put("message", "ブロック機能は現在利用できません");
             
         } catch (Exception e) {
             response.put("success", false);
@@ -530,8 +493,12 @@ public class FriendController {
                 return ResponseEntity.ok(response);
             }
             
-            List<Friendship> pendingRequests = friendshipService.getPendingRequestsByAddressee(currentUserOpt.get());
-            response.put("count", pendingRequests.size());
+            // フォロワー数を返す（相互フォローでないもの）
+            List<User> followers = friendshipService.getFollowers(currentUserOpt.get());
+            long count = followers.stream()
+                .filter(follower -> !friendshipService.areFriends(currentUserOpt.get(), follower))
+                .count();
+            response.put("count", count);
             
         } catch (Exception e) {
             response.put("count", 0);
@@ -555,12 +522,9 @@ public class FriendController {
                 return ResponseEntity.badRequest().build();
             }
             
-            List<Friendship> friendships = friendshipService.getFriendshipsByUser(currentUserOpt.get());
-            List<Map<String, Object>> result = friendships.stream()
-                .map(friendship -> {
-                    User friend = friendship.getRequester().equals(currentUserOpt.get()) 
-                        ? friendship.getAddressee() : friendship.getRequester();
-                    
+            List<User> friends = friendshipService.getFriends(currentUserOpt.get());
+            List<Map<String, Object>> result = friends.stream()
+                .map(friend -> {
                     // UserProfileを取得してアバター情報を含める
                     UserProfile friendProfile = userProfileService.getOrCreateProfile(friend);
                     
@@ -601,17 +565,22 @@ public class FriendController {
                 return ResponseEntity.badRequest().build();
             }
             
-            List<Friendship> sentRequests = friendshipService.getPendingRequestsByRequester(currentUserOpt.get());
+            List<User> following = friendshipService.getFollowing(currentUserOpt.get());
+            // 相互フォローでないユーザーのみ
+            List<User> sentRequests = following.stream()
+                .filter(user -> !friendshipService.areFriends(currentUserOpt.get(), user))
+                .collect(Collectors.toList());
+            
             List<Map<String, Object>> result = sentRequests.stream()
-                .map(friendship -> {
-                    UserProfile addresseeProfile = userProfileService.getOrCreateProfile(friendship.getAddressee());
+                .map(addressee -> {
+                    UserProfile addresseeProfile = userProfileService.getOrCreateProfile(addressee);
                     
                     Map<String, Object> requestData = new HashMap<>();
-                    requestData.put("id", friendship.getId());
+                    requestData.put("id", addressee.getId());
                     
                     Map<String, Object> addresseeData = new HashMap<>();
-                    addresseeData.put("id", friendship.getAddressee().getId());
-                    addresseeData.put("username", friendship.getAddressee().getUsername());
+                    addresseeData.put("id", addressee.getId());
+                    addresseeData.put("username", addressee.getUsername());
                     addresseeData.put("displayName", addresseeProfile.getDisplayName());
                     addresseeData.put("avatarUrl", addresseeProfile.getAvatarUrlOrDefault());
                     requestData.put("addressee", addresseeData);
@@ -642,20 +611,9 @@ public class FriendController {
                 return ResponseEntity.badRequest().build();
             }
             
-            List<Friendship> blockedFriendships = friendshipService.getBlockedUsersByUser(currentUserOpt.get());
-            List<Map<String, Object>> result = blockedFriendships.stream()
-                .map(friendship -> {
-                    User blockedUser = friendship.getRequester().equals(currentUserOpt.get()) 
-                        ? friendship.getAddressee() : friendship.getRequester();
+            // ブロック機能は後で実装
+            List<Map<String, Object>> result = new ArrayList<>();
                     
-                    Map<String, Object> blockedData = new HashMap<>();
-                    blockedData.put("id", blockedUser.getId());
-                    blockedData.put("username", blockedUser.getUsername());
-                    
-                    return blockedData;
-                })
-                .collect(Collectors.toList());
-            
             return ResponseEntity.ok(result);
             
         } catch (Exception e) {
@@ -678,17 +636,22 @@ public class FriendController {
                 return ResponseEntity.badRequest().build();
             }
             
-            List<Friendship> requests = friendshipService.getPendingRequestsByAddressee(currentUserOpt.get());
+            List<User> followers = friendshipService.getFollowers(currentUserOpt.get());
+            // 相互フォローでないユーザーのみ
+            List<User> requests = followers.stream()
+                .filter(follower -> !friendshipService.areFriends(currentUserOpt.get(), follower))
+                .collect(Collectors.toList());
+            
             List<Map<String, Object>> result = requests.stream()
-                .map(friendship -> {
-                    UserProfile requesterProfile = userProfileService.getOrCreateProfile(friendship.getRequester());
+                .map(requester -> {
+                    UserProfile requesterProfile = userProfileService.getOrCreateProfile(requester);
                     
                     Map<String, Object> requestData = new HashMap<>();
-                    requestData.put("id", friendship.getId());
+                    requestData.put("id", requester.getId());
                     
                     Map<String, Object> requesterData = new HashMap<>();
-                    requesterData.put("id", friendship.getRequester().getId());
-                    requesterData.put("username", friendship.getRequester().getUsername());
+                    requesterData.put("id", requester.getId());
+                    requesterData.put("username", requester.getUsername());
                     requesterData.put("displayName", requesterProfile.getDisplayName());
                     requesterData.put("avatarUrl", requesterProfile.getAvatarUrlOrDefault());
                     requestData.put("requester", requesterData);
@@ -736,10 +699,9 @@ public class FriendController {
                 return ResponseEntity.badRequest().body(response);
             }
             
-            friendshipService.unblockUser(currentUserOpt.get(), targetUserOpt.get());
-            
-            response.put("success", true);
-            response.put("message", "ブロックを解除しました");
+            // ブロック解除機能は後で実装
+            response.put("success", false);
+            response.put("message", "ブロック解除機能は現在利用できません");
             
         } catch (Exception e) {
             response.put("success", false);

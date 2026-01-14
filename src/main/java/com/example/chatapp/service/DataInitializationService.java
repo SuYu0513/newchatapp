@@ -42,12 +42,12 @@ public class DataInitializationService implements CommandLineRunner {
             User systemUser = userRepository.findByUsername("system").orElseThrow();
             
             ChatRoom defaultRoom = new ChatRoom();
-            defaultRoom.setName("メインチャット");
+            defaultRoom.setName("メインルーム");
             defaultRoom.setType(ChatRoom.ChatRoomType.GROUP);
             defaultRoom.setCreatedBy(systemUser);
             chatRoomRepository.save(defaultRoom);
             
-            System.out.println("デフォルトチャットルーム「メインチャット」を作成しました。");
+            System.out.println("デフォルトチャットルーム「メインルーム」を作成しました。");
         } else {
             System.out.println("既存のチャットルームが見つかりました。データベースは正常に永続化されています。");
         }

@@ -54,6 +54,9 @@ public class User {
     @ManyToMany(mappedBy = "users")
     private Set<ChatRoom> chatRooms = new HashSet<>();
     
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private UserProfile profile;
+    
     // デフォルトコンストラクタ
     public User() {}
     
@@ -143,5 +146,13 @@ public class User {
     
     public void setChatRooms(Set<ChatRoom> chatRooms) {
         this.chatRooms = chatRooms;
+    }
+    
+    public UserProfile getProfile() {
+        return profile;
+    }
+    
+    public void setProfile(UserProfile profile) {
+        this.profile = profile;
     }
 }

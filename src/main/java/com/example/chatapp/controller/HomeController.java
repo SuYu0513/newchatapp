@@ -2,11 +2,14 @@ package com.example.chatapp.controller;
 
 import com.example.chatapp.entity.User;
 import com.example.chatapp.entity.UserProfile;
+import com.example.chatapp.entity.Post;
 import com.example.chatapp.repository.UserProfileRepository;
 import com.example.chatapp.service.PostService;
 import com.example.chatapp.service.UserService;
 import com.example.chatapp.service.ChatRoomService;
+import com.example.chatapp.service.FriendshipService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,7 +24,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -39,6 +44,12 @@ public class HomeController {
     
     @Autowired
     private UserProfileRepository userProfileRepository;
+    
+    @Autowired
+    private FriendshipService friendshipService;
+    
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
 
     @GetMapping("/home")
     public String home(Authentication authentication, Model model) {
@@ -60,6 +71,11 @@ public class HomeController {
                 if (profileOpt.isPresent()) {
                     model.addAttribute("profile", profileOpt.get());
                 }
+                
+                // フォロー/フォロワー/フレンド数を追加
+                model.addAttribute("followingCount", friendshipService.getFollowingCount(user));
+                model.addAttribute("followerCount", friendshipService.getFollowersCount(user));
+                model.addAttribute("friendCount", friendshipService.getFriends(user).size());
             }
             
             // ルーム情報も追加
@@ -93,11 +109,13 @@ public class HomeController {
                         for (MultipartFile file : mediaFiles) {
                             if (!file.isEmpty()) {
                                 String originalFilename = file.getOriginalFilename();
-                                String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-                                String filename = UUID.randomUUID().toString() + extension;
-                                Path filePath = uploadPath.resolve(filename);
-                                Files.copy(file.getInputStream(), filePath);
-                                uploadedFilePaths.add("/uploads/posts/" + filename);
+                                if (originalFilename != null) {
+                                    String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+                                    String filename = UUID.randomUUID().toString() + extension;
+                                    Path filePath = uploadPath.resolve(filename);
+                                    Files.copy(file.getInputStream(), filePath);
+                                    uploadedFilePaths.add("/uploads/posts/" + filename);
+                                }
                             }
                         }
                     } catch (IOException e) {
@@ -109,7 +127,29 @@ public class HomeController {
                 
                 // 投稿作成
                 String mediaPathsStr = uploadedFilePaths.isEmpty() ? null : String.join(",", uploadedFilePaths);
-                postService.createPost(userOpt.get(), content.trim(), mediaPathsStr);
+                Post newPost = postService.createPost(userOpt.get(), content.trim(), mediaPathsStr);
+                
+                // WebSocketで新しい投稿を全ユーザーに通知
+                Map<String, Object> postData = new HashMap<>();
+                postData.put("id", newPost.getId());
+                postData.put("content", newPost.getContent());
+                postData.put("mediaPath", newPost.getMediaPath());
+                postData.put("createdAt", newPost.getCreatedAt().toString());
+                
+                Map<String, Object> userData = new HashMap<>();
+                userData.put("id", newPost.getUser().getId());
+                userData.put("username", newPost.getUser().getUsername());
+                
+                UserProfile profile = newPost.getUser().getProfile();
+                if (profile != null) {
+                    userData.put("displayName", profile.getDisplayName());
+                    userData.put("avatarUrl", profile.getAvatarUrl());
+                }
+                
+                postData.put("user", userData);
+                
+                messagingTemplate.convertAndSend("/topic/posts", postData);
+                
                 redirectAttributes.addFlashAttribute("success", "投稿しました！");
             }
         }

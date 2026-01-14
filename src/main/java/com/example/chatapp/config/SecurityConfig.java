@@ -47,6 +47,8 @@ public class SecurityConfig {
                 .requestMatchers("/login", "/register").permitAll()
                 // プロフィール作成（新規登録直後のみ）
                 .requestMatchers("/profile/create").permitAll()
+                // APIエンドポイント（認証済みユーザーのみ）
+                .requestMatchers("/api/**").authenticated()
                 // アイコンジェネレーター（認証不要）
                 .requestMatchers("/icon-generator.html").permitAll()
                 // 静的リソース（認証不要だが制限）

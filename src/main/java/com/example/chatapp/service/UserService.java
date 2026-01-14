@@ -115,4 +115,11 @@ public class UserService {
     public long getTotalUserCount() {
         return userRepository.count();
     }
+    
+    /**
+     * 全ユーザーを取得
+     */
+    public List<User> findAll() {
+        return userRepository.findAll();
+    }
 }

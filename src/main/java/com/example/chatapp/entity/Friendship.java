@@ -4,33 +4,40 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 /**
- * フレンド関係を管理するエンティティ
+ * フォロー関係を管理するエンティティ
+ * follower → following の単方向フォロー関係を表現
+ * 相互フォローの場合は2つのレコードが存在する
  */
 @Entity
-@Table(name = "friendships")
+@Table(name = "friendships", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"follower_id", "following_id"})
+})
 public class Friendship {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * フォローしている人（自分）
+     */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "requester_id", nullable = false)
-    private User requester;
+    @JoinColumn(name = "follower_id", nullable = false)
+    private User follower;
 
+    /**
+     * フォローされている人（相手）
+     */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "addressee_id", nullable = false)
-    private User addressee;
+    @JoinColumn(name = "following_id", nullable = false)
+    private User following;
 
-    @Enumerated(EnumType.STRING)
+    /**
+     * フォロー状態（PENDING, ACCEPTED, BLOCKEDなど）
+     * 現在の実装ではシンプルにACCEPTEDのみ使用
+     */
     @Column(name = "status", nullable = false)
-    private FriendshipStatus status = FriendshipStatus.PENDING;
-
-    @Column(name = "requested_at")
-    private LocalDateTime requestedAt;
-
-    @Column(name = "accepted_at")
-    private LocalDateTime acceptedAt;
+    private String status = "ACCEPTED";
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -42,13 +49,12 @@ public class Friendship {
     public Friendship() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
-        this.requestedAt = LocalDateTime.now();
     }
 
-    public Friendship(User requester, User addressee) {
+    public Friendship(User follower, User following) {
         this();
-        this.requester = requester;
-        this.addressee = addressee;
+        this.follower = follower;
+        this.following = following;
     }
 
     // ゲッター・セッター
@@ -60,49 +66,28 @@ public class Friendship {
         this.id = id;
     }
 
-    public User getRequester() {
-        return requester;
+    public User getFollower() {
+        return follower;
     }
 
-    public void setRequester(User requester) {
-        this.requester = requester;
+    public void setFollower(User follower) {
+        this.follower = follower;
     }
 
-    public User getAddressee() {
-        return addressee;
+    public User getFollowing() {
+        return following;
     }
 
-    public void setAddressee(User addressee) {
-        this.addressee = addressee;
+    public void setFollowing(User following) {
+        this.following = following;
     }
 
-    public FriendshipStatus getStatus() {
+    public String getStatus() {
         return status;
     }
 
-    public void setStatus(FriendshipStatus status) {
+    public void setStatus(String status) {
         this.status = status;
-        this.updatedAt = LocalDateTime.now();
-        
-        if (status == FriendshipStatus.ACCEPTED) {
-            this.acceptedAt = LocalDateTime.now();
-        }
-    }
-
-    public LocalDateTime getRequestedAt() {
-        return requestedAt;
-    }
-
-    public void setRequestedAt(LocalDateTime requestedAt) {
-        this.requestedAt = requestedAt;
-    }
-
-    public LocalDateTime getAcceptedAt() {
-        return acceptedAt;
-    }
-
-    public void setAcceptedAt(LocalDateTime acceptedAt) {
-        this.acceptedAt = acceptedAt;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -125,48 +110,15 @@ public class Friendship {
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
-
-    // フレンドシップステータスの列挙型
-    public enum FriendshipStatus {
-        PENDING("申請中"),
-        ACCEPTED("承認済み"),
-        DECLINED("拒否"),
-        BLOCKED("ブロック");
-
-        private final String displayName;
-
-        FriendshipStatus(String displayName) {
-            this.displayName = displayName;
-        }
-
-        public String getDisplayName() {
-            return displayName;
-        }
+    
+    // 後方互換性のためのメソッド（既存コードとの互換性）
+    @Deprecated
+    public User getRequester() {
+        return follower;
     }
-
-    // ヘルパーメソッド
-    public User getFriendOf(User user) {
-        if (requester.equals(user)) {
-            return addressee;
-        } else if (addressee.equals(user)) {
-            return requester;
-        }
-        return null;
-    }
-
-    public boolean isAccepted() {
-        return status == FriendshipStatus.ACCEPTED;
-    }
-
-    public boolean isPending() {
-        return status == FriendshipStatus.PENDING;
-    }
-
-    public boolean isBlocked() {
-        return status == FriendshipStatus.BLOCKED;
-    }
-
-    public boolean involvesUser(User user) {
-        return requester.equals(user) || addressee.equals(user);
+    
+    @Deprecated
+    public User getAddressee() {
+        return following;
     }
 }

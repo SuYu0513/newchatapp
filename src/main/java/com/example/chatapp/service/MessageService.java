@@ -163,30 +163,25 @@ public class MessageService {
      */
     private ChatRoom createDefaultChatRoom() {
         ChatRoom defaultRoom = new ChatRoom();
-        defaultRoom.setName("メインチャット");
+        defaultRoom.setName("メインルーム");
         defaultRoom.setType(ChatRoom.ChatRoomType.GROUP);
         
-        // システムユーザーとして保存（後でadminユーザーを作成予定）
-        Optional<User> adminUser = userRepository.findByUsername("admin");
-        if (adminUser.isEmpty()) {
-            // 管理者ユーザーが存在しない場合は最初のユーザーを取得
-            List<User> users = userRepository.findAll();
-            if (!users.isEmpty()) {
-                defaultRoom.setCreatedBy(users.get(0));
-            } else {
-                // 暫定的にダミーユーザーを作成
-                User dummyUser = new User();
-                dummyUser.setUsername("system");
-                dummyUser.setEmail("system@chatapp.com");
-                dummyUser.setPassword("dummy");
-                User savedUser = userRepository.save(dummyUser);
-                defaultRoom.setCreatedBy(savedUser);
-            }
-        } else {
-            defaultRoom.setCreatedBy(adminUser.get());
-        }
+        // systemユーザーを取得または作成
+        User systemUser = userRepository.findByUsername("system")
+                .orElseGet(() -> {
+                    System.out.println("注意: システムユーザーが存在しないため、作成します");
+                    User newSystemUser = new User();
+                    newSystemUser.setUsername("system");
+                    newSystemUser.setEmail("system@chatapp.com");
+                    // パスワードはエンコードしない（ログインできないダミーユーザー）
+                    newSystemUser.setPassword("system_dummy_password");
+                    newSystemUser.setFriendCode(999999); // 固定フレンドコード
+                    return userRepository.save(newSystemUser);
+                });
         
+        defaultRoom.setCreatedBy(systemUser);
         defaultRoom.setCreatedAt(LocalDateTime.now());
+        
         return chatRoomRepository.save(defaultRoom);
     }
 

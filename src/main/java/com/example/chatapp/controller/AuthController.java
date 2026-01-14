@@ -22,7 +22,11 @@ public class AuthController {
     private UserService userService;
 
     @GetMapping("/")
-    public String home() {
+    public String home(java.security.Principal principal) {
+        // 既にログイン済みの場合はホームにリダイレクト
+        if (principal != null) {
+            return "redirect:/home";
+        }
         return "redirect:/login";
     }
 
@@ -31,7 +35,14 @@ public class AuthController {
                            @RequestParam(value = "logout", required = false) String logout,
                            @RequestParam(value = "success", required = false) String success,
                            HttpSession session,
-                           Model model) {
+                           Model model,
+                           java.security.Principal principal) {
+        
+        // 既にログイン済みの場合はホームにリダイレクト
+        if (principal != null) {
+            return "redirect:/home";
+        }
+        
         if (error != null) {
             model.addAttribute("error", "ユーザー名またはパスワードが正しくありません");
         }

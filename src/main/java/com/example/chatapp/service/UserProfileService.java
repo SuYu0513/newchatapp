@@ -18,6 +18,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 @Service
@@ -185,52 +186,41 @@ public class UserProfileService {
         // 基本的なランダムマッチング可能ユーザーを取得
         List<UserProfile> candidates = userProfileRepository.findAvailableForRandomMatching(excludeUser.getId());
         
-        // フレンドリストを取得
-        List<Friendship> friendships = friendshipRepository.findAcceptedFriendships(excludeUser);
-        List<Long> friendIds = friendships.stream()
-            .map(friendship -> {
-                // 自分がrequesterの場合はaddresseeを、addresseeの場合はrequesterを取得
-                if (friendship.getRequester().getId().equals(excludeUser.getId())) {
-                    return friendship.getAddressee().getId();
-                } else {
-                    return friendship.getRequester().getId();
-                }
-            })
+        // フレンド（相互フォロー）のIDを取得
+        List<User> friends = friendshipRepository.findMutualFollows(excludeUser);
+        List<Long> friendIds = friends.stream()
+            .map(User::getId)
             .collect(Collectors.toList());
         
-        // ブロックしたユーザーリストを取得
-        List<Friendship> blockedFriendships = friendshipRepository.findByRequesterAndStatus(
-            excludeUser, Friendship.FriendshipStatus.BLOCKED);
-        List<Long> blockedUserIds = blockedFriendships.stream()
-            .map(friendship -> friendship.getAddressee().getId())
+        // フォロー中のユーザーIDを取得
+        List<User> following = friendshipRepository.findFollowing(excludeUser);
+        List<Long> followingUserIds = following.stream()
+            .map(User::getId)
             .collect(Collectors.toList());
         
-        // 送信済み申請のユーザーIDを取得
-        List<Friendship> sentRequests = friendshipRepository.findSentRequests(excludeUser);
-        List<Long> sentRequestUserIds = sentRequests.stream()
-            .map(friendship -> friendship.getAddressee().getId())
+        // フォロワーのユーザーIDを取得
+        List<User> followers = friendshipRepository.findFollowers(excludeUser);
+        List<Long> followerUserIds = followers.stream()
+            .map(User::getId)
             .collect(Collectors.toList());
         
-        // 受信申請のユーザーIDを取得
-        List<Friendship> receivedRequests = friendshipRepository.findPendingRequests(excludeUser);
-        List<Long> receivedRequestUserIds = receivedRequests.stream()
-            .map(friendship -> friendship.getRequester().getId())
-            .collect(Collectors.toList());
+        // ブロック機能は後で実装
+        List<Long> blockedUserIds = new ArrayList<>();
         
         // デバッグ情報出力
         System.out.println("=== ランダムマッチング候補者フィルタリング ===");
         System.out.println("基本候補者数: " + candidates.size());
         System.out.println("除外 - フレンド: " + friendIds.size() + " 人");
+        System.out.println("除外 - フォロー中: " + followingUserIds.size() + " 人");
+        System.out.println("除外 - フォロワー: " + followerUserIds.size() + " 人");
         System.out.println("除外 - ブロック: " + blockedUserIds.size() + " 人");
-        System.out.println("除外 - 送信申請: " + sentRequestUserIds.size() + " 人");
-        System.out.println("除外 - 受信申請: " + receivedRequestUserIds.size() + " 人");
         
-        // フレンド、ブロックユーザー、申請中ユーザーを除外
+        // フレンド、フォロー関係、ブロックユーザーを除外
         List<UserProfile> filteredCandidates = candidates.stream()
             .filter(profile -> !friendIds.contains(profile.getUser().getId()))
+            .filter(profile -> !followingUserIds.contains(profile.getUser().getId()))
+            .filter(profile -> !followerUserIds.contains(profile.getUser().getId()))
             .filter(profile -> !blockedUserIds.contains(profile.getUser().getId()))
-            .filter(profile -> !sentRequestUserIds.contains(profile.getUser().getId()))
-            .filter(profile -> !receivedRequestUserIds.contains(profile.getUser().getId()))
             .collect(Collectors.toList());
         
         System.out.println("最終候補者数: " + filteredCandidates.size() + " 人");

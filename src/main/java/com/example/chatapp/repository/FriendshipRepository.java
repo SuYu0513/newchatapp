@@ -13,50 +13,71 @@ import java.util.Optional;
 @Repository
 public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
 
-    @Query("SELECT f FROM Friendship f WHERE (f.requester = :user OR f.addressee = :user) AND f.status = 'ACCEPTED'")
+    /**
+     * フォロー関係を取得（follower → following）
+     */
+    Optional<Friendship> findByFollowerAndFollowing(User follower, User following);
+
+    /**
+     * フォローしているユーザー一覧を取得
+     */
+    @Query("SELECT f.following FROM Friendship f WHERE f.follower = :user")
+    List<User> findFollowing(@Param("user") User user);
+
+    /**
+     * フォロワー一覧を取得
+     */
+    @Query("SELECT f.follower FROM Friendship f WHERE f.following = :user")
+    List<User> findFollowers(@Param("user") User user);
+
+    /**
+     * 相互フォロー（友達）一覧を取得
+     */
+    @Query("SELECT f1.following FROM Friendship f1 WHERE f1.follower = :user AND " +
+           "EXISTS (SELECT f2 FROM Friendship f2 WHERE f2.follower = f1.following AND f2.following = :user)")
+    List<User> findMutualFollows(@Param("user") User user);
+
+    /**
+     * 相互フォローかどうか確認
+     */
+    @Query("SELECT CASE WHEN COUNT(f1) > 0 AND COUNT(f2) > 0 THEN true ELSE false END " +
+           "FROM Friendship f1, Friendship f2 " +
+           "WHERE f1.follower = :user1 AND f1.following = :user2 " +
+           "AND f2.follower = :user2 AND f2.following = :user1")
+    boolean areMutualFollows(@Param("user1") User user1, @Param("user2") User user2);
+
+    /**
+     * フォローしているかどうか確認
+     */
+    boolean existsByFollowerAndFollowing(User follower, User following);
+
+    /**
+     * フォロー数をカウント
+     */
+    long countByFollower(User follower);
+
+    /**
+     * フォロワー数をカウント
+     */
+    long countByFollowing(User following);
+
+    /**
+     * フォロー関係を削除
+     */
+    void deleteByFollowerAndFollowing(User follower, User following);
+
+    // 後方互換性のためのメソッド（既存コード用）
+    @Deprecated
+    @Query("SELECT f FROM Friendship f WHERE f.follower = :user OR f.following = :user")
     List<Friendship> findAcceptedFriendships(@Param("user") User user);
 
-    @Query("SELECT f FROM Friendship f WHERE f.addressee = :user AND f.status = 'PENDING'")
-    List<Friendship> findPendingRequests(@Param("user") User user);
+    @Deprecated
+    default Optional<Friendship> findBetweenUsers(User user1, User user2) {
+        return findByFollowerAndFollowing(user1, user2);
+    }
 
-    @Query("SELECT f FROM Friendship f WHERE f.requester = :user AND f.status = 'PENDING'")
-    List<Friendship> findSentRequests(@Param("user") User user);
-
-    @Query("SELECT f FROM Friendship f WHERE " +
-           "((f.requester = :user1 AND f.addressee = :user2) OR " +
-           "(f.requester = :user2 AND f.addressee = :user1))")
-    Optional<Friendship> findBetweenUsers(@Param("user1") User user1, @Param("user2") User user2);
-
-    @Query("SELECT f FROM Friendship f WHERE " +
-           "((f.requester = :user1 AND f.addressee = :user2) OR " +
-           "(f.requester = :user2 AND f.addressee = :user1)) AND " +
-           "f.status = :status")
-    Optional<Friendship> findBetweenUsersWithStatus(@Param("user1") User user1, 
-                                                   @Param("user2") User user2, 
-                                                   @Param("status") Friendship.FriendshipStatus status);
-
-    @Query("SELECT COUNT(f) FROM Friendship f WHERE (f.requester = :user OR f.addressee = :user) AND f.status = 'ACCEPTED'")
-    long countFriends(@Param("user") User user);
-
-    @Query("SELECT COUNT(f) FROM Friendship f WHERE f.addressee = :user AND f.status = 'PENDING'")
-    long countPendingRequests(@Param("user") User user);
-
-    @Query("SELECT f FROM Friendship f WHERE " +
-           "f.status = 'ACCEPTED' AND " +
-           "(f.requester = :user OR f.addressee = :user)")
-    List<Friendship> findAllFriends(@Param("user") User user);
-
-    void deleteByRequesterAndAddressee(User requester, User addressee);
-
-    // Spring Data JPA の命名規則に基づくメソッド
-    List<Friendship> findByAddresseeAndStatus(User addressee, Friendship.FriendshipStatus status);
-    
-    List<Friendship> findByRequesterAndStatus(User requester, Friendship.FriendshipStatus status);
-    
-    List<Friendship> findByRequesterAndAddresseeAndStatus(User requester, User addressee, Friendship.FriendshipStatus status);
-    
-    boolean existsByRequesterAndAddresseeAndStatus(User requester, User addressee, Friendship.FriendshipStatus status);
-
-    @Query("SELECT f FROM Friendship f WHERE (f.requester = :user OR f.addressee = :user) AND f.status = 'ACCEPTED'")
-    List<Friendship> findAcceptedFriendshipsByUser(@Param("user") User user);
+    @Deprecated
+    default long countFriends(User user) {
+        return countByFollower(user);
+    }
 }

@@ -37,6 +37,17 @@ self.addEventListener('install', function(event) {
 
 // キャッシュからレスポンスを返す
 self.addEventListener('fetch', function(event) {
+  // WebSocketリクエストは無視
+  if (event.request.url.includes('/ws')) {
+    return;
+  }
+  
+  // POSTリクエストはキャッシュせずそのまま通す
+  if (event.request.method !== 'GET') {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+  
   // リダイレクトレスポンスの場合は直接返す
   if (event.request.redirect === 'manual') {
     event.respondWith(fetch(event.request));

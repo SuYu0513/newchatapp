@@ -44,6 +44,7 @@ public class LoginRedirectInterceptor implements HandlerInterceptor {
                requestURI.equals("/login") ||
                requestURI.equals("/register") ||
                requestURI.startsWith("/login/") ||
+               requestURI.equals("/profile/create") ||
                requestURI.startsWith("/h2-console/") ||
                requestURI.equals("/error");
     }

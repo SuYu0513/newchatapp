@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -100,7 +99,7 @@ public class ProfileController {
         }
         
         // フレンド関係の状態を取得
-        String friendshipStatus = getFriendshipStatus(currentUser, targetUser);
+        String friendshipStatus = friendshipService.getRelationship(currentUser, targetUser);
         
         // 統計情報を取得
         UserStatisticsDto statistics = userStatisticsService.getUserStatistics(targetUser.getId())
@@ -127,7 +126,7 @@ public class ProfileController {
      * フレンド関係の状態を取得
      */
     private String getFriendshipStatus(User currentUser, User targetUser) {
-        String status = friendshipService.getFriendshipStatus(currentUser, targetUser);
+        String status = friendshipService.getRelationship(currentUser, targetUser);
         
         // FriendshipServiceの戻り値をプロフィール画面用の値に変換
         switch (status) {
@@ -214,7 +213,7 @@ public class ProfileController {
             redirectAttributes.addFlashAttribute("errorMessage", "プロフィールの更新に失敗しました: " + e.getMessage());
         }
         
-        return "redirect:/profile";
+        return "redirect:/home";
     }
 
     /**

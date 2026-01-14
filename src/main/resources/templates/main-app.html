@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-visual-viewport">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, interactive-widget=resizes-visual-viewport">
     <title>チャットアプリ</title>
     
     <!-- PWA設定 -->
@@ -19,7 +19,7 @@
 </head>
 <body>
     <!-- メインコンテナ -->
-    <div class="app-container">
+    <div class="app-container" th:attr="data-current-user-id=${user != null ? user.id : ''}">
         
         <!-- ホーム画面 -->
         <section class="app-section active" id="home-section">
@@ -41,12 +41,23 @@
                     <div th:each="post : ${posts}" class="post-card">
                         <div class="post-header">
                             <div class="post-user-info">
-                                <div class="post-avatar default-avatar" 
-                                     th:attr="data-username=${post.user.username}">
+                                <!-- プロフィール画像がある場合 -->
+                                <div class="post-avatar user-profile-link" 
+                                     th:if="${post.user.profile != null and post.user.profile.avatarUrl != null and !post.user.profile.avatarUrl.isEmpty()}"
+                                     th:style="'background-image: url(' + ${post.user.profile.avatarUrl} + '); background-size: cover; background-position: center; cursor: pointer;'"
+                                     th:attr="data-user-id=${post.user.id}">
+                                </div>
+                                <!-- デフォルトアイコン -->
+                                <div class="post-avatar default-avatar user-profile-link" 
+                                     th:if="${post.user.profile == null or post.user.profile.avatarUrl == null or post.user.profile.avatarUrl.isEmpty()}"
+                                     th:attr="data-username=${post.user.username}, data-user-id=${post.user.id}"
+                                     style="cursor: pointer;">
                                     <i class="fas fa-user"></i>
                                 </div>
                                 <div class="post-user-details">
-                                    <span class="post-username" th:text="${post.user.username}">ユーザー名</span>
+                                    <span class="post-username clickable-username user-profile-link" 
+                                          th:text="${post.user.profile != null and post.user.profile.displayName != null and !post.user.profile.displayName.isEmpty() ? post.user.profile.displayName : post.user.username}"
+                                          th:attr="data-user-id=${post.user.id}">ユーザー名</span>
                                     <span class="post-time" th:text="${#temporals.format(post.createdAt, 'yyyy年MM月dd日 HH:mm')}">投稿日時</span>
                                 </div>
                             </div>
@@ -61,7 +72,8 @@
                                     <img th:if="${#strings.endsWith(mediaUrl, '.jpg') or #strings.endsWith(mediaUrl, '.jpeg') or #strings.endsWith(mediaUrl, '.png') or #strings.endsWith(mediaUrl, '.gif') or #strings.endsWith(mediaUrl, '.webp')}"
                                          th:src="${mediaUrl}" 
                                          alt="投稿画像"
-                                         class="post-media-image">
+                                         class="post-media-image"
+                                         onclick="openImageModal(this.src)">
                                     <!-- 動画の場合 -->
                                     <video th:if="${#strings.endsWith(mediaUrl, '.mp4') or #strings.endsWith(mediaUrl, '.webm') or #strings.endsWith(mediaUrl, '.mov')}"
                                            th:src="${mediaUrl}" 
@@ -207,9 +219,50 @@
         <!-- チャット画面 -->
         <section class="app-section" id="chat-section">
             <div class="section-content">
-                <div class="welcome-section">
-                    <h1>💬 チャット</h1>
-                    <p class="text-white-50">準備中...</p>
+                <div class="chat-list-header">
+                    <div class="header-tabs">
+                        <button class="tab-btn active" data-tab="all-chat">すべて</button>
+                        <button class="tab-btn" data-tab="friends-chat">友達</button>
+                    </div>
+                </div>
+                
+                <!-- すべてのチャット -->
+                <div class="tab-content active" id="all-chat-tab">
+                    <div class="chat-list">
+                        <div class="no-chats">
+                            <i class="fas fa-comments fa-3x mb-3 text-muted"></i>
+                            <p class="text-muted">チャットがありません</p>
+                        </div>
+                        
+                        <!-- チャットアイテム例（動的に生成予定） -->
+                        <!-- 
+                        <div class="chat-item">
+                            <div class="chat-avatar">
+                                <img src="/images/avatar.png" alt="アバター">
+                            </div>
+                            <div class="chat-content">
+                                <div class="chat-top">
+                                    <span class="chat-name">ユーザー名</span>
+                                    <span class="chat-time">09:38</span>
+                                </div>
+                                <div class="chat-bottom">
+                                    <p class="chat-message">最新のメッセージがここに表示されます</p>
+                                    <span class="chat-badge">1</span>
+                                </div>
+                            </div>
+                        </div>
+                        -->
+                    </div>
+                </div>
+                
+                <!-- 友達のチャット -->
+                <div class="tab-content" id="friends-chat-tab">
+                    <div class="chat-list">
+                        <div class="no-chats">
+                            <i class="fas fa-user-friends fa-3x mb-3 text-muted"></i>
+                            <p class="text-muted">友達とのチャットがありません</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -217,32 +270,12 @@
         <!-- マイページ画面 -->
         <section class="app-section" id="mypage-section">
             <div class="section-content">
-                <!-- ヘッダー -->
-                <!-- <div class="mypage-header">
-                    <h1>👤 マイページ</h1> -->
-                    <!-- ハンバーガーメニュー -->
-                    <div class="dropdown">
-                        <button class="btn btn-link text-white hamburger-btn" type="button" id="mypageMenu" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-bars" style="font-size: 1.5rem;"></i>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="mypageMenu">
-                            <li>
-                                <a class="dropdown-item" href="/profile/edit">
-                                    <i class="fas fa-user-edit me-2"></i>プロフィール編集
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item" href="/logout">
-                                    <i class="fas fa-sign-out-alt me-2"></i>ログアウト
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-                
                 <!-- プロフィールセクション -->
                 <div class="profile-section">
+                    <!-- ハンバーガーメニューボタン -->
+                    <button class="hamburger-btn" type="button" id="mypageMenuBtn">
+                        <i class="fas fa-bars" style="font-size: 1.5rem;"></i>
+                    </button>
                     <div class="profile-main">
                         <div class="profile-main-top">
                             <!-- アイコン -->
@@ -279,12 +312,104 @@
                                           th:text="${tag.trim()}">タグ</span>
                                 </div>
                             </div>
+                            
+                            <!-- フォロー/フォロワー/フレンド数 -->
+                            <div class="profile-stats">
+                                <div class="stat-item">
+                                    <span class="stat-label">フォロー</span>
+                                    <span class="stat-value" id="myFollowingCount" th:text="${followingCount != null ? followingCount : 0}">0</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">フォロワー</span>
+                                    <span class="stat-value" id="myFollowerCount" th:text="${followerCount != null ? followerCount : 0}">0</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">友達</span>
+                                    <span class="stat-value" id="myFriendCount" th:text="${friendCount != null ? friendCount : 0}">0</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
         
+        <!-- 他ユーザープロフィール閲覧画面 -->
+        <section class="app-section" id="user-profile-view-section">
+            <div class="section-content">
+                <!-- プロフィールセクション -->
+                <div class="profile-section profile-view-mode">
+                    <!-- 戻るボタン -->
+                    <button class="back-btn" type="button" id="backToHomeBtn">
+                        <i class="fas fa-chevron-left" style="font-size: 1.2rem;"></i>
+                    </button>
+                    <div class="profile-main" id="viewedProfileContent">
+                        <!-- JavaScriptで動的にロードされる -->
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+    </div>
+    
+    <!-- プロフィールアクションボタン（閲覧用プロフィール画面専用） -->
+    <div class="profile-actions" id="profileActions" style="display: none;">
+        <button class="btn-action btn-chat" id="btnStartChat">
+            <i class="fas fa-comment me-2"></i>チャット
+        </button>
+        <button class="btn-action btn-follow" id="btnFollowUser">
+            <i class="fas fa-user-plus me-2"></i>フォロー
+        </button>
+    </div>
+    
+    <!-- 画像モーダル -->
+    <div class="image-modal" id="imageModal" onclick="closeImageModal(event)">
+        <button class="image-modal-close" onclick="closeImageModal(event)">
+            <i class="fas fa-times"></i>
+        </button>
+        <img class="image-modal-content" id="modalImage" src="" alt="拡大画像">
+    </div>
+    
+    <!-- スライドメニューオーバーレイ -->
+    <div class="slide-menu-overlay" id="slideMenuOverlay"></div>
+    
+    <!-- スライドメニュー -->
+    <div class="slide-menu" id="slideMenu">
+        <button class="slide-menu-close" id="slideMenuClose">
+            <i class="fas fa-times"></i>
+        </button>
+        
+        <!-- アイコン -->
+        <div class="slide-menu-avatar-container">
+            <div class="slide-menu-avatar" 
+                 th:if="${profile != null and profile.avatarUrl != null and !profile.avatarUrl.isEmpty()}"
+                 th:style="'background-image: url(' + ${profile.avatarUrl} + '); background-size: cover; background-position: center;'">
+            </div>
+            <div class="slide-menu-avatar default-avatar" 
+                 th:if="${profile == null or profile.avatarUrl == null or profile.avatarUrl.isEmpty()}"
+                 th:attr="data-username=${user.username}">
+                <i class="fas fa-user"></i>
+            </div>
+        </div>
+        
+        <!-- ニックネーム -->
+        <div class="slide-menu-nickname">
+            <span th:text="${profile != null and profile.displayName != null ? profile.displayName : (user != null ? user.username : 'ユーザー名')}">ユーザー名</span>
+        </div>
+        
+        <!-- ナビゲーション -->
+        <nav class="slide-menu-nav">
+            <a href="/profile/edit" class="slide-menu-item">
+                <i class="fas fa-user-edit me-3"></i>プロフィール編集
+            </a>
+        </nav>
+        
+        <!-- ログアウト（最下部） -->
+        <div class="slide-menu-footer">
+            <a href="/logout" class="slide-menu-item logout-item" onclick="handleLogout(event)">
+                <i class="fas fa-sign-out-alt me-3"></i>ログアウト
+            </a>
+        </div>
     </div>
     
     <!-- 投稿ボタン（フッターの上） -->
@@ -317,7 +442,214 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
     <script>
+        // WebSocket接続
+        let stompClient = null;
+        
+        function connectWebSocket() {
+            const socket = new SockJS('/ws');
+            stompClient = Stomp.over(socket);
+            
+            stompClient.connect({}, function(frame) {
+                console.log('WebSocket接続成功');
+                
+                // 新規投稿の購読
+                stompClient.subscribe('/topic/posts', function(message) {
+                    const postData = JSON.parse(message.body);
+                    addNewPostToDOM(postData);
+                });
+                
+                // フォロー数更新の購読
+                stompClient.subscribe('/topic/follow-updates', function(message) {
+                    const updateData = JSON.parse(message.body);
+                    updateFollowCountsForUser(updateData);
+                });
+            }, function(error) {
+                console.error('WebSocket接続エラー:', error);
+                // 5秒後に再接続
+                setTimeout(connectWebSocket, 5000);
+            });
+        }
+        
+        // ページ読み込み時にWebSocket接続
+        window.addEventListener('DOMContentLoaded', function() {
+            connectWebSocket();
+        });
+        
+        // 新規投稿をDOMに追加
+        function addNewPostToDOM(postData) {
+            const postsContainer = document.querySelector('.posts-container');
+            const noPosts = postsContainer.querySelector('.no-posts');
+            
+            // "まだ投稿がありません"メッセージを削除
+            if (noPosts) {
+                noPosts.remove();
+            }
+            
+            // 投稿カードを作成
+            const postCard = document.createElement('div');
+            postCard.className = 'post-card';
+            
+            const user = postData.user;
+            const displayName = user.displayName || user.username;
+            const colorIndex = getUserColor(user.username);
+            
+            // アバターHTML
+            let avatarHtml = '';
+            if (user.avatarUrl) {
+                avatarHtml = `<div class="post-avatar user-profile-link" style="background-image: url(${user.avatarUrl}); background-size: cover; background-position: center; cursor: pointer;" data-user-id="${user.id}"></div>`;
+            } else {
+                avatarHtml = `<div class="post-avatar default-avatar user-profile-link" data-username="${user.username}" data-color="${colorIndex}" data-user-id="${user.id}" style="cursor: pointer;"><i class="fas fa-user"></i></div>`;
+            }
+            
+            // メディアHTML
+            let mediaHtml = '';
+            if (postData.mediaPath) {
+                const mediaUrls = postData.mediaPath.split(',');
+                mediaHtml = '<div class="post-media-grid">';
+                mediaUrls.forEach(url => {
+                    if (url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+                        mediaHtml += `<div class="post-media-item"><img src="${url}" alt="投稿画像" class="post-media-image" onclick="openImageModal(this.src)"></div>`;
+                    } else if (url.match(/\.(mp4|webm|mov)$/i)) {
+                        mediaHtml += `<div class="post-media-item"><video src="${url}" controls class="post-media-video"></video></div>`;
+                    }
+                });
+                mediaHtml += '</div>';
+            }
+            
+            // 日時フォーマット
+            const createdAt = new Date(postData.createdAt);
+            const formattedDate = `${createdAt.getFullYear()}年${String(createdAt.getMonth() + 1).padStart(2, '0')}月${String(createdAt.getDate()).padStart(2, '0')}日 ${String(createdAt.getHours()).padStart(2, '0')}:${String(createdAt.getMinutes()).padStart(2, '0')}`;
+            
+            postCard.innerHTML = `
+                <div class="post-header">
+                    <div class="post-user-info">
+                        ${avatarHtml}
+                        <div class="post-user-details">
+                            <span class="post-username clickable-username user-profile-link" data-user-id="${user.id}">${displayName}</span>
+                            <span class="post-time">${formattedDate}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="post-content">
+                    <p>${postData.content}</p>
+                    ${mediaHtml}
+                </div>
+            `;
+            
+            // デフォルトアバターの色を設定
+            const defaultAvatar = postCard.querySelector('.default-avatar');
+            if (defaultAvatar) {
+                setDefaultAvatarColor(defaultAvatar);
+            }
+            
+            // クリックイベントを追加
+            postCard.querySelectorAll('.user-profile-link').forEach(element => {
+                element.addEventListener('click', function() {
+                    const userId = this.getAttribute('data-user-id');
+                    if (userId) {
+                        viewUserProfile(userId);
+                    }
+                });
+            });
+            
+            // 先頭に追加（新しい投稿が一番上に表示される）
+            postsContainer.insertBefore(postCard, postsContainer.firstChild);
+            
+            // アニメーション効果
+            postCard.style.opacity = '0';
+            postCard.style.transform = 'translateY(-20px)';
+            setTimeout(() => {
+                postCard.style.transition = 'all 0.5s ease';
+                postCard.style.opacity = '1';
+                postCard.style.transform = 'translateY(0)';
+            }, 10);
+        }
+        
+        // フォロー数をリアルタイム更新
+        async function updateFollowCountsForUser(updateData) {
+            const followedData = updateData.followedUserData;
+            const followerData = updateData.followerUserData;
+            
+            // フォローされた人のプロフィールを見ている場合
+            if (followedData && currentViewedUserId && currentViewedUserId == followedData.userId) {
+                const targetFollowerCount = document.getElementById('targetFollowerCount');
+                if (targetFollowerCount && followedData.followerCount !== undefined) {
+                    targetFollowerCount.textContent = followedData.followerCount;
+                }
+                
+                // フォロー数と友達数も更新
+                const profileStats = document.querySelector('#user-profile-view-section .profile-stats');
+                if (profileStats) {
+                    const statValues = profileStats.querySelectorAll('.stat-value');
+                    if (statValues.length >= 3 && followedData.followingCount !== undefined) {
+                        statValues[0].textContent = followedData.followingCount;
+                    }
+                    if (statValues.length >= 3 && followedData.friendCount !== undefined) {
+                        statValues[2].textContent = followedData.friendCount;
+                    }
+                }
+                
+                // ボタンも更新
+                await updateFollowButton(currentViewedUserId);
+            }
+            
+            // フォローした人のプロフィールを見ている場合
+            if (followerData && currentViewedUserId && currentViewedUserId == followerData.userId) {
+                const targetFollowerCount = document.getElementById('targetFollowerCount');
+                if (targetFollowerCount && followerData.followerCount !== undefined) {
+                    targetFollowerCount.textContent = followerData.followerCount;
+                }
+                
+                // フォロー数と友達数も更新
+                const profileStats = document.querySelector('#user-profile-view-section .profile-stats');
+                if (profileStats) {
+                    const statValues = profileStats.querySelectorAll('.stat-value');
+                    if (statValues.length >= 3 && followerData.followingCount !== undefined) {
+                        statValues[0].textContent = followerData.followingCount;
+                    }
+                    if (statValues.length >= 3 && followerData.friendCount !== undefined) {
+                        statValues[2].textContent = followerData.friendCount;
+                    }
+                }
+                
+                // ボタンも更新
+                await updateFollowButton(currentViewedUserId);
+            }
+        }
+        
+        // 画像モーダル表示
+        function openImageModal(src) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modalImg.src = src;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // 画像モーダルを閉じる
+        function closeImageModal(event) {
+            // 画像自体をクリックした場合は閉じない
+            if (event.target.classList.contains('image-modal-content')) {
+                return;
+            }
+            const modal = document.getElementById('imageModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        // ログアウト処理
+        function handleLogout(event) {
+            // localStorageから記憶したログイン情報を削除
+            localStorage.removeItem('rememberLogin');
+            localStorage.removeItem('savedUsername');
+            sessionStorage.clear();
+            console.log('ログイン情報を削除しました');
+            // ログアウト処理を続行（デフォルトのリンク動作）
+        }
+        
         // 星を生成
         function createStars() {
             const container = document.querySelector('.app-container');
@@ -341,6 +673,20 @@
         
         // ページ読み込み時に星を生成
         createStars();
+        
+        // ログイン成功時にlocalStorageに記憶
+        const pendingUsername = sessionStorage.getItem('pendingUsername');
+        if (pendingUsername) {
+            localStorage.setItem('rememberLogin', 'true');
+            localStorage.setItem('savedUsername', pendingUsername);
+            sessionStorage.removeItem('pendingUsername');
+            // リダイレクトカウンターをクリア（ログイン成功）
+            sessionStorage.removeItem('loginRedirectCount');
+            console.log('ログイン情報を記憶しました: ' + pendingUsername);
+        } else {
+            // ログインページからのリダイレクトでない場合もカウンターをクリア
+            sessionStorage.removeItem('loginRedirectCount');
+        }
         
         // セクション切り替え
         const navItems = document.querySelectorAll('.nav-item');
@@ -540,7 +886,279 @@
                     avatar.setAttribute('data-color', colorIndex);
                 }
             });
+            
+            // スライドメニューの制御
+            const mypageMenuBtn = document.getElementById('mypageMenuBtn');
+            const slideMenu = document.getElementById('slideMenu');
+            const slideMenuOverlay = document.getElementById('slideMenuOverlay');
+            const slideMenuClose = document.getElementById('slideMenuClose');
+            
+            if (mypageMenuBtn && slideMenu && slideMenuOverlay) {
+                // メニューを開く
+                mypageMenuBtn.addEventListener('click', () => {
+                    slideMenu.classList.add('active');
+                    slideMenuOverlay.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                });
+                
+                // メニューを閉じる（オーバーレイクリック）
+                slideMenuOverlay.addEventListener('click', () => {
+                    slideMenu.classList.remove('active');
+                    slideMenuOverlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                });
+                
+                // メニューを閉じる（×ボタン）
+                if (slideMenuClose) {
+                    slideMenuClose.addEventListener('click', () => {
+                        slideMenu.classList.remove('active');
+                        slideMenuOverlay.classList.remove('active');
+                        document.body.style.overflow = '';
+                    });
+                }
+            }
         });
+        
+        // ユーザープロフィール閲覧機能
+        let currentViewedUserId = null; // 閲覧中のユーザーID
+        
+        async function viewUserProfile(userId) {
+            // 現在のログインユーザーのIDを取得
+            const currentUserId = document.querySelector('.app-container').dataset.currentUserId;
+            
+            // 閲覧中のユーザーIDを保存
+            currentViewedUserId = userId;
+            
+            // 自分のプロフィールをクリックした場合はマイページに遷移
+            if (userId === currentUserId) {
+                // マイページに遷移
+                sections.forEach(section => section.classList.remove('active'));
+                document.getElementById('mypage-section').classList.add('active');
+                navItems.forEach(nav => nav.classList.remove('active'));
+                // マイページのナビゲーションアイテムをアクティブにする（最後のアイテム）
+                navItems[navItems.length - 1].classList.add('active');
+                createPostBtn.style.display = 'none';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/users/${userId}/profile`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    // プロフィール情報を表示
+                    const viewedProfileContent = document.getElementById('viewedProfileContent');
+                    const user = data.user;
+                    const profile = data.profile;
+                    
+                    // アイコンのHTML
+                    let avatarHtml = '';
+                    if (profile && profile.avatarUrl) {
+                        avatarHtml = `<div class="profile-avatar" style="background-image: url(${profile.avatarUrl}); background-size: cover; background-position: center;"></div>`;
+                    } else {
+                        const colorIndex = getUserColor(user.username);
+                        avatarHtml = `<div class="profile-avatar default-avatar" data-username="${user.username}" data-color="${colorIndex}"><i class="fas fa-user"></i></div>`;
+                    }
+                    
+                    // タグのHTML
+                    let tagsHtml = '';
+                    if (profile && profile.favoriteThings) {
+                        const tags = profile.favoriteThings.split(',').map(tag => tag.trim()).filter(tag => tag);
+                        if (tags.length > 0) {
+                            tagsHtml = `
+                                <div class="profile-tags-container">
+                                    <div class="profile-tags-scroll">
+                                        ${tags.map(tag => `<span class="profile-tag">${tag}</span>`).join('')}
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }
+                    
+                    viewedProfileContent.innerHTML = `
+                        <div class="profile-main-top">
+                            ${avatarHtml}
+                            <div class="profile-info-top">
+                                <h2 class="profile-username">${profile && profile.displayName ? profile.displayName : user.username}</h2>
+                                <p class="profile-friendcode">${user.friendCode ? 'FC: ' + user.friendCode : 'FC: 未設定'}</p>
+                            </div>
+                        </div>
+                        <div class="profile-info-bottom">
+                            <p class="profile-bio ${!profile || !profile.bio ? 'text-muted' : ''}">
+                                ${profile && profile.bio ? profile.bio : '自己紹介が未設定です'}
+                            </p>
+                            ${tagsHtml}
+                            <div class="profile-stats">
+                                <div class="stat-item">
+                                    <span class="stat-label">フォロー</span>
+                                    <span class="stat-value">${data.followingCount || 0}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">フォロワー</span>
+                                    <span class="stat-value" id="targetFollowerCount">${data.followerCount || 0}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">友達</span>
+                                    <span class="stat-value">${data.friendCount || 0}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // フォロー状態を取得してボタンを更新
+                    await updateFollowButton(userId);
+                    
+                    // 画面切り替え
+                    sections.forEach(section => section.classList.remove('active'));
+                    document.getElementById('user-profile-view-section').classList.add('active');
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    
+                    // プロフィールアクションボタンを表示、フッターを非表示
+                    document.getElementById('profileActions').style.display = 'flex';
+                    document.querySelector('.bottom-nav').style.display = 'none';
+                    createPostBtn.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error loading user profile:', error);
+                alert('プロフィールの読み込みに失敗しました');
+            }
+        }
+        
+        // フォローボタンの状態を更新
+        async function updateFollowButton(userId) {
+            try {
+                const response = await fetch(`/api/users/${userId}/relationship`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const followBtn = document.getElementById('btnFollowUser');
+                    const relationship = data.relationship;
+                    
+                    // relationship: "friend" (相互フォロー), "following" (フォロー中), "follower" (フォローされている), "none" (関係なし)
+                    if (relationship === 'friend') {
+                        followBtn.innerHTML = '<i class="fas fa-user-check me-2"></i>友達';
+                        followBtn.classList.add('following');
+                    } else if (relationship === 'following') {
+                        followBtn.innerHTML = '<i class="fas fa-user-check me-2"></i>フォロー中';
+                        followBtn.classList.add('following');
+                    } else if (relationship === 'follower') {
+                        followBtn.innerHTML = '<i class="fas fa-user-plus me-2"></i>フォローバック';
+                        followBtn.classList.remove('following');
+                    } else {
+                        followBtn.innerHTML = '<i class="fas fa-user-plus me-2"></i>フォロー';
+                        followBtn.classList.remove('following');
+                    }
+                }
+            } catch (error) {
+                console.error('Error getting relationship:', error);
+            }
+        }
+        
+        // フォローボタンのクリックイベント
+        const btnFollowUser = document.getElementById('btnFollowUser');
+        if (btnFollowUser) {
+            btnFollowUser.addEventListener('click', async () => {
+                if (!currentViewedUserId) {
+                    return;
+                }
+                
+                const isFollowing = btnFollowUser.classList.contains('following');
+                const endpoint = isFollowing ? 'unfollow' : 'follow';
+                
+                try {
+                    const response = await fetch(`/api/users/${currentViewedUserId}/${endpoint}`, {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        // ボタンの状態を更新
+                        await updateFollowButton(currentViewedUserId);
+                        
+                        console.log('Follow response data:', data); // デバッグログ
+                        
+                        // 閲覧中のプロフィールのフォロワー数を更新
+                        const followerCountElement = document.getElementById('targetFollowerCount');
+                        if (followerCountElement && data.targetFollowerCount !== undefined) {
+                            console.log('Updating targetFollowerCount to:', data.targetFollowerCount); // デバッグログ
+                            followerCountElement.textContent = data.targetFollowerCount;
+                        } else {
+                            console.warn('targetFollowerCount element not found or data missing'); // デバッグログ
+                        }
+                        
+                        // マイページのフォロー/フォロワー/友達数を更新
+                        const myFollowingCount = document.getElementById('myFollowingCount');
+                        if (myFollowingCount && data.followingCount !== undefined) {
+                            myFollowingCount.textContent = data.followingCount;
+                        }
+                        
+                        const myFollowerCount = document.getElementById('myFollowerCount');
+                        if (myFollowerCount && data.followerCount !== undefined) {
+                            myFollowerCount.textContent = data.followerCount;
+                        }
+                        
+                        const myFriendCount = document.getElementById('myFriendCount');
+                        if (myFriendCount && data.friendCount !== undefined) {
+                            myFriendCount.textContent = data.friendCount;
+                        }
+                        
+                        // 成功メッセージを表示（オプション）
+                        // alert(data.message);
+                    } else {
+                        alert(data.message || 'エラーが発生しました');
+                    }
+                } catch (error) {
+                    console.error('Error toggling follow:', error);
+                    alert('エラーが発生しました');
+                }
+            });
+        }
+        
+        // ユーザープロファイルリンクのクリックイベント
+        document.addEventListener('click', function(e) {
+            const target = e.target.closest('.user-profile-link');
+            if (target && target.dataset.userId) {
+                viewUserProfile(target.dataset.userId);
+            }
+        });
+        
+        // 戻るボタン
+        const backToHomeBtn = document.getElementById('backToHomeBtn');
+        if (backToHomeBtn) {
+            backToHomeBtn.addEventListener('click', () => {
+                sections.forEach(section => section.classList.remove('active'));
+                homeSection.classList.add('active');
+                navItems.forEach(nav => nav.classList.remove('active'));
+                navItems[0].classList.add('active');
+                createPostBtn.style.display = 'flex';
+                
+                // プロフィールアクションボタンを非表示、フッターを再表示
+                document.getElementById('profileActions').style.display = 'none';
+                document.querySelector('.bottom-nav').style.display = 'flex';
+            });
+        }
+        
+        // スワイプジェスチャーで戻る
+        const userProfileViewSection = document.getElementById('user-profile-view-section');
+        if (userProfileViewSection) {
+            let touchStartX = 0;
+            let touchEndX = 0;
+            
+            userProfileViewSection.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            });
+            
+            userProfileViewSection.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            });
+            
+            function handleSwipe() {
+                if (touchEndX - touchStartX > 100) { // 右スワイプ
+                    backToHomeBtn.click();
+                }
+            }
+        }
     </script>
 </body>
 </html>
