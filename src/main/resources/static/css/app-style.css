@@ -76,7 +76,7 @@ input, textarea {
 
 
 .login-kaado {
-    opacity: 0.3 !important; 
+    opacity: 0.8 !important; 
     background: transparent;
     backdrop-filter: blur(10px) saturate(180%);
     border-radius: 0;
@@ -92,7 +92,7 @@ input, textarea {
 .login-kaado::before,
 .login-kaado::after {
     display: none;
-    opacity: 0.3 !important;
+    opacity: 0.8 !important;
 }
 
 /* .login-hedda {
@@ -106,12 +106,12 @@ input, textarea {
 
 .login-bodii {
     padding: clamp(2rem, 5vw, 3rem);
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.55);
     backdrop-filter: blur(10px) saturate(180%);
     border-radius: 30px;
-    border: 1.5px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15),
-                inset 0 0 60px rgba(255, 255, 255, 0.05);
+    border: 1.5px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.35),
+                inset 0 0 60px rgba(255, 255, 255, 0.15);
 }
 
 .login-bodii .form-control {
@@ -128,9 +128,10 @@ input, textarea {
 }
 
 .login-bodii .form-floating label {
-    color: rgba(255, 255, 255, 0.95);
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-    font-weight: 500;
+    color: #495057;
+    font-weight: 600;
+    text-shadow: 0 0 10px rgba(73, 80, 87, 0.3),
+                 0 0 20px rgba(102, 126, 234, 0.2);
 }
 
 .login-bodii .form-floating {
@@ -151,4 +152,28 @@ input, textarea {
     border-color: #667eea;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     background: white;
+}
+
+.login-bodii p,
+.login-bodii .text-center p {
+    color: #2c3e50;
+    font-weight: 500;
+    text-shadow: 0 0 8px rgba(44, 62, 80, 0.2);
+}
+
+.login-bodii .register-link {
+    color: #667eea;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    text-shadow: 0 0 15px rgba(102, 126, 234, 0.5),
+                 0 0 25px rgba(102, 126, 234, 0.3);
+}
+
+.login-bodii .register-link:hover {
+    color: #764ba2;
+    transform: translateY(-2px);
+    text-shadow: 0 0 20px rgba(118, 75, 162, 0.6),
+                 0 0 35px rgba(118, 75, 162, 0.4),
+                 0 0 50px rgba(118, 75, 162, 0.2);
 }
