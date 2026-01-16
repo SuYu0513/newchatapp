@@ -8,8 +8,11 @@ import com.example.chatapp.service.FriendshipService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import java.security.Principal;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -29,6 +32,9 @@ public class UserApiController {
     
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
+    
+    @PersistenceContext
+    private EntityManager entityManager;
 
     // ユーザー検索エンドポイント
     @GetMapping("/search")
@@ -68,8 +74,16 @@ public class UserApiController {
     
     // ユーザープロフィール取得エンドポイント
     @GetMapping("/{userId}/profile")
+    @Transactional(readOnly = true)
     public ResponseEntity<Map<String, Object>> getUserProfile(@PathVariable Long userId) {
         try {
+            System.out.println("===== プロフィール取得開始: UserID=" + userId + " =====");
+            
+            // 永続化コンテキストをクリアして最新データを強制取得
+            entityManager.flush();
+            entityManager.clear();
+            System.out.println("EntityManager cleared - will fetch fresh data");
+            
             User user = userService.findById(userId)
                 .orElseThrow(() -> new RuntimeException("ユーザーが見つかりません"));
             
@@ -94,20 +108,30 @@ public class UserApiController {
             response.put("profile", profileData);
             
             // フォロー/フォロワー/友達数
+            System.out.println("Fetching counts for user: " + user.getUsername());
             long followingCount = friendshipService.getFollowingCount(user);
+            System.out.println("  -> Following Count: " + followingCount);
             long followerCount = friendshipService.getFollowersCount(user);
+            System.out.println("  -> Follower Count: " + followerCount);
             long friendCount = friendshipService.getFriendsCount(user);
+            System.out.println("  -> Friend Count: " + friendCount);
             
             System.out.println("=== Profile Debug for User: " + user.getUsername() + " (ID: " + userId + ") ===");
             System.out.println("Following Count: " + followingCount);
             System.out.println("Follower Count: " + followerCount);
             System.out.println("Friend Count: " + friendCount);
+            System.out.println("===== プロフィール取得完了 =====");
             
             response.put("followingCount", followingCount);
             response.put("followerCount", followerCount);
             response.put("friendCount", friendCount);
             
-            return ResponseEntity.ok(response);
+            // Cache-Controlヘッダーを追加してキャッシュを完全に無効化
+            return ResponseEntity.ok()
+                .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                .header("Pragma", "no-cache")
+                .header("Expires", "0")
+                .body(response);
             
         } catch (Exception e) {
             Map<String, Object> errorResponse = new HashMap<>();

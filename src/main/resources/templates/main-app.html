@@ -6,7 +6,7 @@
     <title>チャットアプリ</title>
     
     <!-- PWA設定 -->
-    <link rel="manifest" href="/manifest.json?v=4">
+    <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#667eea">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -45,19 +45,19 @@
                                 <div class="post-avatar user-profile-link" 
                                      th:if="${post.user.profile != null and post.user.profile.avatarUrl != null and !post.user.profile.avatarUrl.isEmpty()}"
                                      th:style="'background-image: url(' + ${post.user.profile.avatarUrl} + '); background-size: cover; background-position: center; cursor: pointer;'"
-                                     th:attr="data-user-id=${post.user.id}">
+                                     th:attr="data-user-id=${post.user.id}, data-friend-code=${post.userFriendCode}">
                                 </div>
                                 <!-- デフォルトアイコン -->
                                 <div class="post-avatar default-avatar user-profile-link" 
                                      th:if="${post.user.profile == null or post.user.profile.avatarUrl == null or post.user.profile.avatarUrl.isEmpty()}"
-                                     th:attr="data-username=${post.user.username}, data-user-id=${post.user.id}"
+                                     th:attr="data-username=${post.user.username}, data-user-id=${post.user.id}, data-friend-code=${post.userFriendCode}"
                                      style="cursor: pointer;">
                                     <i class="fas fa-user"></i>
                                 </div>
                                 <div class="post-user-details">
                                     <span class="post-username clickable-username user-profile-link" 
                                           th:text="${post.user.profile != null and post.user.profile.displayName != null and !post.user.profile.displayName.isEmpty() ? post.user.profile.displayName : post.user.username}"
-                                          th:attr="data-user-id=${post.user.id}">ユーザー名</span>
+                                          th:attr="data-user-id=${post.user.id}, data-friend-code=${post.userFriendCode}">ユーザー名</span>
                                     <span class="post-time" th:text="${#temporals.format(post.createdAt, 'yyyy年MM月dd日 HH:mm')}">投稿日時</span>
                                 </div>
                             </div>
@@ -73,10 +73,12 @@
                                          th:src="${mediaUrl}" 
                                          alt="投稿画像"
                                          class="post-media-image"
+                                         loading="lazy"
                                          onclick="openImageModal(this.src)">
                                     <!-- 動画の場合 -->
                                     <video th:if="${#strings.endsWith(mediaUrl, '.mp4') or #strings.endsWith(mediaUrl, '.webm') or #strings.endsWith(mediaUrl, '.mov')}"
                                            th:src="${mediaUrl}" 
+                                           preload="metadata"
                                            controls
                                            class="post-media-video"></video>
                                 </div>
@@ -267,6 +269,41 @@
             </div>
         </section>
         
+        <!-- DM画面 -->
+        <section class="app-section" id="dm-section" style="display: none;">
+            <div class="section-content">
+                <!-- DMヘッダー -->
+                <div class="dm-header">
+                    <button class="back-btn" id="backFromDmBtn">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <div class="dm-user-info" id="dmUserInfo" style="cursor: pointer;">
+                        <div class="dm-avatar"></div>
+                        <span class="dm-username"></span>
+                    </div>
+                </div>
+                
+                <!-- DMメッセージエリア -->
+                <div class="dm-messages-container" id="dmMessagesContainer">
+                    <div class="dm-messages" id="dmMessages">
+                        <!-- メッセージがここに表示されます -->
+                    </div>
+                </div>
+                
+                <!-- DM入力エリア -->
+                <div class="dm-input-area">
+                    <textarea 
+                        class="dm-input" 
+                        id="dmInput" 
+                        placeholder="メッセージを入力..." 
+                        rows="1"></textarea>
+                    <button class="dm-send-btn" id="dmSendBtn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+        
         <!-- マイページ画面 -->
         <section class="app-section" id="mypage-section">
             <div class="section-content">
@@ -285,7 +322,7 @@
                             </div>
                             <div class="profile-avatar default-avatar" 
                                  th:if="${profile == null or profile.avatarUrl == null or profile.avatarUrl.isEmpty()}"
-                                 th:attr="data-username=${user.username}">
+                                 th:attr="data-username=${user != null ? user.username : 'unknown'}">
                                 <i class="fas fa-user"></i>
                             </div>
                             
@@ -299,11 +336,8 @@
                         <!-- 自己紹介文とタグ（アイコンの下） -->
                         <div class="profile-info-bottom">
                             <!-- 自己紹介文 -->
-                            <p class="profile-bio" th:if="${profile != null and profile.bio != null and !profile.bio.isEmpty()}" 
-                               th:text="${profile.bio}">自己紹介文がここに表示されます</p>
-                            <p class="profile-bio text-muted" th:if="${profile == null or profile.bio == null or profile.bio.isEmpty()}">
-                                自己紹介が未設定です
-                            </p>
+                            <p class="profile-bio" th:if="${profile != null and profile.bio != null and !profile.bio.isEmpty()}" th:text="${profile.bio}">自己紹介文がここに表示されます</p>
+                            <p class="profile-bio text-muted" th:if="${profile == null or profile.bio == null or profile.bio.isEmpty()}">自己紹介が未設定です</p>
                             
                             <!-- 好きなものタグ（横スクロール） -->
                             <div class="profile-tags-container" th:if="${profile != null and profile.favoriteThings != null and !profile.favoriteThings.isEmpty()}">
@@ -441,41 +475,132 @@
         </button>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
     <script>
+        // デフォルトアバターの色設定関数
+        function setDefaultAvatarColor(avatarElement) {
+            if (!avatarElement) return;
+            
+            // data-username属性またはテキストコンテンツから取得
+            const username = avatarElement.getAttribute('data-username') || 
+                           avatarElement.textContent.trim() ||
+                           'default';
+            
+            const colors = [
+                '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
+                '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B88B', '#AAB7B8'
+            ];
+            
+            let hash = 0;
+            for (let i = 0; i < username.length; i++) {
+                hash = username.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const color = colors[Math.abs(hash) % colors.length];
+            avatarElement.style.backgroundColor = color;
+        }
+        
         // WebSocket接続
         let stompClient = null;
+        let isWebSocketConnected = false;
+        
+        // 現在のユーザーID（グローバル変数）
+        let currentUserId = null;
+        
+        // 初期化関数（ページ読み込み時に実行）
+        function initializeApp() {
+            // ユーザーIDを取得
+            const appContainer = document.querySelector('.app-container');
+            if (appContainer && appContainer.dataset.currentUserId) {
+                currentUserId = parseInt(appContainer.dataset.currentUserId);
+                console.log('👤 現在のユーザーID:', currentUserId);
+            } else {
+                console.error('❌ ユーザーIDが取得できません');
+            }
+            
+            // WebSocket接続を開始
+            connectWebSocket();
+            
+            // 接続状態を定期的に確認
+            setInterval(function() {
+                if (!isWebSocketConnected) {
+                    connectWebSocket();
+                }
+            }, 60000); // 60秒ごと
+        }
         
         function connectWebSocket() {
+            console.log('===== WebSocket接続開始 =====');
+            console.log('接続先:', window.location.origin + '/ws');
+            
             const socket = new SockJS('/ws');
             stompClient = Stomp.over(socket);
             
+            // デバッグログを無効化（本番環境では有効にすると情報が多すぎる）
+            stompClient.debug = null;
+            
             stompClient.connect({}, function(frame) {
-                console.log('WebSocket接続成功');
+                isWebSocketConnected = true;
+                console.log('✅ WebSocket接続成功');
+                console.log('接続情報:', frame);
                 
                 // 新規投稿の購読
                 stompClient.subscribe('/topic/posts', function(message) {
+                    console.log('📨 新規投稿を受信:', message.body);
                     const postData = JSON.parse(message.body);
                     addNewPostToDOM(postData);
                 });
                 
                 // フォロー数更新の購読
                 stompClient.subscribe('/topic/follow-updates', function(message) {
+                    console.log('📊 フォロー更新を受信:', message.body);
                     const updateData = JSON.parse(message.body);
                     updateFollowCountsForUser(updateData);
                 });
+                
+                // DMメッセージの購読
+                stompClient.subscribe('/user/queue/dm', function(message) {
+                    console.log('� WebSocketからDMメッセージ受信:', message.body);
+                    try {
+                        const dmData = JSON.parse(message.body);
+                        handleIncomingDM(dmData);
+                    } catch (error) {
+                        console.error('❌ DMメッセージのパースエラー:', error);
+                    }
+                });
+                
+                // DM既読通知の購読
+                stompClient.subscribe('/user/queue/dm-read', function(message) {
+                    console.log('✅ DM既読通知を受信:', message.body);
+                    try {
+                        const readData = JSON.parse(message.body);
+                        handleDMReadNotification(readData);
+                    } catch (error) {
+                        console.error('❌ DM既読通知のパースエラー:', error);
+                    }
+                });
+                
+                console.log('📡 WebSocketサブスクリプション完了');
             }, function(error) {
-                console.error('WebSocket接続エラー:', error);
+                isWebSocketConnected = false;
+                console.error('❌ WebSocket接続エラー:', error);
+                console.log('⏰ 5秒後に再接続を試行します...');
                 // 5秒後に再接続
                 setTimeout(connectWebSocket, 5000);
             });
+            
+            // 接続状態の監視
+            socket.onclose = function() {
+                isWebSocketConnected = false;
+                console.warn('⚠️ WebSocket接続が切断されました');
+            };
         }
         
-        // ページ読み込み時にWebSocket接続
+        // ページ読み込み時に初期化
         window.addEventListener('DOMContentLoaded', function() {
-            connectWebSocket();
+            console.log('🚀 アプリ初期化開始');
+            initializeApp();
         });
         
         // 新規投稿をDOMに追加
@@ -499,9 +624,9 @@
             // アバターHTML
             let avatarHtml = '';
             if (user.avatarUrl) {
-                avatarHtml = `<div class="post-avatar user-profile-link" style="background-image: url(${user.avatarUrl}); background-size: cover; background-position: center; cursor: pointer;" data-user-id="${user.id}"></div>`;
+                avatarHtml = `<div class="post-avatar user-profile-link" style="background-image: url(${user.avatarUrl}); background-size: cover; background-position: center; cursor: pointer;" data-user-id="${user.id}" data-friend-code="${postData.userFriendCode || ''}"></div>`;
             } else {
-                avatarHtml = `<div class="post-avatar default-avatar user-profile-link" data-username="${user.username}" data-color="${colorIndex}" data-user-id="${user.id}" style="cursor: pointer;"><i class="fas fa-user"></i></div>`;
+                avatarHtml = `<div class="post-avatar default-avatar user-profile-link" data-username="${user.username}" data-color="${colorIndex}" data-user-id="${user.id}" data-friend-code="${postData.userFriendCode || ''}" style="cursor: pointer;"><i class="fas fa-user"></i></div>`;
             }
             
             // メディアHTML
@@ -511,8 +636,9 @@
                 mediaHtml = '<div class="post-media-grid">';
                 mediaUrls.forEach(url => {
                     if (url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-                        mediaHtml += `<div class="post-media-item"><img src="${url}" alt="投稿画像" class="post-media-image" onclick="openImageModal(this.src)"></div>`;
+                        mediaHtml += `<div class="post-media-item"><img src="${url}" alt="投稿画像" class="post-media-image" loading="lazy" onclick="openImageModal(this.src)"></div>`;
                     } else if (url.match(/\.(mp4|webm|mov)$/i)) {
+                        mediaHtml += `<div class="post-media-item"><video src="${url}" class="post-media-video" preload="metadata" controls></video></div>`;
                         mediaHtml += `<div class="post-media-item"><video src="${url}" controls class="post-media-video"></video></div>`;
                     }
                 });
@@ -528,7 +654,7 @@
                     <div class="post-user-info">
                         ${avatarHtml}
                         <div class="post-user-details">
-                            <span class="post-username clickable-username user-profile-link" data-user-id="${user.id}">${displayName}</span>
+                            <span class="post-username clickable-username user-profile-link" data-user-id="${user.id}" data-friend-code="${user.friendCode || ''}">${displayName}</span>
                             <span class="post-time">${formattedDate}</span>
                         </div>
                     </div>
@@ -549,6 +675,8 @@
             postCard.querySelectorAll('.user-profile-link').forEach(element => {
                 element.addEventListener('click', function() {
                     const userId = this.getAttribute('data-user-id');
+                    const friendCode = this.getAttribute('data-friend-code');
+                    console.log('ユーザークリック - ID:', userId, 'FriendCode:', friendCode);
                     if (userId) {
                         viewUserProfile(userId);
                     }
@@ -572,6 +700,72 @@
         async function updateFollowCountsForUser(updateData) {
             const followedData = updateData.followedUserData;
             const followerData = updateData.followerUserData;
+            
+            // 現在のユーザーIDを取得
+            const currentUserId = document.querySelector('.app-container').dataset.currentUserId;
+            
+            console.log('🔄 フォロー更新データ受信:', {
+                followedUserId: followedData?.userId,
+                followerUserId: followerData?.userId,
+                currentUserId: currentUserId,
+                currentViewedUserId: currentViewedUserId
+            });
+            
+            console.log('型チェック:', {
+                followedUserIdType: typeof followedData?.userId,
+                followerUserIdType: typeof followerData?.userId,
+                currentUserIdType: typeof currentUserId
+            });
+            
+            // 自分がフォローされた場合（自分のマイページのフォロワー数を更新）
+            const isFollowed = followedData && followedData.userId == currentUserId;
+            console.log('自分がフォローされた？', isFollowed, 'followedData.userId:', followedData?.userId, 'currentUserId:', currentUserId);
+            
+            if (isFollowed) {
+                console.log('✅ 自分がフォローされました！マイページを更新します');
+                const myFollowerCount = document.getElementById('myFollowerCount');
+                console.log('myFollowerCount要素:', myFollowerCount);
+                if (myFollowerCount && followedData.followerCount !== undefined) {
+                    console.log('📊 マイページのフォロワー数更新:', followedData.followerCount);
+                    myFollowerCount.textContent = followedData.followerCount;
+                } else {
+                    console.warn('⚠️ フォロワー数を更新できません:', {
+                        element: myFollowerCount,
+                        count: followedData.followerCount
+                    });
+                }
+                
+                const myFriendCount = document.getElementById('myFriendCount');
+                if (myFriendCount && followedData.friendCount !== undefined) {
+                    console.log('📊 マイページの友達数更新:', followedData.friendCount);
+                    myFriendCount.textContent = followedData.friendCount;
+                }
+            }
+            
+            // 自分がフォローした場合（自分のマイページのフォロー数を更新）
+            const isFollowing = followerData && followerData.userId == currentUserId;
+            console.log('自分がフォローした？', isFollowing, 'followerData.userId:', followerData?.userId, 'currentUserId:', currentUserId);
+            
+            if (isFollowing) {
+                console.log('✅ 自分がフォローしました！マイページを更新します');
+                const myFollowingCount = document.getElementById('myFollowingCount');
+                console.log('myFollowingCount要素:', myFollowingCount);
+                if (myFollowingCount && followerData.followingCount !== undefined) {
+                    console.log('📊 マイページのフォロー数更新:', followerData.followingCount);
+                    myFollowingCount.textContent = followerData.followingCount;
+                } else {
+                    console.warn('⚠️ フォロー数を更新できません:', {
+                        element: myFollowingCount,
+                        count: followerData.followingCount
+                    });
+                }
+                
+                const myFriendCount = document.getElementById('myFriendCount');
+                if (myFriendCount && followerData.friendCount !== undefined) {
+                    console.log('📊 マイページの友達数更新:', followerData.friendCount);
+                    myFriendCount.textContent = followerData.friendCount;
+                }
+            }
             
             // フォローされた人のプロフィールを見ている場合
             if (followedData && currentViewedUserId && currentViewedUserId == followedData.userId) {
@@ -711,22 +905,50 @@
                 } else {
                     createPostBtn.style.display = 'none';
                 }
+                
+                // チャット画面に遷移した時にDM会話リストを読み込む
+                if (sectionName === 'chat') {
+                    loadDMConversations();
+                }
+            });
+        });
+        
+        // チャットタブ切り替え（すべて/友達）
+        const chatTabBtns = document.querySelectorAll('.chat-list-header .tab-btn');
+        chatTabBtns.forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const tabName = btn.dataset.tab;
+                
+                chatTabBtns.forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.chat-list-header + div, .chat-list-header + div + div').forEach(c => c.classList.remove('active'));
+                
+                btn.classList.add('active');
+                const targetTab = document.getElementById(tabName + '-tab');
+                targetTab.classList.add('active');
+                
+                // 友達タブに切り替えた場合は友達のDMを読み込む
+                if (tabName === 'friends-chat') {
+                    await loadFriendsDMConversations();
+                }
             });
         });
         
         // ルームタブ切り替え
-        const tabBtns = document.querySelectorAll('.tab-btn');
-        const tabContents = document.querySelectorAll('.tab-content');
+        const roomTabBtns = document.querySelectorAll('.room-list-header .tab-btn');
+        const tabContents = document.querySelectorAll('.room-list-header + .tab-content, .room-list-header + .tab-content + .tab-content');
         
-        tabBtns.forEach(btn => {
+        roomTabBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 const tabName = btn.dataset.tab;
                 
-                tabBtns.forEach(b => b.classList.remove('active'));
+                roomTabBtns.forEach(b => b.classList.remove('active'));
                 tabContents.forEach(c => c.classList.remove('active'));
                 
                 btn.classList.add('active');
-                document.getElementById(tabName + '-tab').classList.add('active');
+                const targetContent = document.getElementById(tabName + '-tab');
+                if (targetContent) {
+                    targetContent.classList.add('active');
+                }
             });
         });
         
@@ -870,21 +1092,14 @@
         
         // デフォルトアイコンに色を設定
         document.addEventListener('DOMContentLoaded', function() {
+            // すべてのデフォルトアバターに色を設定
             document.querySelectorAll('.default-avatar').forEach(avatar => {
-                const username = avatar.getAttribute('data-username');
-                if (username) {
-                    const colorIndex = getUserColor(username);
-                    avatar.setAttribute('data-color', colorIndex);
-                }
+                setDefaultAvatarColor(avatar);
             });
             
             // マイページのアバターにも色を設定
             document.querySelectorAll('.profile-avatar').forEach(avatar => {
-                const username = avatar.getAttribute('data-username');
-                if (username) {
-                    const colorIndex = getUserColor(username);
-                    avatar.setAttribute('data-color', colorIndex);
-                }
+                setDefaultAvatarColor(avatar);
             });
             
             // スライドメニューの制御
@@ -945,6 +1160,13 @@
                 const response = await fetch(`/api/users/${userId}/profile`);
                 const data = await response.json();
                 
+                console.log('===== プロフィール取得 =====');
+                console.log('UserID:', userId);
+                console.log('APIレスポンス:', data);
+                console.log('Following:', data.followingCount);
+                console.log('Follower:', data.followerCount);
+                console.log('Friend:', data.friendCount);
+                
                 if (data.success) {
                     // プロフィール情報を表示
                     const viewedProfileContent = document.getElementById('viewedProfileContent');
@@ -983,10 +1205,8 @@
                                 <p class="profile-friendcode">${user.friendCode ? 'FC: ' + user.friendCode : 'FC: 未設定'}</p>
                             </div>
                         </div>
-                        <div class="profile-info-bottom">
-                            <p class="profile-bio ${!profile || !profile.bio ? 'text-muted' : ''}">
-                                ${profile && profile.bio ? profile.bio : '自己紹介が未設定です'}
-                            </p>
+                        <div class="profile-info-bottom" style="text-align: left;">
+                            <p class="profile-bio ${!profile || !profile.bio ? 'text-muted' : ''}" style="text-align: left !important;">${profile && profile.bio ? profile.bio : '自己紹介が未設定です'}</p>
                             ${tagsHtml}
                             <div class="profile-stats">
                                 <div class="stat-item">
@@ -1008,14 +1228,31 @@
                     // フォロー状態を取得してボタンを更新
                     await updateFollowButton(userId);
                     
+                    // チャットボタンにユーザーIDを設定
+                    const btnStartChat = document.getElementById('btnStartChat');
+                    btnStartChat.dataset.userId = userId;
+                    
                     // 画面切り替え
                     sections.forEach(section => section.classList.remove('active'));
                     document.getElementById('user-profile-view-section').classList.add('active');
                     navItems.forEach(nav => nav.classList.remove('active'));
                     
+                    // DM画面を確実に非表示
+                    const dmSection = document.getElementById('dm-section');
+                    if (dmSection) {
+                        dmSection.style.display = 'none';
+                        dmSection.classList.remove('active');
+                    }
+                    
                     // プロフィールアクションボタンを表示、フッターを非表示
-                    document.getElementById('profileActions').style.display = 'flex';
-                    document.querySelector('.bottom-nav').style.display = 'none';
+                    const profileActions = document.getElementById('profileActions');
+                    if (profileActions) {
+                        profileActions.style.cssText = 'display: flex;';
+                    }
+                    const bottomNav = document.querySelector('.bottom-nav');
+                    if (bottomNav) {
+                        bottomNav.style.display = 'none';
+                    }
                     createPostBtn.style.display = 'none';
                 }
             } catch (error) {
@@ -1038,15 +1275,19 @@
                     if (relationship === 'friend') {
                         followBtn.innerHTML = '<i class="fas fa-user-check me-2"></i>友達';
                         followBtn.classList.add('following');
+                        followBtn.dataset.relationship = 'friend'; // データ属性に関係性を保存
                     } else if (relationship === 'following') {
                         followBtn.innerHTML = '<i class="fas fa-user-check me-2"></i>フォロー中';
                         followBtn.classList.add('following');
+                        followBtn.dataset.relationship = 'following'; // データ属性に関係性を保存
                     } else if (relationship === 'follower') {
                         followBtn.innerHTML = '<i class="fas fa-user-plus me-2"></i>フォローバック';
                         followBtn.classList.remove('following');
+                        followBtn.dataset.relationship = 'follower';
                     } else {
                         followBtn.innerHTML = '<i class="fas fa-user-plus me-2"></i>フォロー';
                         followBtn.classList.remove('following');
+                        followBtn.dataset.relationship = 'none';
                     }
                 }
             } catch (error) {
@@ -1063,7 +1304,29 @@
                 }
                 
                 const isFollowing = btnFollowUser.classList.contains('following');
+                const relationship = btnFollowUser.dataset.relationship;
+                
+                // フォロー済み・友達の場合は確認ダイアログを表示
+                if (isFollowing) {
+                    let confirmMessage = 'フォローを解除しますか？';
+                    
+                    // 友達の場合は明示的にメッセージを変更
+                    if (relationship === 'friend') {
+                        confirmMessage = '友達関係を解除しますか？\n（相互フォローが解除されます）';
+                    }
+                    
+                    const confirmUnfollow = confirm(confirmMessage);
+                    if (!confirmUnfollow) {
+                        return; // キャンセルされた場合は何もしない
+                    }
+                }
+                
                 const endpoint = isFollowing ? 'unfollow' : 'follow';
+                
+                // ボタンを一時的に無効化
+                btnFollowUser.disabled = true;
+                const originalText = btnFollowUser.innerHTML;
+                btnFollowUser.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>処理中...';
                 
                 try {
                     const response = await fetch(`/api/users/${currentViewedUserId}/${endpoint}`, {
@@ -1072,7 +1335,7 @@
                     const data = await response.json();
                     
                     if (data.success) {
-                        // ボタンの状態を更新
+                        // ボタンの状態を即座に更新
                         await updateFollowButton(currentViewedUserId);
                         
                         console.log('Follow response data:', data); // デバッグログ
@@ -1106,10 +1369,15 @@
                         // alert(data.message);
                     } else {
                         alert(data.message || 'エラーが発生しました');
+                        btnFollowUser.innerHTML = originalText; // エラー時は元に戻す
                     }
                 } catch (error) {
                     console.error('Error toggling follow:', error);
                     alert('エラーが発生しました');
+                    btnFollowUser.innerHTML = originalText; // エラー時は元に戻す
+                } finally {
+                    // ボタンを再度有効化
+                    btnFollowUser.disabled = false;
                 }
             });
         }
@@ -1118,7 +1386,16 @@
         document.addEventListener('click', function(e) {
             const target = e.target.closest('.user-profile-link');
             if (target && target.dataset.userId) {
-                viewUserProfile(target.dataset.userId);
+                const userId = target.dataset.userId;
+                const friendCode = target.dataset.friendCode;
+                const username = target.dataset.username;
+                console.log('===== プロフィールクリック =====');
+                console.log('クリックされた要素:', target);
+                console.log('User ID:', userId);
+                console.log('Friend Code:', friendCode);
+                console.log('Username:', username);
+                console.log('================================');
+                viewUserProfile(userId);
             }
         });
         
@@ -1158,6 +1435,528 @@
                     backToHomeBtn.click();
                 }
             }
+        }
+        
+        // ========================================
+        // DM機能
+        // ========================================
+        
+        let currentConversationId = null;
+        let currentDMUser = null;
+        
+        // DM会話リストを読み込む
+        async function loadDMConversations() {
+            try {
+                console.log('📋 DM会話リストを読み込み中...');
+                const response = await fetch('/api/dm/conversations');
+                console.log('📡 API Response Status:', response.status);
+                
+                const data = await response.json();
+                console.log('📦 API Response Data:', data);
+                
+                if (!data.success) {
+                    console.error('❌ DM会話リストの取得に失敗しました');
+                    return;
+                }
+                
+                const conversations = data.conversations;
+                console.log('✅ DM会話リスト取得:', conversations.length, '件');
+                console.log('📋 Conversations Detail:', conversations);
+                
+                displayConversationList(conversations);
+            } catch (error) {
+                console.error('❌ DM会話リスト読み込みエラー:', error);
+            }
+        }
+        
+        // DM会話リストを表示
+        function displayConversationList(conversations) {
+            const chatListContainer = document.querySelector('#all-chat-tab .chat-list');
+            const noChatsElement = chatListContainer.querySelector('.no-chats');
+            
+            if (!chatListContainer) {
+                console.error('❌ チャットリストコンテナが見つかりません');
+                return;
+            }
+            
+            // 既存のチャットアイテムを削除
+            const existingItems = chatListContainer.querySelectorAll('.chat-item');
+            existingItems.forEach(item => item.remove());
+            
+            if (conversations.length === 0) {
+                // 会話がない場合は「チャットがありません」を表示
+                if (noChatsElement) {
+                    noChatsElement.style.display = 'flex';
+                }
+                console.log('📋 DM会話なし');
+                return;
+            }
+            
+            // 会話がある場合は「チャットがありません」を非表示
+            if (noChatsElement) {
+                noChatsElement.style.display = 'none';
+            }
+            
+            console.log('📋 DM会話を表示:', conversations.length, '件');
+            
+            // 会話リストを表示
+            conversations.forEach(conv => {
+                const chatItem = document.createElement('div');
+                chatItem.className = 'chat-item';
+                chatItem.dataset.conversationId = conv.conversationId;
+                chatItem.dataset.userId = conv.userId;
+                
+                // 最終メッセージ時刻のフォーマット
+                const lastMessageTime = conv.lastMessageAt ? formatTime(new Date(conv.lastMessageAt)) : '';
+                
+                // メッセージの最初の1行だけを取得（最大10文字）
+                let messagePreview = conv.lastMessage || '';
+                const firstLine = messagePreview.split('\n')[0]; // 最初の1行
+                const truncatedMessage = firstLine.length > 10 ? firstLine.substring(0, 10) + '...' : firstLine;
+                
+                // アバターのスタイル
+                const avatarStyle = conv.avatarUrl 
+                    ? `background-image: url(${conv.avatarUrl}); background-size: cover; background-position: center;` 
+                    : '';
+                
+                chatItem.innerHTML = `
+                    <div class="chat-avatar" style="${avatarStyle}">
+                        ${!conv.avatarUrl ? '<i class="fas fa-user"></i>' : ''}
+                    </div>
+                    <div class="chat-content">
+                        <div class="chat-top">
+                            <span class="chat-name">${escapeHtml(conv.displayName || conv.username)}</span>
+                            <span class="chat-time">${lastMessageTime}</span>
+                        </div>
+                        <div class="chat-bottom">
+                            <p class="chat-message">${escapeHtml(truncatedMessage)}</p>
+                            ${conv.unreadCount > 0 ? `<span class="chat-badge">${conv.unreadCount}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                // クリックイベント
+                chatItem.addEventListener('click', async () => {
+                    await startConversationFromList(conv.conversationId, conv.userId, conv.displayName || conv.username, conv.avatarUrl);
+                });
+                
+                chatListContainer.appendChild(chatItem);
+            });
+        }
+        
+        // 時刻のフォーマット関数
+        function formatTime(date) {
+            const now = new Date();
+            const diff = now - date;
+            const hours = Math.floor(diff / 1000 / 60 / 60);
+            
+            if (hours < 1) {
+                const minutes = Math.floor(diff / 1000 / 60);
+                return minutes < 1 ? 'たった今' : `${minutes}分前`;
+            } else if (hours < 24) {
+                return date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+            } else if (hours < 48) {
+                return '昨日';
+            } else {
+                return date.toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' });
+            }
+        }
+        
+        // 友達のDM会話リストを読み込む
+        async function loadFriendsDMConversations() {
+            try {
+                console.log('📋 友達のDM会話リストを読み込み中...');
+                const response = await fetch('/api/dm/conversations/friends');
+                console.log('📡 Friends API Response Status:', response.status);
+                
+                const data = await response.json();
+                console.log('📦 Friends API Response Data:', data);
+                
+                if (!data.success) {
+                    console.error('❌ 友達のDM会話リストの取得に失敗しました');
+                    return;
+                }
+                
+                const conversations = data.conversations;
+                console.log('✅ 友達のDM会話リスト取得:', conversations.length, '件');
+                console.log('📋 Friends Conversations Detail:', conversations);
+                
+                displayFriendsConversationList(conversations);
+            } catch (error) {
+                console.error('❌ 友達のDM会話リスト読み込みエラー:', error);
+            }
+        }
+        
+        // 友達のDM会話リストを表示
+        function displayFriendsConversationList(conversations) {
+            const chatListContainer = document.querySelector('#friends-chat-tab .chat-list');
+            const noChatsElement = chatListContainer.querySelector('.no-chats');
+            
+            if (!chatListContainer) {
+                console.error('❌ 友達チャットリストコンテナが見つかりません');
+                return;
+            }
+            
+            // 既存のチャットアイテムを削除
+            const existingItems = chatListContainer.querySelectorAll('.chat-item');
+            existingItems.forEach(item => item.remove());
+            
+            if (conversations.length === 0) {
+                // 会話がない場合は「友達とのチャットがありません」を表示
+                if (noChatsElement) {
+                    noChatsElement.style.display = 'flex';
+                }
+                console.log('📋 友達のDM会話なし');
+                return;
+            }
+            
+            // 会話がある場合は「友達とのチャットがありません」を非表示
+            if (noChatsElement) {
+                noChatsElement.style.display = 'none';
+            }
+            
+            console.log('📋 友達のDM会話を表示:', conversations.length, '件');
+            
+            // 会話リストを表示（displayConversationListと同じ処理）
+            conversations.forEach(conv => {
+                const chatItem = document.createElement('div');
+                chatItem.className = 'chat-item';
+                chatItem.dataset.conversationId = conv.conversationId;
+                chatItem.dataset.userId = conv.userId;
+                
+                // 最終メッセージ時刻のフォーマット
+                const lastMessageTime = conv.lastMessageAt ? formatTime(new Date(conv.lastMessageAt)) : '';
+                
+                // メッセージの最初の1行だけを取得（最大10文字）
+                let messagePreview = conv.lastMessage || '';
+                const firstLine = messagePreview.split('\n')[0]; // 最初の1行
+                const truncatedMessage = firstLine.length > 10 ? firstLine.substring(0, 10) + '...' : firstLine;
+                
+                // アバターのスタイル
+                const avatarStyle = conv.avatarUrl 
+                    ? `background-image: url(${conv.avatarUrl}); background-size: cover; background-position: center;` 
+                    : '';
+                
+                chatItem.innerHTML = `
+                    <div class="chat-avatar" style="${avatarStyle}">
+                        ${!conv.avatarUrl ? '<i class="fas fa-user"></i>' : ''}
+                    </div>
+                    <div class="chat-content">
+                        <div class="chat-top">
+                            <span class="chat-name">${escapeHtml(conv.displayName || conv.username)}</span>
+                            <span class="chat-time">${lastMessageTime}</span>
+                        </div>
+                        <div class="chat-bottom">
+                            <p class="chat-message">${escapeHtml(truncatedMessage)}</p>
+                            ${conv.unreadCount > 0 ? `<span class="chat-badge">${conv.unreadCount}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                // クリックイベント
+                chatItem.addEventListener('click', async () => {
+                    await startConversationFromList(conv.conversationId, conv.userId, conv.displayName || conv.username, conv.avatarUrl);
+                });
+                
+                chatListContainer.appendChild(chatItem);
+            });
+        }
+        
+        // 会話リストからDMを開始
+        async function startConversationFromList(conversationId, userId, displayName, avatarUrl) {
+            currentConversationId = conversationId;
+            currentDMUser = {
+                userId: userId,
+                username: displayName,
+                displayName: displayName,
+                avatarUrl: avatarUrl
+            };
+            await openDMScreen(conversationId);
+        }
+        
+        // 閲覧用マイページの「チャット」ボタン
+        document.getElementById('btnStartChat').addEventListener('click', async function() {
+            const viewedUserId = this.dataset.userId;
+            if (!viewedUserId) {
+                console.error('ユーザーIDが設定されていません');
+                return;
+            }
+            
+            try {
+                console.log('🚀 DM会話を開始:', viewedUserId);
+                
+                const response = await fetch('/api/dm/conversations/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ targetUserId: parseInt(viewedUserId) })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const conversation = data.conversation;
+                    currentConversationId = conversation.conversationId;
+                    currentDMUser = {
+                        userId: conversation.userId,
+                        username: conversation.username,
+                        displayName: conversation.displayName,
+                        avatarUrl: conversation.avatarUrl
+                    };
+                    await openDMScreen(currentConversationId);
+                } else {
+                    alert('DMの開始に失敗しました');
+                }
+            } catch (error) {
+                console.error('DM開始エラー:', error);
+                alert('DMの開始に失敗しました');
+            }
+        });
+        
+        async function openDMScreen(conversationId) {
+            try {
+                const response = await fetch(`/api/dm/conversations/${conversationId}/messages`);
+                const data = await response.json();
+                
+                if (!data.success) throw new Error('メッセージの取得に失敗');
+                
+                // 会話IDを明示的に数値として設定
+                currentConversationId = parseInt(conversationId);
+                console.log('🔧 DM画面オープン - 会話ID設定:', currentConversationId);
+                
+                const dmHeader = document.querySelector('.dm-header .dm-user-info');
+                const conversation = data.conversation;
+                const avatarStyle = conversation.avatarUrl 
+                    ? `background-image: url(${conversation.avatarUrl})` 
+                    : '';
+                dmHeader.innerHTML = `
+                    <div class="dm-avatar" style="${avatarStyle}"></div>
+                    <span class="dm-username">${conversation.displayName || conversation.username}</span>
+                `;
+                
+                // ヘッダークリックで相手のプロフィールに遷移
+                dmHeader.onclick = () => {
+                    viewUserProfile(currentDMUser.userId);
+                };
+                
+                displayDMMessages(data.messages);
+                
+                const sections = document.querySelectorAll('.app-section');
+                sections.forEach(section => section.classList.remove('active'));
+                document.getElementById('dm-section').style.display = 'block';
+                document.getElementById('dm-section').classList.add('active');
+                
+                // フッターナビゲーションを非表示
+                const bottomNav = document.querySelector('.bottom-nav');
+                if (bottomNav) {
+                    bottomNav.style.display = 'none';
+                }
+                
+                // プロフィールアクションボタン（チャット・フォローボタン）を非表示
+                const profileActions = document.getElementById('profileActions');
+                if (profileActions) {
+                    profileActions.style.display = 'none';
+                }
+                
+                // 投稿ボタンも非表示
+                const createPostBtn = document.getElementById('btnCreatePost');
+                if (createPostBtn) {
+                    createPostBtn.style.display = 'none';
+                }
+                
+                console.log('✅ DM画面を開きました - WebSocket接続状態:', isWebSocketConnected);
+                
+                // WebSocketが接続されていない場合は接続を試みる
+                if (!isWebSocketConnected) {
+                    console.warn('⚠️ WebSocketが未接続です。再接続を試みます...');
+                    connectWebSocket();
+                }
+            } catch (error) {
+                console.error('DM画面オープンエラー:', error);
+                alert('DMの読み込みに失敗しました');
+            }
+        }
+        
+        function displayDMMessages(messages) {
+            console.log('📜 メッセージ履歴を表示:', messages.length, '件');
+            const messagesContainer = document.getElementById('dmMessages');
+            messagesContainer.innerHTML = '';
+            
+            messages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `dm-message ${msg.isOwn ? 'own' : 'other'}`;
+                
+                const time = new Date(msg.sentAt).toLocaleTimeString('ja-JP', { 
+                    hour: '2-digit', minute: '2-digit' 
+                });
+                
+                const avatarStyle = msg.senderAvatarUrl 
+                    ? `background-image: url(${msg.senderAvatarUrl})` 
+                    : '';
+                
+                messageDiv.innerHTML = `
+                    ${!msg.isOwn ? `<div class="dm-message-avatar" style="${avatarStyle}"></div>` : ''}
+                    <div class="dm-message-bubble">
+                        <div class="dm-message-content">${escapeHtml(msg.content)}</div>
+                        <div class="dm-message-time">${time}</div>
+                    </div>
+                    ${msg.isOwn ? `<div class="dm-message-avatar" style="${avatarStyle}"></div>` : ''}
+                `;
+                
+                messagesContainer.appendChild(messageDiv);
+            });
+            
+            scrollDMToBottom();
+            console.log('✅ メッセージ履歴の表示完了');
+        }
+        
+        document.getElementById('dmSendBtn').addEventListener('click', sendDM);
+        document.getElementById('dmInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendDM();
+            }
+        });
+        
+        async function sendDM() {
+            const input = document.getElementById('dmInput');
+            const content = input.value.trim();
+            
+            console.log('📤 DM送信試行:', {
+                content: content,
+                conversationId: currentConversationId,
+                connected: isWebSocketConnected
+            });
+            
+            if (!content || !currentConversationId) {
+                console.warn('⚠️ メッセージが空または会話IDがありません');
+                return;
+            }
+            
+            if (stompClient && isWebSocketConnected) {
+                const payload = {
+                    conversationId: currentConversationId,
+                    content: content
+                };
+                console.log('📨 WebSocketで送信:', payload);
+                stompClient.send('/app/dm.send', {}, JSON.stringify(payload));
+                
+                input.value = '';
+                input.style.height = 'auto';
+                console.log('✅ DMメッセージ送信完了');
+            } else {
+                console.error('❌ WebSocket未接続');
+                alert('接続が切断されています');
+            }
+        }
+        
+        function handleIncomingDM(dmData) {
+            console.log('📨 DM受信:', dmData);
+            console.log('現在の会話ID:', currentConversationId, '(型:', typeof currentConversationId + ')');
+            console.log('受信したメッセージの会話ID:', dmData.conversationId, '(型:', typeof dmData.conversationId + ')');
+            console.log('現在のユーザーID:', currentUserId);
+            console.log('送信者ID:', dmData.senderId);
+            
+            // 会話IDを明示的に数値として比較
+            const receivedConversationId = parseInt(dmData.conversationId);
+            const currentConvId = parseInt(currentConversationId);
+            
+            console.log('比較: ', receivedConversationId, '===', currentConvId, '?', receivedConversationId === currentConvId);
+            
+            // DM画面が開いている場合はメッセージを追加
+            if (receivedConversationId === currentConvId) {
+                console.log('✅ 現在の会話のメッセージです。表示します。');
+                const messagesContainer = document.getElementById('dmMessages');
+                if (!messagesContainer) {
+                    console.error('❌ dmMessagesコンテナが見つかりません');
+                    return;
+                }
+                
+                const messageDiv = document.createElement('div');
+                const isOwn = parseInt(dmData.senderId) === parseInt(currentUserId);
+                console.log('自分のメッセージか？:', isOwn);
+                messageDiv.className = `dm-message ${isOwn ? 'own' : 'other'}`;
+                
+                const time = new Date(dmData.sentAt).toLocaleTimeString('ja-JP', { 
+                    hour: '2-digit', minute: '2-digit' 
+                });
+                
+                const avatarStyle = dmData.senderAvatarUrl 
+                    ? `background-image: url(${dmData.senderAvatarUrl})` 
+                    : '';
+                
+                messageDiv.innerHTML = `
+                    ${!isOwn ? `<div class="dm-message-avatar" style="${avatarStyle}"></div>` : ''}
+                    <div class="dm-message-bubble">
+                        <div class="dm-message-content">${escapeHtml(dmData.content)}</div>
+                        <div class="dm-message-time">${time}</div>
+                    </div>
+                    ${isOwn ? `<div class="dm-message-avatar" style="${avatarStyle}"></div>` : ''}
+                `;
+                
+                messagesContainer.appendChild(messageDiv);
+                scrollDMToBottom();
+                console.log('📝 メッセージをDOMに追加しました');
+                
+                if (!isOwn && stompClient && isWebSocketConnected) {
+                    stompClient.send('/app/dm.read', {}, JSON.stringify({
+                        conversationId: currentConversationId
+                    }));
+                }
+            } else {
+                console.log('⚠️ 別の会話のメッセージです。DM画面には表示しません。');
+            }
+            
+            // チャット画面が表示されている場合は会話リストを更新（リアルタイム）
+            const chatSection = document.getElementById('chat-section');
+            if (chatSection && chatSection.classList.contains('active')) {
+                console.log('🔄 チャット画面が表示中なので会話リストを更新します');
+                loadDMConversations();
+            }
+        }
+        
+        function handleDMReadNotification(readData) {
+            console.log('✅ 既読通知:', readData);
+        }
+        
+        function scrollDMToBottom() {
+            const container = document.getElementById('dmMessagesContainer');
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        document.getElementById('backFromDmBtn').addEventListener('click', function() {
+            document.getElementById('dm-section').style.display = 'none';
+            document.getElementById('dm-section').classList.remove('active');
+            
+            const sections = document.querySelectorAll('.app-section');
+            sections.forEach(section => section.classList.remove('active'));
+            document.getElementById('home-section').classList.add('active');
+            
+            // フッターナビゲーションを再表示
+            const bottomNav = document.querySelector('.bottom-nav');
+            if (bottomNav) {
+                bottomNav.style.display = 'flex';
+            }
+            
+            // プロフィールアクションボタンを非表示のまま（元の画面に戻るだけなので）
+            const profileActions = document.getElementById('profileActions');
+            if (profileActions) {
+                profileActions.style.display = 'none';
+            }
+            
+            // 投稿ボタンを再表示
+            const createPostBtn = document.getElementById('btnCreatePost');
+            if (createPostBtn) {
+                createPostBtn.style.display = 'flex';
+            }
+            
+            currentConversationId = null;
+            currentDMUser = null;
+        });
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
     </script>
 </body>

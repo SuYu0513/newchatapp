@@ -1,27 +1,11 @@
-const CACHE_NAME = 'chat-app-v12'; // キャッシュバージョンアップ
+const CACHE_NAME = 'chat-app-v17'; // 軽量化バージョン
 const urlsToCache = [
-  '/',
-  '/login',
-  '/chat',
   '/css/chat-style.css',
   '/css/kawaii-theme.css',
-  '/css/mobile.css',
   '/js/kawaii-theme.js',
-  '/js/pwa.js',
-  '/images/default-avatar.svg',
-  '/images/app-icon.svg',
-  '/images/app-icon-48.svg',
-  '/images/app-icon-72.svg',
-  '/images/app-icon-96.svg',
-  '/images/app-icon-144.svg',
-  '/images/app-icon-180.svg',
-  '/images/app-icon-180.png',
-  '/images/app-icon-192.svg',
   '/images/app-icon-192-enhanced.svg',
-  '/manifest.json',
-  'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
-  'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js'
+  '/images/app-icon.svg',
+  '/manifest.json'
 ];
 
 // Service Worker インストール時
@@ -29,16 +13,31 @@ self.addEventListener('install', function(event) {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(function(cache) {
-        console.log('Service Worker: キャッシュを開いています');
         return cache.addAll(urlsToCache);
+      })
+      .then(function() {
+        return self.skipWaiting();
       })
   );
 });
 
 // キャッシュからレスポンスを返す
 self.addEventListener('fetch', function(event) {
+  const url = new URL(event.request.url);
+  
   // WebSocketリクエストは無視
-  if (event.request.url.includes('/ws')) {
+  if (url.pathname.includes('/ws')) {
+    return;
+  }
+  
+  // APIリクエストは常にネットワークから取得（キャッシュしない）
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(
+      fetch(event.request, { 
+        cache: 'no-store',  // ブラウザキャッシュも無効化
+        redirect: 'follow' 
+      })
+    );
     return;
   }
   
@@ -54,6 +53,29 @@ self.addEventListener('fetch', function(event) {
     return;
   }
   
+  // HTMLページは常にネットワークから取得（Network First戦略）
+  if (event.request.headers.get('accept')?.includes('text/html') || 
+      url.pathname === '/' || 
+      url.pathname === '/login' || 
+      url.pathname === '/chat' ||
+      url.pathname.endsWith('.html')) {
+    event.respondWith(
+      fetch(event.request, { redirect: 'follow' })
+        .then(function(response) {
+          // 成功した場合はレスポンスを返す（キャッシュしない）
+          return response;
+        })
+        .catch(function(error) {
+          // ネットワークエラーの場合はキャッシュから返す（オフライン対応）
+          return caches.match(event.request).then(function(cachedResponse) {
+            return cachedResponse || Response.error();
+          });
+        })
+    );
+    return;
+  }
+  
+  // 静的リソース（CSS/JS/画像）はCache First戦略
   event.respondWith(
     caches.match(event.request)
       .then(function(response) {
@@ -92,11 +114,12 @@ self.addEventListener('activate', function(event) {
       return Promise.all(
         cacheNames.map(function(cacheName) {
           if (cacheName !== CACHE_NAME) {
-            console.log('Service Worker: 古いキャッシュを削除しています', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
+    }).then(function() {
+      return self.clients.claim();
     })
   );
 });

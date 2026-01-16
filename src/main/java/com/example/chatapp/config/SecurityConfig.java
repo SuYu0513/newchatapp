@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 @Configuration
 @EnableWebSecurity
@@ -36,6 +37,11 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
+    }
+
+    @Bean
+    public HttpSessionEventPublisher httpSessionEventPublisher() {
+        return new HttpSessionEventPublisher();
     }
 
     @Bean
@@ -82,6 +88,11 @@ public class SecurityConfig {
                 .logoutSuccessHandler(logoutSuccessHandler)
                 .deleteCookies("JSESSIONID", "remember-me")
                 .permitAll()
+            )
+            .sessionManagement(session -> session
+                .maximumSessions(1)
+                .maxSessionsPreventsLogin(false) // 新しいログインを許可し、古いセッションを無効化
+                .expiredUrl("/login?sessionExpired=true") // セッション無効化時のリダイレクト先
             )
             .csrf(csrf -> csrf.disable()) // 一時的にCSRF保護を無効化
             .headers(headers -> headers

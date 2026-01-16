@@ -15,6 +15,9 @@ public class Post {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
     
+    @Column(name = "user_friend_code")
+    private Integer userFriendCode; // 投稿時のユーザーのフレンドコード（キャッシュ対策）
+    
     @Column(nullable = false, length = 1000)
     private String content;
     
@@ -52,6 +55,14 @@ public class Post {
     
     public void setUser(User user) {
         this.user = user;
+    }
+    
+    public Integer getUserFriendCode() {
+        return userFriendCode;
+    }
+    
+    public void setUserFriendCode(Integer userFriendCode) {
+        this.userFriendCode = userFriendCode;
     }
     
     public String getContent() {

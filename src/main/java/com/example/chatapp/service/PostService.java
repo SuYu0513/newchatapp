@@ -18,6 +18,7 @@ public class PostService {
     @Transactional
     public Post createPost(User user, String content) {
         Post post = new Post(user, content);
+        post.setUserFriendCode(user.getFriendCode()); // フレンドコードを保存
         return postRepository.save(post);
     }
     
@@ -25,6 +26,7 @@ public class PostService {
     public Post createPost(User user, String content, String mediaPath) {
         Post post = new Post(user, content);
         post.setMediaPath(mediaPath);
+        post.setUserFriendCode(user.getFriendCode()); // フレンドコードを保存
         return postRepository.save(post);
     }
     

@@ -4,9 +4,11 @@ import com.example.chatapp.entity.Friendship;
 import com.example.chatapp.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import jakarta.persistence.QueryHint;
 import java.util.List;
 import java.util.Optional;
 
@@ -54,11 +56,13 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
     /**
      * フォロー数をカウント
      */
+    @QueryHints(@QueryHint(name = "org.hibernate.cacheable", value = "false"))
     long countByFollower(User follower);
 
     /**
      * フォロワー数をカウント
      */
+    @QueryHints(@QueryHint(name = "org.hibernate.cacheable", value = "false"))
     long countByFollowing(User following);
 
     /**

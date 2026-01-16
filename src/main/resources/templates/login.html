@@ -68,6 +68,18 @@
                                 <i class="fas fa-exclamation-triangle me-1"></i>
                             </div>
                             
+                            <!-- セッション無効化メッセージ -->
+                            <div th:if="${param.sessionExpired}" class="alert alert-warning fade-in">
+                                <i class="fas fa-info-circle me-1"></i>
+                                別の場所からログインされたため、こちらのセッションは無効になりました
+                            </div>
+                            
+                            <!-- セッション制限エラー（非推奨：現在は使用されていません） -->
+                            <div th:if="${param.sessionLimit}" class="alert alert-danger fade-in">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                そのアカウントは既に使用されています
+                            </div>
+                            
                             <!-- ログアウトメッセージ表示 -->
                             <div th:if="${message}" class="alert alert-info fade-in" th:text="${message}">
                                 <i class="fas fa-info-circle me-1"></i>

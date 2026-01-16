@@ -147,6 +147,31 @@ public class UserProfileService {
         
         return savedProfile;
     }
+    
+    /**
+     * ユーザーの表示名を取得（プロフィールのdisplayNameまたはusername）
+     */
+    public String getDisplayName(User user) {
+        if (user == null) {
+            return "不明なユーザー";
+        }
+        UserProfile profile = getOrCreateProfile(user);
+        if (profile.getDisplayName() != null && !profile.getDisplayName().isEmpty()) {
+            return profile.getDisplayName();
+        }
+        return user.getUsername();
+    }
+    
+    /**
+     * ユーザーのアバターURLを取得
+     */
+    public String getAvatarUrl(User user) {
+        if (user == null) {
+            return null;
+        }
+        UserProfile profile = getOrCreateProfile(user);
+        return profile.getAvatarUrl();
+    }
 
     /**
      * オンラインステータスの更新
