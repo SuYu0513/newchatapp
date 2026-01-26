@@ -60,9 +60,19 @@
                                 <label for="name" class="form-label kawaii-label">
                                     <i class="fas fa-tag me-1 sparkle-hover"></i>ルーム名
                                 </label>
-                                <input type="text" class="form-control kawaii-input" id="name" name="name" 
+                                <input type="text" class="form-control kawaii-input" id="name" name="name"
                                        placeholder="例: プログラミング雑談" required maxlength="100">
                                 <div class="form-text">最大100文字まで</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="description" class="form-label kawaii-label">
+                                    <i class="fas fa-align-left me-1 sparkle-hover"></i>説明文
+                                </label>
+                                <textarea class="form-control kawaii-input" id="description" name="description"
+                                          rows="3" placeholder="例: プログラミングに関する雑談や質問、情報共有の場です"
+                                          maxlength="500"></textarea>
+                                <div class="form-text">最大500文字まで（任意）</div>
                             </div>
 
                             <div class="mb-3">
@@ -71,20 +81,33 @@
                                 </label>
                                 <select class="form-select kawaii-select" id="type" name="type" required>
                                     <option value="GROUP" selected>
-                                        <i class="fas fa-users"></i>グループチャット（誰でも参加可能）
-                                    </option>
-                                    <option value="PRIVATE">
-                                        <i class="fas fa-lock"></i>プライベートチャット（招待制）
+                                        <i class="fas fa-users"></i>グループチャット
                                     </option>
                                 </select>
-                                <div class="form-text">
-                                    <div class="d-flex align-items-center mb-1">
-                                        <i class="fas fa-users text-success me-2"></i>
-                                        <strong>グループチャット:</strong> 誰でも自由に参加できます
-                                    </div>
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-lock text-info me-2"></i>
-                                        <strong>プライベートチャット:</strong> 作成者が招待したユーザーのみ参加可能
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label kawaii-label">
+                                    <i class="fas fa-globe me-1 sparkle-hover"></i>公開設定
+                                </label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="isPublic" id="isPublicTrue" value="true" checked>
+                                    <label class="form-check-label" for="isPublicTrue">
+                                        <i class="fas fa-globe text-success me-1"></i>
+                                        <strong>パブリック</strong> - 誰でも検索・参加可能
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="isPublic" id="isPublicFalse" value="false">
+                                    <label class="form-check-label" for="isPublicFalse">
+                                        <i class="fas fa-lock text-info me-1"></i>
+                                        <strong>プライベート</strong> - 招待されたユーザーのみ参加可能
+                                    </label>
+                                </div>
+                                <div class="form-text mt-2">
+                                    <div class="alert alert-info small mb-0">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        プライベートルームは検索結果に表示されず、招待リンクでのみ参加できます
                                     </div>
                                 </div>
                             </div>

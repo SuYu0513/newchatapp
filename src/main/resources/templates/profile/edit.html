@@ -201,19 +201,22 @@
                             
                             <!-- 居住地 -->
                             <div class="mb-3">
-                                <label for="location" class="form-label">
+                                <label for="locationSelectorBtn" class="form-label">
                                     <i class="fas fa-map-marker-alt me-1"></i>居住地
                                 </label>
-                                <input type="text" 
-                                       class="form-control" 
+                                <input type="hidden" 
                                        id="location" 
                                        name="location" 
-                                       th:value="${profile.location}"
-                                       maxlength="100"
-                                       placeholder="例: 東京都, 日本">
-                                <div class="character-counter" id="locationCounter">
-                                    <span id="locationCount">0</span>/100
-                                </div>
+                                       th:value="${profile.location}">
+                                <button type="button" 
+                                        class="form-control text-start location-selector-btn" 
+                                        id="locationSelectorBtn"
+                                        onclick="openLocationSelector()">
+                                    <span id="locationDisplay" th:text="${profile.location != null and !profile.location.isEmpty() ? profile.location : '居住地を選択してください'}">
+                                        居住地を選択してください
+                                    </span>
+                                    <i class="fas fa-chevron-right float-end mt-1"></i>
+                                </button>
                             </div>
                             
                             <!-- ステータスメッセージ -->
@@ -282,7 +285,7 @@
                             
                             <!-- 興味・関心 -->
                             <div class="mb-4">
-                                <label class="form-label">
+                                <label for="interestsInput" class="form-label">
                                     <i class="fas fa-heart me-1"></i>興味・関心
                                 </label>
                                 <div class="tag-input-area mb-2">
@@ -302,7 +305,7 @@
                             
                             <!-- 趣味 -->
                             <div class="mb-4">
-                                <label class="form-label">
+                                <label for="hobbiesInput" class="form-label">
                                     <i class="fas fa-gamepad me-1"></i>趣味
                                 </label>
                                 <div class="tag-input-area mb-2">
@@ -322,7 +325,7 @@
                             
                             <!-- 好きなもの -->
                             <div class="mb-4">
-                                <label class="form-label">
+                                <label for="favoriteThingsInput" class="form-label">
                                     <i class="fas fa-star me-1"></i>好きなもの
                                 </label>
                                 <div class="tag-input-area mb-2">
@@ -337,12 +340,12 @@
                                 </div>
                                 <div id="favoriteThingsTags" class="tags-container"></div>
                                 <div id="favoriteThingsCounter" class="tag-counter">0 / 30</div>
-                                <input type="hidden" id="favoriteThings" name="favoriteThings" th:value="${profile.favoriteThings}">
+                                <input type="hidden" id="favoriteThings" name="favoriteThings" th:value="${profile.favoriteThings != null ? profile.favoriteThings : ''}">
                             </div>
                             
                             <!-- 話せる言語 -->
                             <div class="mb-4">
-                                <label class="form-label">
+                                <label for="languagesInput" class="form-label">
                                     <i class="fas fa-globe me-1"></i>話せる言語
                                 </label>
                                 <div class="tag-input-area mb-2">
@@ -362,7 +365,7 @@
                             
                             <!-- 性格特性 -->
                             <div class="mb-4">
-                                <label class="form-label">
+                                <label for="personalityTraitsInput" class="form-label">
                                     <i class="fas fa-user-circle me-1"></i>性格特性
                                 </label>
                                 <div class="tag-input-area mb-2">
@@ -555,7 +558,6 @@
             // 各フィールドの文字数カウンター初期化
             updateCharacterCounter('displayName', 'displayNameCounter', 50);
             updateCharacterCounter('bio', 'bioCounter', 500);
-            updateCharacterCounter('location', 'locationCounter', 100);
             updateCharacterCounter('status', 'statusCounter', 100);
             
             // フォーム送信前のバリデーション
@@ -685,6 +687,752 @@
             // 初期化
             loadExistingTags();
         });
+        
+        // ========================================
+        // 居住地選択機能
+        // ========================================
+        
+        // 都道府県データ
+        const prefectures = [
+            '北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
+            '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県',
+            '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県',
+            '岐阜県', '静岡県', '愛知県', '三重県',
+            '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県',
+            '鳥取県', '島根県', '岡山県', '広島県', '山口県',
+            '徳島県', '香川県', '愛媛県', '高知県',
+            '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
+        ];
+        
+        // 五十音データ
+        const kanaGroups = ['あ', 'か', 'さ', 'た', 'な', 'は', 'ま', 'や', 'ら', 'わ'];
+        
+        // 市区町村データ
+        const cities = {
+            '北海道': {
+                'あ': ['旭川市', '芦別市', '網走市', '石狩市', '岩見沢市'],
+                'か': ['歌志内市'],
+                'さ': ['札幌市'],
+                'た': ['伊達市', '千歳市'],
+                'な': ['名寄市', '根室市'],
+                'は': ['函館市', '美唄市', '深川市', '富良野市', '北広島市', '北見市'],
+                'ま': ['三笠市', '室蘭市', '紋別市'],
+                'や': ['夕張市'],
+                'ら': ['留萌市'],
+                'わ': ['稚内市']
+            },
+            '青森県': {
+                'あ': ['青森市'],
+                'か': [],
+                'さ': [],
+                'た': ['つがる市', '十和田市'],
+                'な': [],
+                'は': ['八戸市', '平川市', '弘前市'],
+                'ま': ['むつ市', '三沢市'],
+                'や': [],
+                'ら': [],
+                'わ': []
+            },
+            '岩手県': {
+                'あ': [],
+                'か': ['釜石市'],
+                'さ': [],
+                'た': ['遠野市'],
+                'な': [],
+                'は': ['花巻市', '一関市', '二戸市', '北上市'],
+                'ま': ['宮古市', '盛岡市'],
+                'や': [],
+                'ら': [],
+                'わ': []
+            },
+            '宮城県': {
+                'あ': [],
+                'か': ['角田市'],
+                'さ': ['仙台市', '白石市'],
+                'た': ['多賀城市'],
+                'な': ['名取市'],
+                'は': ['東松島市'],
+                'ま': [],
+                'や': [],
+                'ら': [],
+                'わ': []
+            },
+            '秋田県': {
+                'あ': ['秋田市'],
+                'か': ['鹿角市'],
+                'さ': [],
+                'た': ['大仙市'],
+                'な': ['にかほ市', '能代市'],
+                'は': [],
+                'ま': [],
+                'や': ['湯沢市', '由利本荘市', '横手市'],
+                'ら': [],
+                'わ': []
+            },
+            '山形県': {
+                'あ': [],
+                'か': [],
+                'さ': ['酒田市'],
+                'た': ['鶴岡市', '天童市'],
+                'な': ['長井市', '南陽市'],
+                'は': [],
+                'ま': [],
+                'や': ['山形市', '米沢市'],
+                'ら': [],
+                'わ': []
+            },
+            '福島県': {
+                'あ': ['会津若松市'],
+                'か': ['喜多方市', '郡山市'],
+                'さ': ['相馬市', '須賀川市'],
+                'た': ['伊達市'],
+                'な': [],
+                'は': ['白河市', '福島市'],
+                'ま': [],
+                'や': [],
+                'ら': [],
+                'わ': []
+            },
+            '茨城県': {
+                'あ': ['石岡市', '潮来市', '稲敷市'],
+                'か': ['笠間市', '鹿嶋市', 'かすみがうら市', '神栖市', '北茨城市'],
+                'さ': ['桜川市', '下妻市'],
+                'た': ['高萩市', '筑西市', 'つくば市', '土浦市'],
+                'な': ['那珂市', '常陸太田市', '常陸大宮市'],
+                'は': ['日立市', 'ひたちなか市'],
+                'ま': ['水戸市', '守谷市'],
+                'や': ['結城市', '龍ケ崎市'],
+                'ら': [],
+                'わ': []
+            },
+            '栃木県': {
+                'あ': ['足利市'],
+                'か': ['鹿沼市'],
+                'さ': ['さくら市', '佐野市', '小山市'],
+                'た': ['栃木市', '那須塩原市'],
+                'な': ['日光市'],
+                'は': [],
+                'ま': ['真岡市'],
+                'や': ['矢板市'],
+                'ら': [],
+                'わ': []
+            },
+            '群馬県': {
+                'あ': ['安中市'],
+                'か': [],
+                'さ': [],
+                'た': ['高崎市', '館林市', '太田市'],
+                'な': ['中之条町', '沼田市'],
+                'は': ['藤岡市'],
+                'ま': ['前橋市', 'みどり市'],
+                'や': [],
+                'ら': [],
+                'わ': []
+            },
+            '埼玉県': {
+                'あ': ['上尾市', '朝霞市'],
+                'か': ['春日部市', '加須市', '川口市', '川越市', '北本市', '行田市', '久喜市', '熊谷市'],
+                'さ': ['さいたま市', '坂戸市', '幸手市', '狭山市', '草加市'],
+                'た': ['秩父市', '鶴ヶ島市'],
+                'な': ['新座市'],
+                'は': ['蓮田市', '鳩ヶ谷市', '羽生市', '飯能市', '東松山市', '深谷市', '富士見市', 'ふじみ野市', '本庄市'],
+                'ま': ['三郷市'],
+                'や': ['八潮市', '吉川市'],
+                'ら': [],
+                'わ': ['和光市', '蕨市']
+            },
+            '千葉県': {
+                'あ': ['旭市', '我孫子市'],
+                'か': ['鎌ケ谷市', '鴨川市', '木更津市', '君津市'],
+                'さ': ['佐倉市', '山武市', '白井市'],
+                'た': ['館山市', '千葉市', '銚子市'],
+                'な': ['流山市', '習志野市', '成田市', '野田市'],
+                'は': ['富津市', '船橋市'],
+                'ま': ['松戸市', '南房総市'],
+                'や': ['八街市', '八千代市', '四街道市'],
+                'ら': [],
+                'わ': []
+            },
+            '東京都': {
+                'あ': ['足立区', '荒川区', '板橋区', '江戸川区', '大田区', '青梅市', '昭島市', '稲城市', 'あきる野市'],
+                'か': ['葛飾区', '北区', '江東区', '国分寺市', '国立市', '小金井市', '小平市', '清瀬市', '狛江市'],
+                'さ': ['品川区', '渋谷区', '新宿区', '杉並区', '墨田区', '世田谷区'],
+                'た': ['台東区', '立川市', '多摩市', '調布市', '千代田区', '中央区', '町田市'],
+                'な': ['中野区', '西東京市'],
+                'は': ['八王子市', '東久留米市', '東村山市', '東大和市', '日野市', '府中市', '福生市', '文京区'],
+                'ま': ['三鷹市', '港区', '武蔵野市', '武蔵村山市', '目黒区'],
+                'や': [],
+                'ら': ['練馬区'],
+                'わ': []
+            },
+            '神奈川県': {
+                'あ': ['厚木市', '綾瀬市', '伊勢原市', '海老名市'],
+                'か': ['鎌倉市', '川崎市', '相模原市', '座間市'],
+                'さ': [],
+                'た': ['茅ヶ崎市'],
+                'な': ['南足柄市'],
+                'は': ['平塚市', '藤沢市'],
+                'ま': ['三浦市', '南足柄市'],
+                'や': ['大和市', '横須賀市', '横浜市'],
+                'ら': [],
+                'わ': []
+            },
+            '新潟県': {
+                'あ': ['阿賀野市'],
+                'か': ['柏崎市', '加茂市'],
+                'さ': ['佐渡市', '三条市', '新発田市'],
+                'た': ['胎内市', '燕市', '十日町市'],
+                'な': ['長岡市', '新潟市'],
+                'は': [],
+                'ま': ['見附市', '南魚沼市', '妙高市', '村上市'],
+                'や': [],
+                'ら': [],
+                'わ': []
+            },
+            '富山県': {
+                'あ': [],
+                'か': [],
+                'さ': ['砺波市'],
+                'た': ['高岡市', '富山市'],
+                'な': ['滑川市', '南砺市'],
+                'は': ['氷見市'],
+                'ま': [],
+                'や': [],
+                'ら': [],
+                'わ': []
+            },
+            '石川県': {
+                'あ': [],
+                'か': ['加賀市', '金沢市', 'かほく市'],
+                'さ': [],
+                'た': [],
+                'な': ['七尾市', '能美市', '野々市市'],
+                'は': ['白山市'],
+                'ま': [],
+                'や': [],
+                'ら': [],
+                'わ': ['輪島市']
+            },
+            '福井県': {
+                'あ': ['あわら市'],
+                'か': [],
+                'さ': ['坂井市', '鯖江市'],
+                'た': [],
+                'な': [],
+                'は': [],
+                'ま': [],
+                'や': [],
+                'ら': [],
+                'わ': []
+            },
+            '山梨県': {
+                'あ': [],
+                'か': ['甲斐市', '甲府市'],
+                'さ': [],
+                'た': ['中央市'],
+                'な': ['南アルプス市'],
+                'は': ['笛吹市', '富士吉田市'],
+                'ま': [],
+                'や': ['山梨市'],
+                'ら': [],
+                'わ': []
+            },
+            '長野県': {
+                'あ': ['安曇野市', '飯田市', '飯山市', '伊那市'],
+                'か': ['上田市'],
+                'さ': ['佐久市', '塩尻市', '須坂市', '諏訪市'],
+                'た': ['千曲市', '茅野市', '東御市'],
+                'な': ['長野市', '中野市'],
+                'は': [],
+                'ま': ['松本市'],
+                'や': [],
+                'ら': [],
+                'わ': []
+            },
+            '岐阜県': {
+                'あ': [],
+                'か': ['各務原市', '可児市', '岐阜市'],
+                'さ': [],
+                'た': ['高山市', '多治見市', '土岐市'],
+                'な': ['中津川市'],
+                'は': ['羽島市'],
+                'ま': ['瑞浪市', '瑞穂市', '美濃加茂市', '美濃市', '本巣市'],
+                'や': [],
+                'ら': [],
+                'わ': []
+            },
+            '静岡県': {
+                'あ': ['熱海市', '伊東市', '伊豆市', '伊豆の国市', '磐田市'],
+                'か': ['掛川市', '菊川市', '湖西市', '御前崎市', '御殿場市'],
+                'さ': ['島田市', '清水市', '裾野市'],
+                'た': [],
+                'な': ['沼津市'],
+                'は': ['浜松市', '袋井市', '藤枝市', '富士市', '富士宮市'],
+                'ま': ['牧之原市', '三島市'],
+                'や': ['焼津市'],
+                'ら': [],
+                'わ': []
+            },
+            '愛知県': {
+                'あ': ['愛西市', '阿久比町', '安城市', '一宮市', '稲沢市', '犬山市', '岩倉市', '大府市', '岡崎市'],
+                'か': ['春日井市', '蟹江町', '蒲郡市', '刈谷市', '北名古屋市', '清須市'],
+                'さ': ['新城市', '瀬戸市'],
+                'た': ['高浜市', '武豊町', '田原市', '知多市', '知立市', '津島市', '東海市', '常滑市', '豊明市', '豊川市', '豊田市', '豊橋市'],
+                'な': ['名古屋市', '西尾市', '日進市'],
+                'は': ['半田市', '碧南市'],
+                'ま': ['みよし市'],
+                'や': ['弥富市'],
+                'ら': [],
+                'わ': []
+            },
+            '三重県': {
+                'あ': ['伊賀市', '伊勢市', 'いなべ市'],
+                'か': ['亀山市', '桑名市'],
+                'さ': ['鈴鹿市'],
+                'た': ['鳥羽市'],
+                'な': ['名張市'],
+                'は': [],
+                'ま': ['松阪市'],
+                'や': ['四日市市'],
+                'ら': [],
+                'わ': ['尾鷲市']
+            },
+            '滋賀県': {
+                'あ': [],
+                'か': ['甲賀市', '湖南市'],
+                'さ': [],
+                'た': ['高島市'],
+                'な': ['長浜市'],
+                'は': ['東近江市', '彦根市'],
+                'ま': ['守山市'],
+                'や': ['野洲市'],
+                'ら': [],
+                'わ': []
+            },
+            '京都府': {
+                'あ': [],
+                'か': ['亀岡市', '木津川市', '京田辺市', '京都市', '京丹後市'],
+                'さ': [],
+                'た': [],
+                'な': ['長岡京市', '南丹市'],
+                'は': [],
+                'ま': ['舞鶴市', '宮津市', '向日市'],
+                'や': ['八幡市'],
+                'ら': [],
+                'わ': []
+            },
+            '大阪府': {
+                'あ': ['池田市', '泉大津市', '泉佐野市', '和泉市', '茨木市', '大阪市', '大阪狭山市'],
+                'か': ['貝塚市', '柏原市', '交野市', '門真市', '河内長野市', '岸和田市'],
+                'さ': ['堺市', '四條畷市', '吹田市', '摂津市', '泉南市'],
+                'た': ['高石市', '高槻市', '大東市', '豊中市', '富田林市'],
+                'は': ['羽曳野市', '阪南市', '東大阪市', '枚方市', '藤井寺市'],
+                'ま': ['松原市', '箕面市', '守口市'],
+                'や': ['八尾市'],
+                'ら': [],
+                'わ': []
+            },
+            '兵庫県': {
+                'あ': ['相生市', '明石市', '赤穂市', '朝来市', '芦屋市', '尼崎市', '淡路市', '伊丹市'],
+                'か': ['加古川市', '加西市', '加東市', '川西市', '神戸市'],
+                'さ': ['篠山市', '佐用町', '三田市', '宍粟市'],
+                'た': ['高砂市', '宝塚市', '丹波市', '豊岡市'],
+                'な': ['西宮市', '西脇市'],
+                'は': ['播磨町', '姫路市'],
+                'ま': ['三木市', '南あわじ市'],
+                'や': ['養父市'],
+                'ら': [],
+                'わ': []
+            },
+            '奈良県': {
+                'あ': [],
+                'か': ['香芝市', '橿原市', '葛城市'],
+                'さ': ['桜井市'],
+                'た': ['天理市'],
+                'な': ['奈良市'],
+                'は': [],
+                'ま': [],
+                'や': ['大和郡山市', '大和高田市'],
+                'ら': [],
+                'わ': []
+            },
+            '和歌山県': {
+                'あ': ['有田市'],
+                'か': ['海南市'],
+                'さ': [],
+                'た': ['田辺市'],
+                'な': [],
+                'は': ['橋本市'],
+                'ま': [],
+                'や': [],
+                'ら': [],
+                'わ': ['和歌山市']
+            },
+            '鳥取県': {
+                'あ': [],
+                'か': [],
+                'さ': ['境港市'],
+                'た': ['鳥取市'],
+                'な': [],
+                'は': [],
+                'ま': ['米子市'],
+                'や': ['倉吉市'],
+                'ら': [],
+                'わ': []
+            },
+            '島根県': {
+                'あ': ['安来市', '出雲市'],
+                'か': [],
+                'さ': [],
+                'た': [],
+                'な': [],
+                'は': ['浜田市'],
+                'ま': ['益田市', '松江市'],
+                'や': [],
+                'ら': [],
+                'わ': []
+            },
+            '岡山県': {
+                'あ': ['赤磐市', '浅口市'],
+                'か': ['笠岡市'],
+                'さ': ['瀬戸内市', '総社市'],
+                'た': ['高梁市', '玉野市'],
+                'な': [],
+                'は': ['備前市'],
+                'ま': ['真庭市'],
+                'や': [],
+                'ら': [],
+                'わ': []
+            },
+            '広島県': {
+                'あ': [],
+                'か': ['呉市'],
+                'さ': [],
+                'た': ['竹原市', '廿日市市'],
+                'な': [],
+                'は': ['東広島市', '広島市', '福山市'],
+                'ま': ['三原市', '三次市'],
+                'や': [],
+                'ら': [],
+                'わ': []
+            },
+            '山口県': {
+                'あ': [],
+                'か': [],
+                'さ': ['下関市', '周南市'],
+                'た': [],
+                'な': ['長門市'],
+                'は': ['萩市', '光市', '防府市'],
+                'ま': [],
+                'や': ['山口市', '柳井市'],
+                'ら': [],
+                'わ': ['岩国市']
+            },
+            '徳島県': {
+                'あ': ['阿南市', '阿波市'],
+                'か': [],
+                'さ': [],
+                'た': [],
+                'な': ['鳴門市'],
+                'は': [],
+                'ま': ['美馬市', '三好市'],
+                'や': [],
+                'ら': [],
+                'わ': []
+            },
+            '香川県': {
+                'あ': [],
+                'か': ['観音寺市'],
+                'さ': ['坂出市', 'さぬき市', '善通寺市'],
+                'た': ['高松市'],
+                'な': [],
+                'は': [],
+                'ま': ['丸亀市', '三豊市'],
+                'や': [],
+                'ら': [],
+                'わ': []
+            },
+            '愛媛県': {
+                'あ': [],
+                'か': [],
+                'さ': ['西条市'],
+                'た': ['東温市'],
+                'な': ['新居浜市'],
+                'は': [],
+                'ま': ['松山市'],
+                'や': ['八幡浜市'],
+                'ら': [],
+                'わ': []
+            },
+            '高知県': {
+                'あ': ['安芸市'],
+                'か': ['香美市', '香南市'],
+                'さ': ['宿毛市', '須崎市'],
+                'た': ['土佐市', '土佐清水市'],
+                'な': ['南国市'],
+                'は': [],
+                'ま': ['室戸市'],
+                'や': [],
+                'ら': [],
+                'わ': []
+            },
+            '福岡県': {
+                'あ': ['朝倉市', '飯塚市', 'うきは市', '大川市', '大野城市', '大牟田市', '小郡市'],
+                'か': ['春日市', '嘉麻市', '北九州市', '古賀市', '久留米市'],
+                'さ': [],
+                'た': ['太宰府市', '筑後市', '筑紫野市'],
+                'な': ['直方市', '中間市', '那珂川市'],
+                'は': ['福岡市', '福津市', '豊前市'],
+                'ま': ['みやま市', '宮若市', '宗像市'],
+                'や': ['柳川市', '八女市', '行橋市'],
+                'ら': [],
+                'わ': []
+            },
+            '佐賀県': {
+                'あ': ['伊万里市'],
+                'か': ['鹿島市', '嬉野市', '神埼市', '唐津市'],
+                'さ': ['佐賀市'],
+                'た': ['多久市', '武雄市'],
+                'な': [],
+                'は': [],
+                'ま': [],
+                'や': [],
+                'ら': [],
+                'わ': []
+            },
+            '長崎県': {
+                'あ': [],
+                'か': [],
+                'さ': ['佐世保市', '島原市', '諫早市'],
+                'た': ['対馬市'],
+                'な': ['長崎市'],
+                'は': ['平戸市'],
+                'ま': ['松浦市', '南島原市'],
+                'や': [],
+                'ら': [],
+                'わ': []
+            },
+            '熊本県': {
+                'あ': ['天草市', '荒尾市', '阿蘇市'],
+                'か': ['上天草市', '菊池市', '合志市', '熊本市'],
+                'さ': [],
+                'た': ['玉名市'],
+                'な': [],
+                'は': ['人吉市'],
+                'ま': [],
+                'や': ['山鹿市', '八代市'],
+                'ら': [],
+                'わ': []
+            },
+            '大分県': {
+                'あ': [],
+                'か': ['杵築市'],
+                'さ': ['佐伯市'],
+                'た': ['竹田市', '津久見市'],
+                'な': ['中津市'],
+                'は': ['日田市', '豊後大野市', '豊後高田市', '別府市'],
+                'ま': [],
+                'や': ['由布市'],
+                'ら': [],
+                'わ': []
+            },
+            '宮崎県': {
+                'あ': [],
+                'か': ['串間市', '小林市'],
+                'さ': ['西都市'],
+                'た': ['高千穂町'],
+                'な': ['日南市', '延岡市'],
+                'は': [],
+                'ま': ['都城市', '宮崎市'],
+                'や': [],
+                'ら': [],
+                'わ': []
+            },
+            '鹿児島県': {
+                'あ': ['阿久根市', '奄美市'],
+                'か': ['鹿児島市', '鹿屋市', '霧島市'],
+                'さ': ['薩摩川内市', '志布志市'],
+                'た': [],
+                'な': ['南九州市', '南さつま市'],
+                'は': [],
+                'ま': ['枕崎市'],
+                'や': [],
+                'ら': [],
+                'わ': []
+            },
+            '沖縄県': {
+                'あ': ['石垣市', '糸満市', '浦添市', '沖縄市'],
+                'か': [],
+                'さ': [],
+                'た': ['豊見城市'],
+                'な': ['名護市', '那覇市', '南城市'],
+                'は': [],
+                'ま': ['宮古島市'],
+                'や': [],
+                'ら': [],
+                'わ': ['宜野湾市']
+            }
+        };
+        
+        let currentStep = 'prefecture'; // 'prefecture', 'kana', 'city'
+        let selectedPrefecture = '';
+        let selectedKana = '';
+        
+        function openLocationSelector() {
+            currentStep = 'prefecture';
+            showPrefectureSelection();
+            
+            // モーダルを表示
+            const modal = new bootstrap.Modal(document.getElementById('locationModal'));
+            modal.show();
+        }
+        
+        function showPrefectureSelection() {
+            const title = document.getElementById('locationModalTitle');
+            const body = document.getElementById('locationModalBody');
+            const backBtn = document.getElementById('locationBackBtn');
+            
+            title.textContent = '都道府県を選択';
+            backBtn.style.display = 'none';
+            
+            body.innerHTML = '<div class="location-list"></div>';
+            const list = body.querySelector('.location-list');
+            
+            prefectures.forEach(pref => {
+                const item = document.createElement('div');
+                item.className = 'location-item';
+                item.textContent = pref;
+                item.onclick = () => selectPrefecture(pref);
+                list.appendChild(item);
+            });
+        }
+        
+        function selectPrefecture(pref) {
+            selectedPrefecture = pref;
+            currentStep = 'kana';
+            
+            // 都道府県のみで終了するオプション
+            if (!cities[pref]) {
+                // 市区町村データがない場合は都道府県のみで確定
+                setLocation(pref);
+                return;
+            }
+            
+            showKanaSelection();
+        }
+        
+        function showKanaSelection() {
+            const title = document.getElementById('locationModalTitle');
+            const body = document.getElementById('locationModalBody');
+            const backBtn = document.getElementById('locationBackBtn');
+            
+            title.textContent = `${selectedPrefecture} - 五十音を選択`;
+            backBtn.style.display = 'block';
+            
+            body.innerHTML = `
+                <div class="mb-3">
+                    <button class="btn btn-outline-primary btn-sm w-100" onclick="setLocation('${selectedPrefecture}')">
+                        <i class="fas fa-check me-2"></i>${selectedPrefecture}のみで確定
+                    </button>
+                </div>
+                <div class="location-list kana-list"></div>
+            `;
+            const list = body.querySelector('.location-list');
+            
+            kanaGroups.forEach(kana => {
+                const item = document.createElement('div');
+                item.className = 'location-item kana-item';
+                item.innerHTML = `<span>${kana}行</span>`;
+                item.onclick = () => selectKana(kana);
+                list.appendChild(item);
+            });
+        }
+        
+        function selectKana(kana) {
+            selectedKana = kana;
+            currentStep = 'city';
+            showCitySelection();
+        }
+        
+        function showCitySelection() {
+            const title = document.getElementById('locationModalTitle');
+            const body = document.getElementById('locationModalBody');
+            const backBtn = document.getElementById('locationBackBtn');
+            
+            title.textContent = `${selectedPrefecture} - ${selectedKana}行`;
+            backBtn.style.display = 'block';
+            
+            const citiesData = cities[selectedPrefecture] && cities[selectedPrefecture][selectedKana] ? cities[selectedPrefecture][selectedKana] : [];
+            
+            if (citiesData.length === 0) {
+                body.innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        ${selectedKana}行で始まる市区町村が登録されていません
+                    </div>
+                    <button class="btn btn-outline-primary w-100" onclick="setLocation('${selectedPrefecture}')">
+                        <i class="fas fa-check me-2"></i>${selectedPrefecture}のみで確定
+                    </button>
+                `;
+                return;
+            }
+            
+            body.innerHTML = '<div class="location-list"></div>';
+            const list = body.querySelector('.location-list');
+            
+            citiesData.forEach(city => {
+                const item = document.createElement('div');
+                item.className = 'location-item';
+                item.textContent = city;
+                item.onclick = () => setLocation(`${selectedPrefecture} ${city}`);
+                list.appendChild(item);
+            });
+        }
+        
+        function goBackLocationSelection() {
+            if (currentStep === 'city') {
+                currentStep = 'kana';
+                showKanaSelection();
+            } else if (currentStep === 'kana') {
+                currentStep = 'prefecture';
+                showPrefectureSelection();
+            }
+        }
+        
+        function setLocation(location) {
+            document.getElementById('location').value = location;
+            document.getElementById('locationDisplay').textContent = location;
+            
+            // モーダルを閉じる
+            const modal = bootstrap.Modal.getInstance(document.getElementById('locationModal'));
+            modal.hide();
+        }
+        
+        // グローバル関数として定義
+        window.openLocationSelector = openLocationSelector;
+        window.goBackLocationSelection = goBackLocationSelection;
     </script>
+    
+    <!-- 居住地選択モーダル -->
+    <div class="modal fade" id="locationModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" 
+                            class="btn btn-sm btn-outline-secondary me-2" 
+                            id="locationBackBtn"
+                            onclick="goBackLocationSelection()"
+                            style="display: none;">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h5 class="modal-title" id="locationModalTitle">都道府県を選択</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="locationModalBody">
+                    <!-- 動的に生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

@@ -59,25 +59,32 @@ public class HomeController {
             System.out.println("認証済みユーザー: " + username);
             model.addAttribute("username", username);
             model.addAttribute("posts", postService.getAllPosts());
-            
+
+            // ユーザーをメインルームに自動参加させる
+            try {
+                chatRoomService.ensureUserInMainRoom(username);
+            } catch (Exception e) {
+                System.err.println("メインルーム自動参加エラー: " + e.getMessage());
+            }
+
             // ユーザー情報を追加（マイページ用）
             Optional<User> userOpt = userService.findByUsername(username);
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
                 model.addAttribute("user", user);
-                
+
                 // プロフィール情報を追加
                 Optional<UserProfile> profileOpt = userProfileRepository.findByUser(user);
                 if (profileOpt.isPresent()) {
                     model.addAttribute("profile", profileOpt.get());
                 }
-                
+
                 // フォロー/フォロワー/フレンド数を追加
                 model.addAttribute("followingCount", friendshipService.getFollowingCount(user));
                 model.addAttribute("followerCount", friendshipService.getFollowersCount(user));
                 model.addAttribute("friendCount", friendshipService.getFriends(user).size());
             }
-            
+
             // ルーム情報も追加
             model.addAttribute("userRooms", chatRoomService.getUserChatRooms(username));
             model.addAttribute("availableRooms", chatRoomService.getAvailablePublicRooms(username));

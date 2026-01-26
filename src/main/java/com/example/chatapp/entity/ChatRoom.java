@@ -20,14 +20,20 @@ public class ChatRoom {
     @Size(max = 100, message = "ルーム名は100文字以下で入力してください")
     @Column(length = 100)
     private String name;
-    
+
+    @Column(length = 500)
+    private String description;
+
     @NotNull(message = "チャットルームのタイプは必須です")
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 20)
     private ChatRoomType type;
     
+    @Column(name = "is_public", nullable = false)
+    private boolean isPublic = true; // デフォルトはパブリック
+    
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by", nullable = false)
+    @JoinColumn(name = "created_by", nullable = true)
     private User createdBy;
     
     @CreationTimestamp
@@ -78,13 +84,29 @@ public class ChatRoom {
     public void setName(String name) {
         this.name = name;
     }
-    
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public ChatRoomType getType() {
         return type;
     }
     
     public void setType(ChatRoomType type) {
         this.type = type;
+    }
+    
+    public boolean isPublic() {
+        return isPublic;
+    }
+    
+    public void setPublic(boolean isPublic) {
+        this.isPublic = isPublic;
     }
     
     public User getCreatedBy() {

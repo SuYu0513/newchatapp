@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chat-app-v17'; // 軽量化バージョン
+const CACHE_NAME = 'chat-app-v19'; // スワイプUI修正
 const urlsToCache = [
   '/css/chat-style.css',
   '/css/kawaii-theme.css',
@@ -31,11 +31,13 @@ self.addEventListener('fetch', function(event) {
   }
   
   // APIリクエストは常にネットワークから取得（キャッシュしない）
-  if (url.pathname.startsWith('/api/')) {
+  if (url.pathname.startsWith('/api/') ||
+      url.pathname.includes('/api/') ||
+      url.pathname.startsWith('/rooms/')) {
     event.respondWith(
-      fetch(event.request, { 
+      fetch(event.request, {
         cache: 'no-store',  // ブラウザキャッシュも無効化
-        redirect: 'follow' 
+        redirect: 'follow'
       })
     );
     return;
@@ -54,9 +56,10 @@ self.addEventListener('fetch', function(event) {
   }
   
   // HTMLページは常にネットワークから取得（Network First戦略）
-  if (event.request.headers.get('accept')?.includes('text/html') || 
-      url.pathname === '/' || 
-      url.pathname === '/login' || 
+  if (event.request.headers.get('accept')?.includes('text/html') ||
+      url.pathname === '/' ||
+      url.pathname === '/login' ||
+      url.pathname === '/home' ||
       url.pathname === '/chat' ||
       url.pathname.endsWith('.html')) {
     event.respondWith(

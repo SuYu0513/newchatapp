@@ -19,7 +19,8 @@
 </head>
 <body>
     <!-- メインコンテナ -->
-    <div class="app-container" th:attr="data-current-user-id=${user != null ? user.id : ''}">
+    <div class="app-container"
+         th:attr="data-current-user-id=${user != null ? user.id : ''}, data-current-username=${username != null ? username : ''}">
         
         <!-- ホーム画面 -->
         <section class="app-section active" id="home-section">
@@ -143,68 +144,139 @@
         <!-- ルーム画面 -->
         <section class="app-section" id="room-section">
             <div class="section-content">
-                <div class="rooms-header">
-                    <h1>🚪 ルーム</h1>
-                    <div class="header-tabs">
-                        <button class="tab-btn active" data-tab="joined">
-                            <i class="fas fa-door-open me-1"></i>参加中
-                        </button>
-                        <button class="tab-btn" data-tab="available">
-                            <i class="fas fa-search me-1"></i>参加可能
-                        </button>
-                    </div>
+                <div class="chat-list-header">
+                    <button class="tab-btn active" data-tab="joined-rooms">参加中</button>
+                    <button class="tab-btn" data-tab="available-rooms">参加可能</button>
+                    <button class="tab-btn" id="btnRoomRequests">
+                        申請
+                        <span class="badge" id="requestBadge" style="display: none;">0</span>
+                    </button>
+                    <button class="tab-btn" id="btnRoomApprovals">
+                        承認
+                        <span class="badge" id="approvalBadge" style="display: none;">0</span>
+                    </button>
+                    <button class="tab-btn" id="btnRoomInvite">
+                        招待
+                    </button>
                 </div>
                 
                 <!-- 参加中のルーム -->
-                <div class="tab-content active" id="joined-tab">
-                    <div class="rooms-list">
-                        <div th:if="${userRooms == null or userRooms.isEmpty()}" class="no-rooms">
-                            <i class="fas fa-door-closed fa-3x mb-3 text-muted"></i>
-                            <p class="text-muted">参加しているルームがありません</p>
-                        </div>
-                        
-                        <div th:each="room : ${userRooms}" class="room-card" th:onclick="'location.href=\'/chat?room=' + ${room.id} + '\''">
-                            <div class="room-icon">
-                                <i class="fas fa-users"></i>
-                            </div>
-                            <div class="room-info">
-                                <h3 class="room-name" th:text="${room.name}">ルーム名</h3>
-                                <p class="room-type" th:text="${room.type.name() == 'GROUP' ? 'グループ' : 'プライベート'}">タイプ</p>
-                            </div>
-                            <div class="room-arrow">
-                                <i class="fas fa-chevron-right"></i>
-                            </div>
+                <div class="tab-content active" id="joined-rooms-tab">
+                    <div class="chat-list room-list">
+                        <div class="no-chats" style="display: none;">
+                            <i class="fas fa-door-open"></i>
+                            <p>参加中のルームがありません</p>
                         </div>
                     </div>
                 </div>
                 
                 <!-- 参加可能なルーム -->
-                <div class="tab-content" id="available-tab">
-                    <div class="rooms-list">
-                        <div th:if="${availableRooms == null or availableRooms.isEmpty()}" class="no-rooms">
-                            <i class="fas fa-inbox fa-3x mb-3 text-muted"></i>
-                            <p class="text-muted">参加可能なルームがありません</p>
-                        </div>
-                        
-                        <div th:each="room : ${availableRooms}" class="room-card">
-                            <div class="room-icon">
-                                <i class="fas fa-door-open"></i>
-                            </div>
-                            <div class="room-info">
-                                <h3 class="room-name" th:text="${room.name}">ルーム名</h3>
-                                <p class="room-type" th:text="${room.type.name() == 'GROUP' ? 'グループ' : 'プライベート'}">タイプ</p>
-                            </div>
-                            <button class="btn-join" th:data-room-id="${room.id}">
-                                <i class="fas fa-sign-in-alt me-1"></i>参加
-                            </button>
+                <div class="tab-content" id="available-rooms-tab">
+                    <div class="chat-list room-list">
+                        <div class="no-chats" style="display: none;">
+                            <i class="fas fa-door-open"></i>
+                            <p>参加可能なルームがありません</p>
                         </div>
                     </div>
                 </div>
-                
+
+                <!-- 申請中のルーム -->
+                <div class="tab-content" id="requests-tab">
+                    <div class="chat-list room-list">
+                        <div class="no-chats" style="display: none;">
+                            <i class="fas fa-inbox"></i>
+                            <p>申請中のルームがありません</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 承認待ちのルーム -->
+                <div class="tab-content" id="approvals-tab">
+                    <div class="chat-list room-list">
+                        <div class="no-chats" style="display: none;">
+                            <i class="fas fa-user-check"></i>
+                            <p>承認待ちのルームがありません</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 招待 -->
+                <div class="tab-content" id="invite-tab">
+                    <div class="chat-list room-list">
+                        <div class="no-chats" style="display: none;">
+                            <i class="fas fa-user-plus"></i>
+                            <p>招待機能は準備中です</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- ルーム作成ボタン -->
-                <a href="/rooms/create" class="btn-create-room">
+                <button class="btn-create-room" id="btnCreateRoom">
                     <i class="fas fa-plus"></i>
-                </a>
+                </button>
+            </div>
+        </section>
+
+        <!-- ルーム作成画面 -->
+        <section class="app-section" id="create-room-section">
+            <div class="section-content">
+                <div class="create-post-header">
+                    <button class="btn-back" id="btnBackFromRoom">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h1>ルーム作成</h1>
+                    <div></div>
+                </div>
+
+                <form id="createRoomForm" class="create-post-form">
+                    <div class="form-group">
+                        <label for="roomName" class="form-label">
+                            <i class="fas fa-tag me-2"></i>ルーム名
+                        </label>
+                        <input type="text" id="roomName" name="name" class="form-input"
+                               placeholder="例: プログラミング雑談" required maxlength="100">
+                        <small class="form-text">最大100文字まで</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="roomDescription" class="form-label">
+                            <i class="fas fa-align-left me-2"></i>説明文
+                        </label>
+                        <textarea id="roomDescription" name="description" class="form-textarea"
+                                  rows="3" placeholder="例: プログラミングに関する雑談や質問、情報共有の場です"
+                                  maxlength="500"></textarea>
+                        <small class="form-text">最大500文字まで（任意）</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-globe me-2"></i>公開設定
+                        </label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="isPublic" value="true" checked>
+                                <span><i class="fas fa-globe text-success me-1"></i>パブリック - 誰でも検索・参加可能</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="isPublic" value="false">
+                                <span><i class="fas fa-lock text-info me-1"></i>プライベート - 招待されたユーザーのみ参加可能</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-user-plus me-2"></i>友達を招待（任意）
+                        </label>
+                        <div id="friendSelectionContainer" class="friend-selection-container">
+                            <p class="loading-text">友達リストを読み込み中...</p>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-plus me-2"></i>ルームを作成
+                    </button>
+                </form>
             </div>
         </section>
         
@@ -303,7 +375,73 @@
                 </div>
             </div>
         </section>
-        
+
+        <!-- ルームチャット画面 -->
+        <section class="app-section" id="room-chat-section" style="display: none;">
+            <div class="section-content">
+                <!-- ルームチャットヘッダー -->
+                <div class="dm-header">
+                    <button class="back-btn" id="backFromRoomChatBtn">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <div class="dm-user-info" id="roomChatInfo" style="cursor: pointer;" title="メンバー一覧を表示">
+                        <div class="dm-avatar">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                            <span class="dm-username" id="roomChatName"></span>
+                            <span style="font-size: 0.75rem; color: #6c757d;" id="roomChatMemberCount"></span>
+                        </div>
+                        <i class="fas fa-chevron-right" style="margin-left: auto; color: #6c757d; font-size: 0.9rem;"></i>
+                    </div>
+                </div>
+
+                <!-- ルームメッセージエリア -->
+                <div class="dm-messages-container" id="roomMessagesContainer">
+                    <div class="dm-messages" id="roomMessages">
+                        <!-- メッセージがここに表示されます -->
+                    </div>
+                </div>
+
+                <!-- ルーム入力エリア -->
+                <div class="dm-input-area">
+                    <textarea
+                        class="dm-input"
+                        id="roomInput"
+                        placeholder="メッセージを入力..."
+                        rows="1"></textarea>
+                    <button class="dm-send-btn" id="roomSendBtn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ルームメンバー一覧パネル -->
+        <section class="app-section" id="room-members-section" style="display: none;">
+            <div class="section-content">
+                <div class="dm-header">
+                    <button class="back-btn" id="backFromMembersBtn">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <div class="dm-user-info">
+                        <div class="dm-avatar">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                            <span class="dm-username" id="membersPanelRoomName">メンバー一覧</span>
+                            <span style="font-size: 0.75rem; color: #6c757d;" id="membersPanelCount"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="members-list-container" style="padding: 1rem; overflow-y: auto; flex: 1;">
+                    <div id="membersList" class="members-list">
+                        <!-- メンバーがここに表示されます -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- マイページ画面 -->
         <section class="app-section" id="mypage-section">
             <div class="section-content">
@@ -421,7 +559,7 @@
             </div>
             <div class="slide-menu-avatar default-avatar" 
                  th:if="${profile == null or profile.avatarUrl == null or profile.avatarUrl.isEmpty()}"
-                 th:attr="data-username=${user.username}">
+                 th:attr="data-username=${user != null ? user.username : username}">
                 <i class="fas fa-user"></i>
             </div>
         </div>
@@ -450,6 +588,26 @@
     <button class="btn-create-post" id="btnCreatePost">
         <i class="fas fa-plus"></i>
     </button>
+    
+    <!-- マッチング種類ヘッダー（マッチ画面のみ表示） -->
+    <div class="match-header" id="matchHeader" style="display: none;">
+        <button class="match-type-btn" data-match-type="nearby">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>近所</span>
+        </button>
+        <button class="match-type-btn" data-match-type="hobby">
+            <i class="fas fa-heart"></i>
+            <span>趣味</span>
+        </button>
+        <button class="match-type-btn" data-match-type="age">
+            <i class="fas fa-calendar-alt"></i>
+            <span>年齢</span>
+        </button>
+        <button class="match-type-btn" data-match-type="destiny">
+            <i class="fas fa-star"></i>
+            <span>運命</span>
+        </button>
+    </div>
     
     <!-- フッターナビゲーション -->
     <footer class="bottom-nav">
@@ -504,19 +662,62 @@
         // WebSocket接続
         let stompClient = null;
         let isWebSocketConnected = false;
-        
+
         // 現在のユーザーID（グローバル変数）
         let currentUserId = null;
-        
+
+        // グローバル変数として現在のユーザー名を保存
+        window.currentUser = null;
+        window.stompClient = null;
+        window.requestedRoomIds = new Set(); // 申請中のルームIDを保持
+
+        // ユーザー変更検知とキャッシュクリア
+        function checkUserChange() {
+            const appContainer = document.querySelector('.app-container');
+            const currentUsername = appContainer?.dataset.currentUsername;
+            const storedUsername = sessionStorage.getItem('chatapp_current_user');
+
+            console.log('🔍 ユーザー変更チェック - 現在:', currentUsername, ', 保存:', storedUsername);
+
+            if (storedUsername && storedUsername !== currentUsername) {
+                console.log('⚠️ ユーザーが変更されました！キャッシュをクリアします');
+                // キャッシュをクリア
+                window.requestedRoomIds = new Set();
+                sessionStorage.clear();
+                // Service Workerのキャッシュもクリア
+                if ('caches' in window) {
+                    caches.keys().then(names => {
+                        names.forEach(name => {
+                            caches.delete(name);
+                            console.log('🗑️ キャッシュ削除:', name);
+                        });
+                    });
+                }
+            }
+
+            // 現在のユーザー名を保存
+            if (currentUsername) {
+                sessionStorage.setItem('chatapp_current_user', currentUsername);
+            }
+        }
+
         // 初期化関数（ページ読み込み時に実行）
         function initializeApp() {
-            // ユーザーIDを取得
+            // ユーザー変更をチェック
+            checkUserChange();
+
+            // ユーザーIDとユーザー名を取得
             const appContainer = document.querySelector('.app-container');
             if (appContainer && appContainer.dataset.currentUserId) {
                 currentUserId = parseInt(appContainer.dataset.currentUserId);
                 console.log('👤 現在のユーザーID:', currentUserId);
             } else {
                 console.error('❌ ユーザーIDが取得できません');
+            }
+
+            if (appContainer && appContainer.dataset.currentUsername) {
+                window.currentUser = appContainer.dataset.currentUsername;
+                console.log('👤 現在のユーザー名:', window.currentUser);
             }
             
             // WebSocket接続を開始
@@ -528,6 +729,14 @@
                     connectWebSocket();
                 }
             }, 60000); // 60秒ごと
+
+            // 初期データをロード
+            console.log('📋 初期データをロード中...');
+            loadJoinedRooms();
+            loadDMConversations();
+
+            // 申請バッジを更新（バックグラウンドで）
+            loadRequestedRooms().catch(err => console.error('申請数取得エラー:', err));
         }
         
         function connectWebSocket() {
@@ -536,10 +745,11 @@
             
             const socket = new SockJS('/ws');
             stompClient = Stomp.over(socket);
-            
+            window.stompClient = stompClient;  // グローバルに保存
+
             // デバッグログを無効化（本番環境では有効にすると情報が多すぎる）
             stompClient.debug = null;
-            
+
             stompClient.connect({}, function(frame) {
                 isWebSocketConnected = true;
                 console.log('✅ WebSocket接続成功');
@@ -580,7 +790,18 @@
                         console.error('❌ DM既読通知のパースエラー:', error);
                     }
                 });
-                
+
+                // ルーム更新の購読
+                stompClient.subscribe('/topic/rooms', function(message) {
+                    console.log('🏠 ルーム更新を受信:', message.body);
+                    try {
+                        const roomData = JSON.parse(message.body);
+                        handleRoomUpdate(roomData);
+                    } catch (error) {
+                        console.error('❌ ルーム更新のパースエラー:', error);
+                    }
+                });
+
                 console.log('📡 WebSocketサブスクリプション完了');
             }, function(error) {
                 isWebSocketConnected = false;
@@ -886,6 +1107,7 @@
         const navItems = document.querySelectorAll('.nav-item');
         const sections = document.querySelectorAll('.app-section');
         const createPostBtn = document.getElementById('btnCreatePost');
+        const matchHeader = document.getElementById('matchHeader');
         
         navItems.forEach(item => {
             item.addEventListener('click', () => {
@@ -906,9 +1128,21 @@
                     createPostBtn.style.display = 'none';
                 }
                 
+                // マッチ画面の場合のみマッチヘッダーを表示
+                if (sectionName === 'match') {
+                    matchHeader.style.display = 'flex';
+                } else {
+                    matchHeader.style.display = 'none';
+                }
+                
                 // チャット画面に遷移した時にDM会話リストを読み込む
                 if (sectionName === 'chat') {
                     loadDMConversations();
+                }
+                
+                // ルーム画面に遷移した時にルームリストを読み込む
+                if (sectionName === 'room') {
+                    loadJoinedRooms();
                 }
             });
         });
@@ -924,7 +1158,9 @@
                 
                 btn.classList.add('active');
                 const targetTab = document.getElementById(tabName + '-tab');
-                targetTab.classList.add('active');
+                if (targetTab) {
+                    targetTab.classList.add('active');
+                }
                 
                 // 友達タブに切り替えた場合は友達のDMを読み込む
                 if (tabName === 'friends-chat') {
@@ -934,23 +1170,91 @@
         });
         
         // ルームタブ切り替え
-        const roomTabBtns = document.querySelectorAll('.room-list-header .tab-btn');
-        const tabContents = document.querySelectorAll('.room-list-header + .tab-content, .room-list-header + .tab-content + .tab-content');
+        const roomTabBtns = document.querySelectorAll('#room-section .chat-list-header .tab-btn');
         
-        roomTabBtns.forEach(btn => {
+        if (roomTabBtns.length > 0) {
+            console.log('ルームタブボタンが見つかりました:', roomTabBtns.length, '個');
+            roomTabBtns.forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const tabName = btn.dataset.tab;
+                    console.log('ルームタブクリック:', tabName);
+                    
+                    roomTabBtns.forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('#room-section .tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    btn.classList.add('active');
+                    const targetContent = document.getElementById(tabName + '-tab');
+                    if (targetContent) {
+                        targetContent.classList.add('active');
+                        console.log('タブコンテンツを表示:', tabName);
+                    }
+                    
+                    // ルームリストを読み込む
+                    if (tabName === 'joined-rooms') {
+                        await loadJoinedRooms();
+                    } else if (tabName === 'available-rooms') {
+                        await loadAvailableRooms();
+                    }
+                });
+            });
+        } else {
+            console.warn('⚠️ ルームタブボタンが見つかりません');
+        }
+        
+        // マッチ種類ボタン切り替え
+        const matchTypeBtns = document.querySelectorAll('.match-type-btn');
+        
+        matchTypeBtns.forEach(btn => {
             btn.addEventListener('click', () => {
-                const tabName = btn.dataset.tab;
+                const matchType = btn.dataset.matchType;
                 
-                roomTabBtns.forEach(b => b.classList.remove('active'));
-                tabContents.forEach(c => c.classList.remove('active'));
+                // 全てのボタンからactiveを削除
+                matchTypeBtns.forEach(b => b.classList.remove('active'));
                 
+                // クリックされたボタンをアクティブに
                 btn.classList.add('active');
-                const targetContent = document.getElementById(tabName + '-tab');
-                if (targetContent) {
-                    targetContent.classList.add('active');
-                }
+                
+                // マッチング処理をここに実装（例：ローディング表示やマッチング開始）
+                console.log(`マッチングタイプ: ${matchType}`);
+                startMatching(matchType);
             });
         });
+        
+        // マッチング開始関数（各マッチタイプに応じた処理）
+        function startMatching(matchType) {
+            const matchSection = document.getElementById('match-section');
+            const welcomeSection = matchSection.querySelector('.welcome-section');
+            
+            switch(matchType) {
+                case 'nearby':
+                    welcomeSection.innerHTML = `
+                        <h1>📍 近所でマッチング</h1>
+                        <p class="text-white-50">近くにいるユーザーを探しています...</p>
+                    `;
+                    break;
+                case 'hobby':
+                    welcomeSection.innerHTML = `
+                        <h1>❤️ 趣味でマッチング</h1>
+                        <p class="text-white-50">共通の趣味を持つユーザーを探しています...</p>
+                    `;
+                    break;
+                case 'age':
+                    welcomeSection.innerHTML = `
+                        <h1>📅 年齢でマッチング</h1>
+                        <p class="text-white-50">同年代のユーザーを探しています...</p>
+                    `;
+                    break;
+                case 'destiny':
+                    welcomeSection.innerHTML = `
+                        <h1>⭐ 運命のマッチング</h1>
+                        <p class="text-white-50">運命の相手を探しています...</p>
+                    `;
+                    break;
+            }
+            
+            // TODO: 実際のマッチング処理をここに実装
+            // 例: APIを呼び出して適切なユーザーを検索し、結果を表示
+        }
         
         // 参加ボタン
         document.querySelectorAll('.btn-join').forEach(btn => {
@@ -1000,7 +1304,135 @@
                 navItems[0].classList.add('active');
             });
         }
-        
+
+        // ルーム作成ボタン - ルーム作成画面へ遷移
+        const btnCreateRoom = document.getElementById('btnCreateRoom');
+        const btnBackFromRoom = document.getElementById('btnBackFromRoom');
+        const createRoomSection = document.getElementById('create-room-section');
+        const roomSection = document.getElementById('room-section');
+
+        if (btnCreateRoom) {
+            btnCreateRoom.addEventListener('click', async () => {
+                sections.forEach(section => section.classList.remove('active'));
+                createRoomSection.classList.add('active');
+                // 友達リストを読み込み
+                await loadFriendsForInvite();
+            });
+        }
+
+        if (btnBackFromRoom) {
+            btnBackFromRoom.addEventListener('click', () => {
+                createRoomSection.classList.remove('active');
+                roomSection.classList.add('active');
+                navItems.forEach(nav => nav.classList.remove('active'));
+                navItems[1].classList.add('active'); // ルームタブをアクティブに
+            });
+        }
+
+        // ルームタブの切り替え（5つ全て）- キャッシュを使わず常に最新データを取得
+        const roomTabButtons = document.querySelectorAll('#room-section .tab-btn');
+        const roomTabContents = document.querySelectorAll('#room-section .tab-content');
+
+        roomTabButtons.forEach(button => {
+            button.addEventListener('click', async () => {
+                // 全てのタブボタンとコンテンツの active を削除
+                roomTabButtons.forEach(btn => btn.classList.remove('active'));
+                roomTabContents.forEach(content => content.classList.remove('active'));
+
+                // クリックされたタブボタンを active に
+                button.classList.add('active');
+
+                // data-tab属性があれば対応するコンテンツを表示
+                const targetTab = button.getAttribute('data-tab');
+                if (targetTab) {
+                    const targetContent = document.getElementById(targetTab + '-tab');
+                    if (targetContent) {
+                        targetContent.classList.add('active');
+                    }
+                }
+
+                // タブに応じてデータを再読み込み（キャッシュクリア効果）
+                console.log('🔄 ルームタブ切り替え - データ再読み込み:', targetTab || button.id);
+
+                if (targetTab === 'joined-rooms') {
+                    await loadJoinedRooms();
+                } else if (targetTab === 'available-rooms') {
+                    await loadAvailableRooms();
+                } else if (button.id === 'btnRoomRequests') {
+                    console.log('📥 申請タブがクリックされました');
+                    document.getElementById('requests-tab').classList.add('active');
+                    await loadRequestedRooms();
+                } else if (button.id === 'btnRoomApprovals') {
+                    console.log('✅ 承認タブがクリックされました');
+                    document.getElementById('approvals-tab').classList.add('active');
+                    await loadPendingApprovals();
+                } else if (button.id === 'btnRoomInvite') {
+                    console.log('👥 招待タブがクリックされました');
+                    document.getElementById('invite-tab').classList.add('active');
+                    // TODO: 招待機能
+                }
+            });
+        });
+
+        // ルーム作成フォーム送信
+        const createRoomForm = document.getElementById('createRoomForm');
+        if (createRoomForm) {
+            createRoomForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const formData = new FormData(createRoomForm);
+
+                // 選択された友達のusernameを取得
+                const selectedFriends = Array.from(document.querySelectorAll('.friend-checkbox:checked'))
+                    .map(checkbox => checkbox.dataset.username);
+
+                const roomData = {
+                    name: formData.get('name'),
+                    description: formData.get('description'),
+                    type: 'GROUP',
+                    isPublic: formData.get('isPublic') === 'true',
+                    invitedUsernames: selectedFriends.join(',')  // カンマ区切りで送信
+                };
+
+                try {
+                    console.log('🚀 ルーム作成開始:', roomData);
+                    const response = await fetch('/rooms/api/create', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: new URLSearchParams(roomData)
+                    });
+
+                    const data = await response.json();
+                    console.log('📦 ルーム作成レスポンス:', data);
+
+                    if (data.success) {
+                        // フォームをリセット
+                        createRoomForm.reset();
+                        // チェックボックスもリセット
+                        document.querySelectorAll('.friend-checkbox').forEach(cb => cb.checked = false);
+
+                        // ルーム画面に戻る
+                        createRoomSection.classList.remove('active');
+                        roomSection.classList.add('active');
+
+                        // ルームリストを再読み込み
+                        await loadJoinedRooms();
+
+                        alert('ルームを作成しました!');
+                        console.log('✅ ルーム作成成功 - ID:', data.roomId);
+                    } else {
+                        alert(data.message || 'ルームの作成に失敗しました');
+                        console.error('❌ ルーム作成失敗:', data.message);
+                    }
+                } catch (error) {
+                    console.error('❌ ルーム作成エラー:', error);
+                    alert('ルームの作成中にエラーが発生しました');
+                }
+            });
+        }
+
         // 文字カウンター
         const postContent = document.getElementById('postContent');
         const charCounter = document.getElementById('charCounter');
@@ -1437,6 +1869,1170 @@
             }
         }
         
+        // ========================================
+        // ルーム機能
+        // ========================================
+        
+        // 参加中のルームリストを読み込む
+        async function loadJoinedRooms() {
+            try {
+                console.log('📋 参加中のルームリストを読み込み中...');
+                const response = await fetch('/rooms/api/joined', {
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+
+                if (!response.ok) {
+                    console.error('❌ API呼び出し失敗:', response.status);
+                    return;
+                }
+
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    console.error('❌ JSONではないレスポンスを受信:', contentType);
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    console.error('❌ ルームリスト取得失敗:', data.message);
+                    return;
+                }
+
+                const rooms = data.rooms || [];
+                console.log('✅ 参加中のルーム取得:', rooms.length, '件');
+
+                displayRoomList(rooms, 'joined-rooms-tab');
+            } catch (error) {
+                console.error('❌ 参加中のルームリスト読み込みエラー:', error);
+            }
+        }
+        
+        // 参加可能なルームリストを読み込む
+        async function loadAvailableRooms() {
+            try {
+                // 先に申請済みルームIDを取得（表示時に必要）
+                await fetchRequestedRoomIds();
+
+                console.log('📋 参加可能なルームリストを読み込み中...');
+                const response = await fetch('/rooms/api/available', {
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+
+                if (!response.ok) {
+                    console.error('❌ API呼び出し失敗:', response.status);
+                    return;
+                }
+
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    console.error('❌ JSONではないレスポンスを受信:', contentType);
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    console.error('❌ ルームリスト取得失敗:', data.message);
+                    return;
+                }
+
+                const rooms = data.rooms || [];
+                console.log('✅ 参加可能なルーム取得:', rooms.length, '件');
+
+                displayAvailableRoomList(rooms, 'available-rooms-tab');
+            } catch (error) {
+                console.error('❌ 参加可能なルームリスト読み込みエラー:', error);
+            }
+        }
+
+        // 申請済みルームIDのみを取得（UIは更新しない）
+        async function fetchRequestedRoomIds() {
+            try {
+                const response = await fetch('/rooms/api/my-requests', {
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+
+                if (!response.ok) return;
+
+                const data = await response.json();
+                if (data.success) {
+                    const rooms = data.rooms || [];
+                    window.requestedRoomIds = new Set(rooms.map(room => room.id));
+                }
+            } catch (error) {
+                console.error('❌ 申請済みルームID取得エラー:', error);
+            }
+        }
+
+        // 申請中のルームリストを読み込む
+        async function loadRequestedRooms() {
+            try {
+                console.log('📋 申請中のルームリストを読み込み中...');
+                const response = await fetch('/rooms/api/my-requests', {
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+
+                if (!response.ok) {
+                    console.error('❌ API呼び出し失敗:', response.status);
+                    return;
+                }
+
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    console.error('❌ JSONではないレスポンスを受信:', contentType);
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    console.error('❌ 申請中のルームリスト取得失敗:', data.message);
+                    return;
+                }
+
+                const rooms = data.rooms || [];
+                console.log('✅ 申請中のルーム取得:', rooms.length, '件');
+
+                // 申請中のルームIDをグローバル変数に保存
+                window.requestedRoomIds = new Set(rooms.map(room => room.id));
+                console.log('📝 申請中のルームID:', [...window.requestedRoomIds]);
+
+                displayRequestedRoomList(rooms);
+
+                // バッジを更新
+                updateRequestBadge(rooms.length);
+            } catch (error) {
+                console.error('❌ 申請中のルームリスト読み込みエラー:', error);
+            }
+        }
+
+        // ルーム作成時の友達招待リストを読み込む
+        async function loadFriendsForInvite() {
+            const container = document.getElementById('friendSelectionContainer');
+            if (!container) return;
+
+            try {
+                console.log('👥 友達リストを読み込み中...');
+                const response = await fetch('/friends/api/list', {
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    container.innerHTML = '<p class="error-text">友達リストの読み込みに失敗しました</p>';
+                    return;
+                }
+
+                const friends = await response.json();
+                console.log('✅ 友達取得:', friends.length, '人');
+
+                if (friends.length === 0) {
+                    container.innerHTML = '<p class="empty-text">友達がいません</p>';
+                    return;
+                }
+
+                // 友達リストを表示
+                let html = '<div class="friend-select-list">';
+                friends.forEach(friend => {
+                    const avatarUrl = friend.avatarUrl || '/images/default-avatar.png';
+                    html += `
+                        <label class="friend-select-item">
+                            <input type="checkbox" class="friend-checkbox" data-username="${escapeHtml(friend.username)}">
+                            <img src="${escapeHtml(avatarUrl)}" class="friend-avatar" alt="${escapeHtml(friend.displayName)}">
+                            <span class="friend-name">${escapeHtml(friend.displayName)}</span>
+                        </label>
+                    `;
+                });
+                html += '</div>';
+                container.innerHTML = html;
+
+            } catch (error) {
+                console.error('❌ 友達リスト読み込みエラー:', error);
+                container.innerHTML = '<p class="error-text">エラーが発生しました</p>';
+            }
+        }
+
+        // 申請中のルームリストを表示
+        function displayRequestedRoomList(rooms) {
+            const requestsTab = document.getElementById('requests-tab');
+            const roomListContainer = requestsTab.querySelector('.room-list');
+            const noRoomsElement = roomListContainer.querySelector('.no-chats');
+
+            if (!roomListContainer) {
+                console.error('❌ 申請中ルームリストコンテナが見つかりません');
+                return;
+            }
+
+            // 既存のルームアイテムを削除
+            const existingItems = roomListContainer.querySelectorAll('.chat-item');
+            existingItems.forEach(item => item.remove());
+
+            if (rooms.length === 0) {
+                if (noRoomsElement) {
+                    noRoomsElement.style.display = 'block';
+                }
+                console.log('📋 申請中のルームなし');
+                return;
+            }
+
+            if (noRoomsElement) {
+                noRoomsElement.style.display = 'none';
+            }
+
+            console.log('📋 申請中のルームを表示:', rooms.length, '件');
+
+            rooms.forEach(room => {
+                const roomItem = document.createElement('div');
+                roomItem.className = 'chat-item';
+                roomItem.dataset.roomId = room.id;
+
+                // 最終メッセージ時刻のフォーマット
+                const lastActivityTime = room.lastActivityAt ? formatTime(new Date(room.lastActivityAt)) : '';
+
+                // ルーム説明の最初の1行だけを取得（最大10文字）
+                let descriptionPreview = room.description || '';
+                if (descriptionPreview) {
+                    const firstLine = descriptionPreview.split('\n')[0];
+                    descriptionPreview = firstLine.length > 10 ? firstLine.substring(0, 10) + '...' : firstLine;
+                } else {
+                    descriptionPreview = '説明なし';
+                }
+
+                // 参加人数の表示
+                const memberCountText = `メンバー${room.memberCount || 0}人`;
+
+                // ルームアイコン（グループチャット風）
+                const roomIcon = '<div class="chat-avatar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"><i class="fas fa-users"></i></div>';
+
+                roomItem.innerHTML = `
+                    ${roomIcon}
+                    <div class="chat-info" style="flex: 1;">
+                        <div class="chat-name-row">
+                            <span class="chat-name">${escapeHtml(room.name)} <span style="font-size: 0.85em; color: #888;">(${memberCountText})</span></span>
+                            <span class="chat-time">${lastActivityTime}</span>
+                        </div>
+                        <div class="chat-message-preview">
+                            ${escapeHtml(descriptionPreview)}
+                        </div>
+                    </div>
+                    <button class="cancel-request-btn" data-room-id="${room.id}" data-room-name="${escapeHtml(room.name)}" style="margin-left: 10px; white-space: nowrap; background: #ffa500; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; font-weight: 500;">
+                        承認待ち
+                    </button>
+                `;
+
+                // キャンセルボタンのイベント
+                const cancelBtn = roomItem.querySelector('.cancel-request-btn');
+                cancelBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const roomId = cancelBtn.dataset.roomId;
+                    const roomName = cancelBtn.dataset.roomName;
+
+                    if (confirm(`「${roomName}」への参加申請をキャンセルしますか?`)) {
+                        await cancelJoinRequest(roomId);
+                    }
+                });
+
+                roomListContainer.appendChild(roomItem);
+            });
+        }
+
+        // 申請バッジを更新
+        function updateRequestBadge(count) {
+            const badge = document.getElementById('requestBadge');
+            if (badge) {
+                if (count > 0) {
+                    badge.textContent = count;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+
+        // ルーム参加申請をキャンセル
+        async function cancelJoinRequest(roomId) {
+            try {
+                console.log('🚫 ルーム参加申請をキャンセル中... roomId:', roomId);
+                const response = await fetch(`/rooms/${roomId}/cancel-request`, {
+                    method: 'DELETE',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    console.error('❌ 申請キャンセル失敗:', response.status);
+                    alert('申請のキャンセルに失敗しました');
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log('✅ 申請をキャンセルしました');
+                    alert(data.message || '参加申請をキャンセルしました');
+
+                    // 申請中のルームリストを再読み込み
+                    await loadRequestedRooms();
+                } else {
+                    console.error('❌ 申請キャンセル失敗:', data.message);
+                    alert(data.message || '申請のキャンセルに失敗しました');
+                }
+            } catch (error) {
+                console.error('❌ 申請キャンセルエラー:', error);
+                alert('申請のキャンセル中にエラーが発生しました');
+            }
+        }
+
+        // 承認待ち一覧を読み込む
+        async function loadPendingApprovals() {
+            try {
+                console.log('📋 承認待ち一覧を読み込み中...');
+                const response = await fetch('/rooms/api/pending-approvals', {
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+
+                if (!response.ok) {
+                    console.error('❌ API呼び出し失敗:', response.status);
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    console.error('❌ 承認待ち一覧取得失敗:', data.message);
+                    return;
+                }
+
+                const approvals = data.approvals || [];
+                console.log('✅ 承認待ち一覧取得:', approvals.length, '件');
+
+                displayApprovalsList(approvals);
+                updateApprovalBadge(approvals.length);
+            } catch (error) {
+                console.error('❌ 承認待ち一覧読み込みエラー:', error);
+            }
+        }
+
+        // 承認待ち一覧を表示
+        function displayApprovalsList(approvals) {
+            const approvalsTab = document.getElementById('approvals-tab');
+            const roomListContainer = approvalsTab.querySelector('.room-list');
+            const noRoomsElement = roomListContainer.querySelector('.no-chats');
+
+            if (!roomListContainer) {
+                console.error('❌ 承認待ちリストコンテナが見つかりません');
+                return;
+            }
+
+            // 既存のアイテムを削除
+            const existingItems = roomListContainer.querySelectorAll('.chat-item');
+            existingItems.forEach(item => item.remove());
+
+            if (approvals.length === 0) {
+                if (noRoomsElement) {
+                    noRoomsElement.style.display = 'block';
+                }
+                console.log('📋 承認待ちなし');
+                return;
+            }
+
+            if (noRoomsElement) {
+                noRoomsElement.style.display = 'none';
+            }
+
+            console.log('📋 承認待ちを表示:', approvals.length, '件');
+
+            approvals.forEach(approval => {
+                const approvalItem = document.createElement('div');
+                approvalItem.className = 'chat-item';
+                approvalItem.dataset.requestId = approval.requestId;
+
+                // 自己紹介文の最初の1行を取得（最大10文字）
+                let bioPreview = approval.bio || '';
+                if (bioPreview) {
+                    const firstLine = bioPreview.split('\n')[0];
+                    bioPreview = firstLine.length > 10 ? firstLine.substring(0, 10) + '...' : firstLine;
+                } else {
+                    bioPreview = '自己紹介なし';
+                }
+
+                // ユーザーアバター
+                const avatarUrl = approval.avatarUrl || '/images/default-avatar.png';
+                const userAvatar = `<div class="chat-avatar"><img src="${escapeHtml(avatarUrl)}" alt="avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"></div>`;
+
+                approvalItem.innerHTML = `
+                    ${userAvatar}
+                    <div class="chat-info" style="flex: 1;">
+                        <div class="chat-name-row">
+                            <span class="chat-name">${escapeHtml(approval.displayName)}</span>
+                            <span class="chat-time" style="font-size: 0.75rem; color: #888;">${escapeHtml(approval.roomName)}</span>
+                        </div>
+                        <div class="chat-message-preview">
+                            ${escapeHtml(bioPreview)}
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-left: 10px;">
+                        <button class="approve-btn" data-room-id="${approval.roomId}" data-username="${escapeHtml(approval.username)}" style="white-space: nowrap; background: #4CAF50; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; font-weight: 500;">
+                            承認
+                        </button>
+                        <button class="reject-btn" data-room-id="${approval.roomId}" data-username="${escapeHtml(approval.username)}" style="white-space: nowrap; background: #f44336; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; font-weight: 500;">
+                            拒否
+                        </button>
+                    </div>
+                `;
+
+                // 承認ボタンのイベント
+                const approveBtn = approvalItem.querySelector('.approve-btn');
+                approveBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const roomId = approveBtn.dataset.roomId;
+                    const username = approveBtn.dataset.username;
+
+                    if (confirm(`${approval.displayName}さんの申請を承認しますか?`)) {
+                        await approveJoinRequest(roomId, username);
+                    }
+                });
+
+                // 拒否ボタンのイベント
+                const rejectBtn = approvalItem.querySelector('.reject-btn');
+                rejectBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const roomId = rejectBtn.dataset.roomId;
+                    const username = rejectBtn.dataset.username;
+
+                    if (confirm(`${approval.displayName}さんの申請を拒否しますか?`)) {
+                        await rejectJoinRequest(roomId, username);
+                    }
+                });
+
+                roomListContainer.appendChild(approvalItem);
+            });
+        }
+
+        // 承認バッジを更新
+        function updateApprovalBadge(count) {
+            const badge = document.getElementById('approvalBadge');
+            if (badge) {
+                if (count > 0) {
+                    badge.textContent = count;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+
+        // 参加申請を承認
+        async function approveJoinRequest(roomId, username) {
+            try {
+                console.log('✅ 参加申請を承認中... roomId:', roomId, 'username:', username);
+                const response = await fetch(`/rooms/${roomId}/approve-request?username=${encodeURIComponent(username)}`, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    console.error('❌ 承認失敗:', response.status);
+                    alert('承認に失敗しました');
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log('✅ 申請を承認しました');
+                    alert(data.message || '参加申請を承認しました');
+
+                    // 承認待ち一覧を再読み込み
+                    await loadPendingApprovals();
+                } else {
+                    console.error('❌ 承認失敗:', data.message);
+                    alert(data.message || '承認に失敗しました');
+                }
+            } catch (error) {
+                console.error('❌ 承認エラー:', error);
+                alert('承認中にエラーが発生しました');
+            }
+        }
+
+        // 参加申請を拒否
+        async function rejectJoinRequest(roomId, username) {
+            try {
+                console.log('❌ 参加申請を拒否中... roomId:', roomId, 'username:', username);
+                const response = await fetch(`/rooms/${roomId}/reject-request?username=${encodeURIComponent(username)}`, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    console.error('❌ 拒否失敗:', response.status);
+                    alert('拒否に失敗しました');
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log('✅ 申請を拒否しました');
+                    alert(data.message || '参加申請を拒否しました');
+
+                    // 承認待ち一覧を再読み込み
+                    await loadPendingApprovals();
+                } else {
+                    console.error('❌ 拒否失敗:', data.message);
+                    alert(data.message || '拒否に失敗しました');
+                }
+            } catch (error) {
+                console.error('❌ 拒否エラー:', error);
+                alert('拒否中にエラーが発生しました');
+            }
+        }
+
+        // 参加可能ルームリストを表示（申請ボタン付き）
+        function displayAvailableRoomList(rooms, tabId) {
+            const tabElement = document.getElementById(tabId);
+            const roomListContainer = tabElement.querySelector('.room-list');
+            const noRoomsElement = roomListContainer.querySelector('.no-chats');
+
+            if (!roomListContainer) {
+                console.error('❌ ルームリストコンテナが見つかりません');
+                return;
+            }
+
+            // 既存のルームアイテムを削除
+            const existingItems = roomListContainer.querySelectorAll('.chat-item');
+            existingItems.forEach(item => item.remove());
+
+            if (rooms.length === 0) {
+                if (noRoomsElement) {
+                    noRoomsElement.style.display = 'block';
+                }
+                console.log('📋 参加可能なルームなし');
+                return;
+            }
+
+            if (noRoomsElement) {
+                noRoomsElement.style.display = 'none';
+            }
+
+            console.log('📋 参加可能なルームを表示:', rooms.length, '件');
+
+            rooms.forEach(room => {
+                const roomItem = document.createElement('div');
+                roomItem.className = 'chat-item';
+                roomItem.dataset.roomId = room.id;
+
+                // 最終メッセージ時刻のフォーマット
+                const lastActivityTime = room.lastActivityAt ? formatTime(new Date(room.lastActivityAt)) : '';
+
+                // ルーム説明の最初の1行だけを取得（最大10文字）
+                let descriptionPreview = room.description || '';
+                if (descriptionPreview) {
+                    const firstLine = descriptionPreview.split('\n')[0];
+                    descriptionPreview = firstLine.length > 10 ? firstLine.substring(0, 10) + '...' : firstLine;
+                } else {
+                    descriptionPreview = '説明なし';
+                }
+
+                // 参加人数の表示
+                const memberCountText = `メンバー${room.memberCount || 0}人`;
+
+                // ルームアイコン（グループチャット風）
+                const roomIcon = '<div class="chat-avatar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"><i class="fas fa-users"></i></div>';
+
+                // 既に申請中かどうかをチェック
+                const isRequested = window.requestedRoomIds && window.requestedRoomIds.has(room.id);
+                const buttonClass = isRequested ? 'btn btn-sm btn-secondary room-join-btn' : 'btn btn-sm btn-primary room-join-btn';
+                const buttonIcon = isRequested ? '<i class="fas fa-clock"></i> 申請中' : '<i class="fas fa-sign-in-alt"></i> 申請';
+                const buttonDisabled = isRequested ? 'disabled' : '';
+
+                roomItem.innerHTML = `
+                    ${roomIcon}
+                    <div class="chat-info" style="flex: 1;">
+                        <div class="chat-name-row">
+                            <span class="chat-name">${escapeHtml(room.name)} <span style="font-size: 0.85em; color: #888;">(${memberCountText})</span></span>
+                            <span class="chat-time">${lastActivityTime}</span>
+                        </div>
+                        <div class="chat-message-preview">${escapeHtml(descriptionPreview)}</div>
+                    </div>
+                    <button class="${buttonClass}" data-room-id="${room.id}" style="margin-left: 10px; white-space: nowrap;" ${buttonDisabled}>
+                        ${buttonIcon}
+                    </button>
+                `;
+
+                // 申請ボタンのクリックイベント（申請中でない場合のみ）
+                const joinBtn = roomItem.querySelector('.room-join-btn');
+                if (!isRequested) {
+                    joinBtn.addEventListener('click', async (e) => {
+                        e.stopPropagation(); // 親要素のクリックイベントを防止
+                        await requestJoinRoom(room.id, joinBtn);
+                    });
+                }
+
+                roomListContainer.appendChild(roomItem);
+            });
+        }
+
+        // ルームリストを表示（参加中タブ用）
+        function displayRoomList(rooms, tabId) {
+            const tabElement = document.getElementById(tabId);
+            const roomListContainer = tabElement.querySelector('.room-list');
+            const noRoomsElement = roomListContainer.querySelector('.no-chats');
+
+            if (!roomListContainer) {
+                console.error('❌ ルームリストコンテナが見つかりません');
+                return;
+            }
+
+            // 既存のルームアイテムを削除（スワイプコンテナも含む）
+            const existingItems = roomListContainer.querySelectorAll('.chat-item, .swipe-container');
+            existingItems.forEach(item => item.remove());
+
+            if (rooms.length === 0) {
+                if (noRoomsElement) {
+                    noRoomsElement.style.display = 'block';
+                }
+                console.log('📋 ルームなし');
+                return;
+            }
+
+            if (noRoomsElement) {
+                noRoomsElement.style.display = 'none';
+            }
+
+            console.log('📋 ルームを表示:', rooms.length, '件');
+
+            const currentUsername = window.currentUser || '';
+
+            rooms.forEach(room => {
+                // メインルーム(ID=1)はスワイプ不可
+                const isMainRoom = room.id === 1;
+                const isCreator = room.createdByUsername === currentUsername;
+
+                // 最終メッセージ時刻のフォーマット
+                const lastActivityTime = room.lastActivityAt ? formatTime(new Date(room.lastActivityAt)) : '';
+
+                // ルーム説明の最初の1行だけを取得（最大10文字）
+                let descriptionPreview = room.description || '';
+                if (descriptionPreview) {
+                    const firstLine = descriptionPreview.split('\n')[0];
+                    descriptionPreview = firstLine.length > 10 ? firstLine.substring(0, 10) + '...' : firstLine;
+                } else {
+                    descriptionPreview = '説明なし';
+                }
+
+                // 参加人数の表示
+                const memberCountText = `メンバー${room.memberCount || 0}人`;
+
+                // ルームアイコン（グループチャット風）
+                const roomIcon = '<div class="chat-avatar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"><i class="fas fa-users"></i></div>';
+
+                if (isMainRoom) {
+                    // メインルームはスワイプなし
+                    const roomItem = document.createElement('div');
+                    roomItem.className = 'chat-item';
+                    roomItem.dataset.roomId = room.id;
+                    roomItem.innerHTML = `
+                        ${roomIcon}
+                        <div class="chat-info">
+                            <div class="chat-name-row">
+                                <span class="chat-name">${escapeHtml(room.name)} <span style="font-size: 0.85em; color: #888;">(${memberCountText})</span></span>
+                                <span class="chat-time">${lastActivityTime}</span>
+                            </div>
+                            <div class="chat-message-preview">${escapeHtml(descriptionPreview)}</div>
+                        </div>
+                    `;
+                    roomItem.addEventListener('click', () => openRoomChat(room));
+                    roomListContainer.appendChild(roomItem);
+                } else {
+                    // スワイプ可能なコンテナを作成
+                    const swipeContainer = document.createElement('div');
+                    swipeContainer.className = 'swipe-container';
+                    swipeContainer.dataset.roomId = room.id;
+                    swipeContainer.dataset.roomName = room.name;
+                    swipeContainer.dataset.isCreator = isCreator ? 'true' : 'false';
+
+                    // アクションボタン（退室 or 解散）
+                    const actionBtn = isCreator
+                        ? `<button class="swipe-action-btn dissolve-btn" data-room-id="${room.id}">
+                               <i class="fas fa-trash-alt"></i>解散
+                           </button>`
+                        : `<button class="swipe-action-btn leave-btn" data-room-id="${room.id}">
+                               <i class="fas fa-sign-out-alt"></i>退室
+                           </button>`;
+
+                    swipeContainer.innerHTML = `
+                        <div class="swipe-actions">
+                            ${actionBtn}
+                        </div>
+                        <div class="swipe-content">
+                            ${roomIcon}
+                            <div class="chat-info">
+                                <div class="chat-name-row">
+                                    <span class="chat-name">${escapeHtml(room.name)} <span style="font-size: 0.85em; color: #888;">(${memberCountText})</span></span>
+                                    <span class="chat-time">${lastActivityTime}</span>
+                                </div>
+                                <div class="chat-message-preview">${escapeHtml(descriptionPreview)}</div>
+                            </div>
+                        </div>
+                    `;
+
+                    // スワイプコンテンツのクリックでルームを開く
+                    const swipeContent = swipeContainer.querySelector('.swipe-content');
+                    swipeContent.addEventListener('click', (e) => {
+                        // スワイプ中でなければルームを開く
+                        if (!swipeContainer.classList.contains('swiped')) {
+                            openRoomChat(room);
+                        }
+                    });
+
+                    // スワイプイベントを設定
+                    setupSwipeEvents(swipeContainer);
+
+                    // アクションボタンのクリックイベント
+                    const actionButton = swipeContainer.querySelector('.swipe-action-btn');
+                    actionButton.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        const roomId = parseInt(actionButton.dataset.roomId);
+                        const roomName = swipeContainer.dataset.roomName;
+                        const isCreatorRoom = swipeContainer.dataset.isCreator === 'true';
+
+                        if (isCreatorRoom) {
+                            // 解散確認
+                            if (confirm(`「${roomName}」を解散しますか？\nこの操作は取り消せません。`)) {
+                                await dissolveRoom(roomId);
+                            }
+                        } else {
+                            // 退室確認
+                            if (confirm(`「${roomName}」から退室しますか？`)) {
+                                await leaveRoom(roomId);
+                            }
+                        }
+                    });
+
+                    roomListContainer.appendChild(swipeContainer);
+                }
+            });
+        }
+
+        // スワイプイベントのセットアップ
+        function setupSwipeEvents(container) {
+            let startX = 0;
+            let currentX = 0;
+            let isDragging = false;
+            const swipeContent = container.querySelector('.swipe-content');
+            const threshold = 50; // スワイプ判定の閾値
+
+            // タッチイベント
+            container.addEventListener('touchstart', (e) => {
+                startX = e.touches[0].clientX;
+                currentX = startX; // タップ時にcurrentXも初期化（タップでスワイプ判定されないように）
+                isDragging = true;
+                swipeContent.style.transition = 'none';
+            }, { passive: true });
+
+            container.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                currentX = e.touches[0].clientX;
+                const diff = startX - currentX;
+
+                // スワイプ開始時にswipingクラスを追加
+                if (diff > 5) {
+                    container.classList.add('swiping');
+                }
+
+                // 左方向のみスワイプ可能（-80pxまで）
+                if (diff > 0) {
+                    const translateX = Math.min(diff, 80);
+                    swipeContent.style.transform = `translateX(-${translateX}px)`;
+                } else if (container.classList.contains('swiped')) {
+                    // 閉じる方向のスワイプ
+                    const translateX = Math.max(80 + diff, 0);
+                    swipeContent.style.transform = `translateX(-${translateX}px)`;
+                }
+            }, { passive: true });
+
+            container.addEventListener('touchend', (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                swipeContent.style.transition = 'transform 0.3s ease';
+                container.classList.remove('swiping');
+
+                const diff = startX - currentX;
+
+                if (container.classList.contains('swiped')) {
+                    // 既に開いている場合
+                    if (diff < -threshold) {
+                        // 閉じる
+                        container.classList.remove('swiped');
+                        swipeContent.style.transform = 'translateX(0)';
+                    } else {
+                        // 開いたままにする
+                        swipeContent.style.transform = 'translateX(-80px)';
+                    }
+                } else {
+                    // 閉じている場合
+                    if (diff > threshold) {
+                        // 開く
+                        container.classList.add('swiped');
+                        swipeContent.style.transform = 'translateX(-80px)';
+                        // 他のスワイプコンテナを閉じる
+                        closeOtherSwipeContainers(container);
+                    } else {
+                        // 閉じたままにする
+                        swipeContent.style.transform = 'translateX(0)';
+                    }
+                }
+            });
+
+            // マウスイベント（PC対応）
+            container.addEventListener('mousedown', (e) => {
+                startX = e.clientX;
+                currentX = startX; // クリック時にcurrentXも初期化
+                isDragging = true;
+                swipeContent.style.transition = 'none';
+            });
+
+            container.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                currentX = e.clientX;
+                const diff = startX - currentX;
+
+                // スワイプ開始時にswipingクラスを追加
+                if (diff > 5) {
+                    container.classList.add('swiping');
+                }
+
+                if (diff > 0) {
+                    const translateX = Math.min(diff, 80);
+                    swipeContent.style.transform = `translateX(-${translateX}px)`;
+                } else if (container.classList.contains('swiped')) {
+                    const translateX = Math.max(80 + diff, 0);
+                    swipeContent.style.transform = `translateX(-${translateX}px)`;
+                }
+            });
+
+            container.addEventListener('mouseup', (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                swipeContent.style.transition = 'transform 0.3s ease';
+                container.classList.remove('swiping');
+
+                const diff = startX - currentX;
+
+                if (container.classList.contains('swiped')) {
+                    if (diff < -threshold) {
+                        container.classList.remove('swiped');
+                        swipeContent.style.transform = 'translateX(0)';
+                    } else {
+                        swipeContent.style.transform = 'translateX(-80px)';
+                    }
+                } else {
+                    if (diff > threshold) {
+                        container.classList.add('swiped');
+                        swipeContent.style.transform = 'translateX(-80px)';
+                        closeOtherSwipeContainers(container);
+                    } else {
+                        swipeContent.style.transform = 'translateX(0)';
+                    }
+                }
+            });
+
+            container.addEventListener('mouseleave', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    swipeContent.style.transition = 'transform 0.3s ease';
+                    container.classList.remove('swiping');
+                    if (!container.classList.contains('swiped')) {
+                        swipeContent.style.transform = 'translateX(0)';
+                    }
+                }
+            });
+        }
+
+        // 他のスワイプコンテナを閉じる
+        function closeOtherSwipeContainers(currentContainer) {
+            document.querySelectorAll('.swipe-container.swiped').forEach(container => {
+                if (container !== currentContainer) {
+                    container.classList.remove('swiped');
+                    const content = container.querySelector('.swipe-content');
+                    if (content) {
+                        content.style.transform = 'translateX(0)';
+                    }
+                }
+            });
+        }
+
+        // ルームから退室
+        async function leaveRoom(roomId) {
+            try {
+                const response = await fetch(`/rooms/${roomId}/leave`, {
+                    method: 'POST',
+                    credentials: 'same-origin'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('ルームから退室しました');
+                    loadJoinedRooms();
+                    loadAvailableRooms();
+                } else {
+                    alert('退室に失敗しました: ' + data.message);
+                }
+            } catch (error) {
+                console.error('❌ 退室エラー:', error);
+                alert('退室中にエラーが発生しました');
+            }
+        }
+
+        // ルームを解散
+        async function dissolveRoom(roomId) {
+            try {
+                const response = await fetch(`/rooms/${roomId}`, {
+                    method: 'DELETE',
+                    credentials: 'same-origin'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('ルームを解散しました');
+                    loadJoinedRooms();
+                } else {
+                    alert('解散に失敗しました: ' + data.message);
+                }
+            } catch (error) {
+                console.error('❌ 解散エラー:', error);
+                alert('解散中にエラーが発生しました');
+            }
+        }
+
+        // ルーム参加申請
+        async function requestJoinRoom(roomId, buttonElement) {
+            try {
+                console.log('📝 ルーム参加申請:', roomId);
+
+                // ボタンを無効化して処理中表示
+                if (buttonElement) {
+                    buttonElement.disabled = true;
+                    buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 送信中...';
+                }
+
+                const response = await fetch(`/rooms/${roomId}/request-join`, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log('✅ 参加申請成功');
+
+                    // ボタンを「申請中」表示に変更
+                    if (buttonElement) {
+                        buttonElement.innerHTML = '<i class="fas fa-clock"></i> 申請中';
+                        buttonElement.classList.remove('btn-primary');
+                        buttonElement.classList.add('btn-secondary');
+                        buttonElement.disabled = true;
+                    }
+
+                    // 申請中のルームリストを更新
+                    await loadRequestedRooms();
+
+                    alert('参加申請を送信しました。ルーム作成者の承認をお待ちください。');
+                } else {
+                    // エラー時はボタンを元に戻す
+                    if (buttonElement) {
+                        buttonElement.disabled = false;
+                        buttonElement.innerHTML = '<i class="fas fa-sign-in-alt"></i> 申請';
+                    }
+                    alert(data.message || '参加申請に失敗しました');
+                    console.error('❌ 参加申請失敗:', data.message);
+                }
+            } catch (error) {
+                console.error('❌ 参加申請エラー:', error);
+                // エラー時はボタンを元に戻す
+                if (buttonElement) {
+                    buttonElement.disabled = false;
+                    buttonElement.innerHTML = '<i class="fas fa-sign-in-alt"></i> 申請';
+                }
+                alert('参加申請中にエラーが発生しました');
+            }
+        }
+
+        // WebSocketからのルーム更新を処理
+        function handleRoomUpdate(roomData) {
+            console.log('🏠 ルーム更新処理:', roomData);
+
+            if (roomData.type === 'room_created') {
+                // 新しいルームが作成された
+                console.log('✨ 新規ルーム作成:', roomData.room.name);
+
+                // 現在表示中のタブを確認して適切なリストを更新
+                // 参加中ルームと参加可能ルームの両方を再読み込み
+                loadJoinedRooms();
+                loadAvailableRooms();
+            } else if (roomData.type === 'room_updated') {
+                // ルーム情報が更新された
+                console.log('🔄 ルーム更新:', roomData.room.name);
+
+                // 両方のリストを再読み込み
+                loadJoinedRooms();
+                loadAvailableRooms();
+            } else if (roomData.type === 'user_joined') {
+                // ユーザーがルームに参加した
+                console.log('👤 ユーザー参加:', roomData.username, 'がルーム', roomData.room.name, 'に参加');
+
+                // 自分が参加した場合は両方のリストを更新
+                loadJoinedRooms();
+                loadAvailableRooms();
+            } else if (roomData.type === 'user_left') {
+                // ユーザーがルームから退出した
+                console.log('👋 ユーザー退出:', roomData.username, 'がルーム', roomData.room.name, 'から退出');
+
+                // メンバー数が更新されるのでリストを再読み込み
+                loadJoinedRooms();
+                loadAvailableRooms();
+            } else if (roomData.type === 'join_request') {
+                // ルーム参加申請があった
+                console.log('📥 参加申請:', roomData.applicantDisplayName, 'が', roomData.roomName, 'に申請');
+
+                // 自分が作成したルームへの申請の場合、承認タブを更新
+                const currentUsername = window.currentUser || '';
+                if (roomData.creatorUsername === currentUsername) {
+                    console.log('✅ 自分が作成したルームへの申請 - 承認タブを更新');
+                    loadPendingApprovals();
+                }
+            } else if (roomData.type === 'request_approved') {
+                // 参加申請が承認された
+                console.log('✅ 申請承認:', roomData.applicantUsername, 'の', roomData.roomName, 'への申請が承認');
+
+                const currentUsername = window.currentUser || '';
+                console.log('📌 現在のユーザー:', currentUsername, ', 申請者:', roomData.applicantUsername, ', 作成者:', roomData.creatorUsername);
+
+                // ルーム作成者の場合：承認タブを更新（自分で承認した場合は既に更新済みなのでスキップ可）
+                if (roomData.creatorUsername === currentUsername) {
+                    console.log('📋 承認タブを更新（作成者）');
+                    loadPendingApprovals();
+                }
+
+                // 申請者の場合：申請中から消え、参加可能から消え、参加中に表示
+                if (roomData.applicantUsername === currentUsername) {
+                    console.log('🎉 自分の申請が承認された！リストを更新します');
+                    // 申請中のルームIDから削除
+                    if (window.requestedRoomIds) {
+                        window.requestedRoomIds.delete(roomData.roomId);
+                    }
+                    // 各リストを更新
+                    loadRequestedRooms();     // 申請中タブを更新
+                    loadAvailableRooms();     // 参加可能タブを更新
+                    loadJoinedRooms();        // 参加中タブを更新
+                    alert('🎉 「' + roomData.roomName + '」への参加が承認されました！');
+                }
+            } else if (roomData.type === 'request_rejected') {
+                // 参加申請が拒否された
+                console.log('❌ 申請拒否:', roomData.applicantUsername, 'の', roomData.roomName, 'への申請が拒否');
+
+                const currentUsername = window.currentUser || '';
+                console.log('📌 現在のユーザー:', currentUsername, ', 申請者:', roomData.applicantUsername, ', 作成者:', roomData.creatorUsername);
+
+                // ルーム作成者の場合：承認タブを更新
+                if (roomData.creatorUsername === currentUsername) {
+                    console.log('📋 承認タブを更新（作成者）');
+                    loadPendingApprovals();
+                }
+
+                // 申請者の場合：申請中から消え、参加可能に戻る
+                if (roomData.applicantUsername === currentUsername) {
+                    console.log('😢 自分の申請が拒否された！リストを更新します');
+                    // 申請中のルームIDから削除
+                    if (window.requestedRoomIds) {
+                        window.requestedRoomIds.delete(roomData.roomId);
+                    }
+                    // 各リストを更新
+                    loadRequestedRooms();     // 申請中タブを更新
+                    loadAvailableRooms();     // 参加可能タブを更新（申請ボタンに戻る）
+                    alert('😢 「' + roomData.roomName + '」への参加が拒否されました');
+                }
+            } else if (roomData.type === 'member_kicked') {
+                // メンバーが退会させられた
+                console.log('👢 メンバー退会:', roomData.kickedUsername, 'が', roomData.roomName, 'から退会させられた');
+
+                const currentUsername = window.currentUser || '';
+
+                // 自分が退会させられた場合
+                if (roomData.kickedUsername === currentUsername) {
+                    console.log('😢 自分が退会させられた！');
+
+                    // メンバーパネルが開いている場合は閉じる
+                    const membersSection = document.getElementById('room-members-section');
+                    if (membersSection && membersSection.style.display !== 'none') {
+                        membersSection.style.display = 'none';
+                        membersSection.classList.remove('active');
+                    }
+
+                    // ルーム一覧を更新
+                    loadJoinedRooms();
+                    loadAvailableRooms();
+
+                    // もし現在そのルームのチャット画面にいる場合は退出
+                    if (currentRoomId === roomData.roomId) {
+                        alert('😢 「' + roomData.roomName + '」から退会させられました');
+                        // ルームチャット画面を閉じてルーム一覧に戻る
+                        document.getElementById('backFromRoomChatBtn').click();
+                    } else {
+                        alert('😢 「' + roomData.roomName + '」から退会させられました');
+                    }
+                }
+
+                // メンバー一覧画面が開いている場合は更新
+                const membersSection = document.getElementById('room-members-section');
+                if (membersSection && membersSection.style.display !== 'none' && currentRoomId === roomData.roomId) {
+                    loadRoomMembers(roomData.roomId);
+                }
+            }
+        }
+
         // ========================================
         // DM機能
         // ========================================
@@ -1952,7 +3548,434 @@
             currentConversationId = null;
             currentDMUser = null;
         });
-        
+
+        // ========================================
+        // ルームチャット関連
+        // ========================================
+
+        let currentRoomId = null;
+        let roomStompClient = null;
+        let roomSubscription = null;
+
+        // ルームチャット画面を開く
+        function openRoomChat(room) {
+            console.log('🚪 ルームチャット画面を開く:', room);
+
+            currentRoomId = room.id;
+
+            // ルームチャット画面を表示
+            const sections = document.querySelectorAll('.app-section');
+            sections.forEach(section => section.classList.remove('active'));
+
+            const roomChatSection = document.getElementById('room-chat-section');
+            roomChatSection.style.display = 'block';
+            roomChatSection.classList.add('active');
+
+            // ヘッダー情報を設定
+            document.getElementById('roomChatName').textContent = room.name;
+            document.getElementById('roomChatMemberCount').textContent = `メンバー${room.memberCount || 0}人`;
+
+            // フッターナビゲーションを非表示
+            const bottomNav = document.querySelector('.bottom-nav');
+            if (bottomNav) {
+                bottomNav.style.display = 'none';
+            }
+
+            // 投稿ボタンを非表示
+            const createPostBtn = document.getElementById('btnCreatePost');
+            if (createPostBtn) {
+                createPostBtn.style.display = 'none';
+            }
+
+            // ルーム作成ボタンを非表示
+            const btnCreateRoom = document.getElementById('btnCreateRoom');
+            if (btnCreateRoom) {
+                btnCreateRoom.style.display = 'none';
+            }
+
+            // メッセージをクリア
+            document.getElementById('roomMessages').innerHTML = '';
+            document.getElementById('roomInput').value = '';
+
+            // WebSocket接続してメッセージを読み込む
+            connectToRoomWebSocket(room.id);
+            loadRoomMessages(room.id);
+        }
+
+        // ルームチャット画面の戻るボタン
+        document.getElementById('backFromRoomChatBtn').addEventListener('click', function() {
+            // WebSocket切断
+            if (roomSubscription) {
+                roomSubscription.unsubscribe();
+                roomSubscription = null;
+            }
+
+            const roomChatSection = document.getElementById('room-chat-section');
+            roomChatSection.style.display = 'none';
+            roomChatSection.classList.remove('active');
+
+            const sections = document.querySelectorAll('.app-section');
+            sections.forEach(section => section.classList.remove('active'));
+
+            // ルームセクションに戻る
+            const roomSection = document.getElementById('room-section');
+            roomSection.classList.add('active');
+
+            // フッターナビゲーションを再表示
+            const bottomNav = document.querySelector('.bottom-nav');
+            if (bottomNav) {
+                bottomNav.style.display = 'flex';
+            }
+
+            // ルーム作成ボタンを再表示
+            const btnCreateRoom = document.getElementById('btnCreateRoom');
+            if (btnCreateRoom) {
+                btnCreateRoom.style.display = 'flex';
+            }
+
+            currentRoomId = null;
+        });
+
+        // ルームヘッダークリックでメンバー一覧を表示
+        document.getElementById('roomChatInfo').addEventListener('click', function() {
+            if (currentRoomId && currentRoomId !== 1) {
+                // メインルーム(ID=1)以外の場合のみメンバー一覧を表示
+                showMembersPanel(currentRoomId);
+            }
+        });
+
+        // メンバー一覧パネルの戻るボタン
+        document.getElementById('backFromMembersBtn').addEventListener('click', function() {
+            const membersSection = document.getElementById('room-members-section');
+            membersSection.style.display = 'none';
+            membersSection.classList.remove('active');
+
+            // ルームチャット画面に戻る
+            const roomChatSection = document.getElementById('room-chat-section');
+            roomChatSection.style.display = 'block';
+            roomChatSection.classList.add('active');
+        });
+
+        // メンバー一覧パネルを表示
+        async function showMembersPanel(roomId) {
+            // メンバー一覧パネルを表示
+            const roomChatSection = document.getElementById('room-chat-section');
+            roomChatSection.style.display = 'none';
+            roomChatSection.classList.remove('active');
+
+            const membersSection = document.getElementById('room-members-section');
+            membersSection.style.display = 'block';
+            membersSection.classList.add('active');
+
+            // ローディング表示
+            document.getElementById('membersList').innerHTML = `
+                <div class="members-loading">
+                    <i class="fas fa-spinner"></i>
+                    <p>読み込み中...</p>
+                </div>
+            `;
+
+            // メンバー情報を取得
+            await loadRoomMembers(roomId);
+        }
+
+        // ルームメンバー一覧を読み込む
+        async function loadRoomMembers(roomId) {
+            try {
+                const response = await fetch(`/rooms/${roomId}/api/members`, {
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+
+                if (!response.ok) {
+                    console.error('❌ メンバー一覧取得失敗:', response.status);
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    console.error('❌ メンバー一覧取得失敗:', data.message);
+                    document.getElementById('membersList').innerHTML = `
+                        <div class="members-empty">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p>${data.message || 'メンバー情報を取得できませんでした'}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // ヘッダー情報を更新
+                document.getElementById('membersPanelRoomName').textContent = data.roomName;
+                document.getElementById('membersPanelCount').textContent = `${data.memberCount}人参加中`;
+
+                // メンバー一覧を表示
+                displayMembersList(data.members, data.isCreator, data.creatorUsername);
+
+            } catch (error) {
+                console.error('❌ メンバー一覧取得エラー:', error);
+                document.getElementById('membersList').innerHTML = `
+                    <div class="members-empty">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>エラーが発生しました</p>
+                    </div>
+                `;
+            }
+        }
+
+        // メンバー一覧を表示
+        function displayMembersList(members, isCreator, creatorUsername) {
+            const container = document.getElementById('membersList');
+
+            if (!members || members.length === 0) {
+                container.innerHTML = `
+                    <div class="members-empty">
+                        <i class="fas fa-users-slash"></i>
+                        <p>メンバーがいません</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 作成者を先頭にソート
+            const sortedMembers = [...members].sort((a, b) => {
+                if (a.isCreator) return -1;
+                if (b.isCreator) return 1;
+                return 0;
+            });
+
+            let html = '';
+            for (const member of sortedMembers) {
+                const avatarHtml = member.avatarUrl
+                    ? `<img src="${member.avatarUrl}" alt="${escapeHtml(member.displayName)}">`
+                    : `<i class="fas fa-user"></i>`;
+
+                const creatorBadge = member.isCreator
+                    ? `<span class="creator-badge">作成者</span>`
+                    : '';
+
+                const bioText = member.shortBio || '';
+
+                // 退会ボタン（作成者が見ている場合のみ、かつ自分自身と作成者以外）
+                let kickButton = '';
+                if (isCreator && !member.isCreator && member.username !== window.currentUser) {
+                    kickButton = `
+                        <div class="member-actions">
+                            <button class="kick-btn" data-username="${escapeHtml(member.username)}" data-display-name="${escapeHtml(member.displayName)}">
+                                退会
+                            </button>
+                        </div>
+                    `;
+                }
+
+                html += `
+                    <div class="member-item" data-username="${escapeHtml(member.username)}">
+                        <div class="member-avatar">
+                            ${avatarHtml}
+                        </div>
+                        <div class="member-info">
+                            <div class="member-name">
+                                ${escapeHtml(member.displayName)}
+                                ${creatorBadge}
+                            </div>
+                            <div class="member-bio">${escapeHtml(bioText)}</div>
+                        </div>
+                        ${kickButton}
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+
+            // 退会ボタンのイベントリスナーを追加
+            container.querySelectorAll('.kick-btn').forEach(btn => {
+                btn.addEventListener('click', async function(e) {
+                    e.stopPropagation();
+                    const username = this.dataset.username;
+                    const displayName = this.dataset.displayName;
+                    if (confirm(`${displayName}さんをルームから退会させますか？`)) {
+                        await kickMember(currentRoomId, username);
+                    }
+                });
+            });
+        }
+
+        // メンバーを退会させる
+        async function kickMember(roomId, username) {
+            try {
+                const response = await fetch(`/rooms/${roomId}/kick-member?username=${encodeURIComponent(username)}`, {
+                    method: 'POST',
+                    credentials: 'same-origin'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(data.message);
+                    // メンバー一覧パネルを閉じてルームチャットに戻る
+                    const membersSection = document.getElementById('room-members-section');
+                    membersSection.style.display = 'none';
+                    membersSection.classList.remove('active');
+
+                    const roomChatSection = document.getElementById('room-chat-section');
+                    roomChatSection.style.display = 'block';
+                    roomChatSection.classList.add('active');
+                } else {
+                    alert('退会処理に失敗しました: ' + data.message);
+                }
+            } catch (error) {
+                console.error('❌ 退会処理エラー:', error);
+                alert('退会処理中にエラーが発生しました');
+            }
+        }
+
+        // ルームのWebSocketに接続
+        function connectToRoomWebSocket(roomId) {
+            if (typeof SockJS === 'undefined' || typeof Stomp === 'undefined') {
+                console.error('❌ SockJS または Stomp が読み込まれていません');
+                return;
+            }
+
+            // 既存の接続があれば切断
+            if (roomSubscription) {
+                roomSubscription.unsubscribe();
+            }
+
+            // グローバルのstompClientを使用（既に接続済みと仮定）
+            if (window.stompClient && window.stompClient.connected) {
+                roomSubscription = window.stompClient.subscribe(`/topic/room/${roomId}`, function(message) {
+                    const chatMessage = JSON.parse(message.body);
+                    displayRoomMessage(chatMessage);
+                });
+                console.log('✅ ルーム', roomId, 'のWebSocketに接続しました');
+            } else {
+                console.error('❌ WebSocketが接続されていません');
+            }
+        }
+
+        // ルームメッセージを読み込む
+        async function loadRoomMessages(roomId) {
+            try {
+                console.log('📨 ルームメッセージを読み込み中...', roomId);
+                const response = await fetch(`/api/messages/room/${roomId}`, {
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    console.error('❌ メッセージ読み込み失敗:', response.status);
+                    return;
+                }
+
+                const messages = await response.json();
+                console.log('✅ メッセージ取得:', messages.length, '件');
+
+                const messagesContainer = document.getElementById('roomMessages');
+                messagesContainer.innerHTML = '';
+
+                messages.forEach(msg => {
+                    displayRoomMessage(msg);
+                });
+
+                // スクロールを最下部に
+                scrollRoomMessagesToBottom();
+            } catch (error) {
+                console.error('❌ メッセージ読み込みエラー:', error);
+            }
+        }
+
+        // ルームメッセージを表示
+        function displayRoomMessage(message) {
+            const messagesContainer = document.getElementById('roomMessages');
+            const messageDiv = document.createElement('div');
+
+            // 現在のユーザー名を取得（グローバル変数から）
+            const currentUsername = window.currentUser || '';
+            const isOwnMessage = message.sender === currentUsername || message.username === currentUsername;
+
+            messageDiv.className = isOwnMessage ? 'dm-message own' : 'dm-message other';
+
+            const timestamp = message.timestamp || message.createdAt;
+            const timeStr = timestamp ? formatTime(new Date(timestamp)) : '';
+            const senderName = message.senderDisplayName || message.sender || message.username || '不明';
+
+            if (isOwnMessage) {
+                messageDiv.innerHTML = `
+                    <div class="dm-message-content own">
+                        <div class="dm-message-text">${escapeHtml(message.content || message.message || '')}</div>
+                        <div class="dm-message-time">${timeStr}</div>
+                    </div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="dm-message-sender">${escapeHtml(senderName)}</div>
+                    <div class="dm-message-content other">
+                        <div class="dm-message-text">${escapeHtml(message.content || message.message || '')}</div>
+                        <div class="dm-message-time">${timeStr}</div>
+                    </div>
+                `;
+            }
+
+            messagesContainer.appendChild(messageDiv);
+        }
+
+        // ルームメッセージを最下部にスクロール
+        function scrollRoomMessagesToBottom() {
+            const container = document.getElementById('roomMessagesContainer');
+            if (container) {
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+
+        // ルームメッセージ送信
+        document.getElementById('roomSendBtn').addEventListener('click', function() {
+            sendRoomMessage();
+        });
+
+        document.getElementById('roomInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendRoomMessage();
+            }
+        });
+
+        function sendRoomMessage() {
+            const input = document.getElementById('roomInput');
+            const message = input.value.trim();
+
+            if (!message || !currentRoomId) {
+                return;
+            }
+
+            if (!window.stompClient || !window.stompClient.connected) {
+                alert('WebSocketが接続されていません');
+                return;
+            }
+
+            const chatMessage = {
+                roomId: currentRoomId,
+                content: message,
+                type: 'CHAT'
+            };
+
+            try {
+                window.stompClient.send(`/app/chat.sendMessage/${currentRoomId}`, {}, JSON.stringify(chatMessage));
+                input.value = '';
+
+                // 自動でサイズをリセット
+                input.style.height = 'auto';
+            } catch (error) {
+                console.error('❌ メッセージ送信エラー:', error);
+                alert('メッセージの送信に失敗しました');
+            }
+        }
+
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
