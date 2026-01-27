@@ -266,10 +266,10 @@
 
                     <div class="form-group">
                         <label class="form-label">
-                            <i class="fas fa-user-plus me-2"></i>友達を招待（任意）
+                            <i class="fas fa-user-plus me-2"></i>フレンドを招待（任意）
                         </label>
                         <div id="friendSelectionContainer" class="friend-selection-container">
-                            <p class="loading-text">友達リストを読み込み中...</p>
+                            <p class="loading-text">フレンドリストを読み込み中...</p>
                         </div>
                     </div>
 
@@ -296,7 +296,7 @@
                 <div class="chat-list-header">
                     <div class="header-tabs">
                         <button class="tab-btn active" data-tab="all-chat">すべて</button>
-                        <button class="tab-btn" data-tab="friends-chat">友達</button>
+                        <button class="tab-btn" data-tab="friends-chat">フレンド</button>
                     </div>
                 </div>
                 
@@ -329,12 +329,12 @@
                     </div>
                 </div>
                 
-                <!-- 友達のチャット -->
+                <!-- フレンドのチャット -->
                 <div class="tab-content" id="friends-chat-tab">
                     <div class="chat-list">
                         <div class="no-chats">
                             <i class="fas fa-user-friends fa-3x mb-3 text-muted"></i>
-                            <p class="text-muted">友達とのチャットがありません</p>
+                            <p class="text-muted">フレンドとのチャットがありません</p>
                         </div>
                     </div>
                 </div>
@@ -487,16 +487,16 @@
                             
                             <!-- フォロー/フォロワー/フレンド数 -->
                             <div class="profile-stats">
-                                <div class="stat-item">
+                                <div class="stat-item stat-clickable" data-tab="following">
                                     <span class="stat-label">フォロー</span>
                                     <span class="stat-value" id="myFollowingCount" th:text="${followingCount != null ? followingCount : 0}">0</span>
                                 </div>
-                                <div class="stat-item">
+                                <div class="stat-item stat-clickable" data-tab="followers">
                                     <span class="stat-label">フォロワー</span>
                                     <span class="stat-value" id="myFollowerCount" th:text="${followerCount != null ? followerCount : 0}">0</span>
                                 </div>
-                                <div class="stat-item">
-                                    <span class="stat-label">友達</span>
+                                <div class="stat-item stat-clickable" data-tab="friends">
+                                    <span class="stat-label">フレンド</span>
                                     <span class="stat-value" id="myFriendCount" th:text="${friendCount != null ? friendCount : 0}">0</span>
                                 </div>
                             </div>
@@ -521,9 +521,32 @@
                 </div>
             </div>
         </section>
-        
+
+        <!-- フォロー/フォロワー/フレンド一覧セクション -->
+        <section class="app-section" id="relations-section" style="display: none;">
+            <div class="section-content">
+                <!-- ヘッダー -->
+                <div class="relations-header">
+                    <button class="back-btn" type="button" id="backFromRelationsBtn">
+                        <i class="fas fa-chevron-left" style="font-size: 1.2rem;"></i>
+                    </button>
+                    <div class="relations-tabs">
+                        <button class="relations-tab active" data-tab="following">フォロー</button>
+                        <button class="relations-tab" data-tab="followers">フォロワー</button>
+                        <button class="relations-tab" data-tab="friends">フレンド</button>
+                    </div>
+                </div>
+                <!-- 一覧表示エリア -->
+                <div class="relations-list-container" id="relationsListContainer">
+                    <div class="relations-list" id="relationsList">
+                        <!-- 動的にロードされる -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </div>
-    
+
     <!-- プロフィールアクションボタン（閲覧用プロフィール画面専用） -->
     <div class="profile-actions" id="profileActions" style="display: none;">
         <button class="btn-action btn-chat" id="btnStartChat">
@@ -541,7 +564,27 @@
         </button>
         <img class="image-modal-content" id="modalImage" src="" alt="拡大画像">
     </div>
-    
+
+    <!-- ユーザープロフィールポップアップ -->
+    <div class="profile-popup-overlay" id="profilePopupOverlay" onclick="closeProfilePopup(event)">
+        <div class="profile-popup" onclick="event.stopPropagation()">
+            <button class="profile-popup-close" onclick="closeProfilePopup(event)">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="profile-popup-content" id="profilePopupContent">
+                <!-- 動的にロードされる -->
+            </div>
+            <div class="profile-popup-actions">
+                <button class="btn-popup-action btn-popup-chat" id="btnPopupChat">
+                    <i class="fas fa-comment me-2"></i>DM
+                </button>
+                <button class="btn-popup-action btn-popup-follow" id="btnPopupFollow">
+                    <i class="fas fa-user-plus me-2"></i>フォロー
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- スライドメニューオーバーレイ -->
     <div class="slide-menu-overlay" id="slideMenuOverlay"></div>
     
@@ -958,7 +1001,7 @@
                 
                 const myFriendCount = document.getElementById('myFriendCount');
                 if (myFriendCount && followedData.friendCount !== undefined) {
-                    console.log('📊 マイページの友達数更新:', followedData.friendCount);
+                    console.log('📊 マイページのフレンド数更新:', followedData.friendCount);
                     myFriendCount.textContent = followedData.friendCount;
                 }
             }
@@ -983,7 +1026,7 @@
                 
                 const myFriendCount = document.getElementById('myFriendCount');
                 if (myFriendCount && followerData.friendCount !== undefined) {
-                    console.log('📊 マイページの友達数更新:', followerData.friendCount);
+                    console.log('📊 マイページのフレンド数更新:', followerData.friendCount);
                     myFriendCount.textContent = followerData.friendCount;
                 }
             }
@@ -995,7 +1038,7 @@
                     targetFollowerCount.textContent = followedData.followerCount;
                 }
                 
-                // フォロー数と友達数も更新
+                // フォロー数とフレンド数も更新
                 const profileStats = document.querySelector('#user-profile-view-section .profile-stats');
                 if (profileStats) {
                     const statValues = profileStats.querySelectorAll('.stat-value');
@@ -1018,7 +1061,7 @@
                     targetFollowerCount.textContent = followerData.followerCount;
                 }
                 
-                // フォロー数と友達数も更新
+                // フォロー数とフレンド数も更新
                 const profileStats = document.querySelector('#user-profile-view-section .profile-stats');
                 if (profileStats) {
                     const statValues = profileStats.querySelectorAll('.stat-value');
@@ -1147,7 +1190,7 @@
             });
         });
         
-        // チャットタブ切り替え（すべて/友達）
+        // チャットタブ切り替え（すべて/フレンド）
         const chatTabBtns = document.querySelectorAll('.chat-list-header .tab-btn');
         chatTabBtns.forEach(btn => {
             btn.addEventListener('click', async () => {
@@ -1162,7 +1205,7 @@
                     targetTab.classList.add('active');
                 }
                 
-                // 友達タブに切り替えた場合は友達のDMを読み込む
+                // フレンドタブに切り替えた場合はフレンドのDMを読み込む
                 if (tabName === 'friends-chat') {
                     await loadFriendsDMConversations();
                 }
@@ -1315,7 +1358,7 @@
             btnCreateRoom.addEventListener('click', async () => {
                 sections.forEach(section => section.classList.remove('active'));
                 createRoomSection.classList.add('active');
-                // 友達リストを読み込み
+                // フレンドリストを読み込み
                 await loadFriendsForInvite();
             });
         }
@@ -1382,7 +1425,7 @@
 
                 const formData = new FormData(createRoomForm);
 
-                // 選択された友達のusernameを取得
+                // 選択されたフレンドのusernameを取得
                 const selectedFriends = Array.from(document.querySelectorAll('.friend-checkbox:checked'))
                     .map(checkbox => checkbox.dataset.username);
 
@@ -1650,7 +1693,7 @@
                                     <span class="stat-value" id="targetFollowerCount">${data.followerCount || 0}</span>
                                 </div>
                                 <div class="stat-item">
-                                    <span class="stat-label">友達</span>
+                                    <span class="stat-label">フレンド</span>
                                     <span class="stat-value">${data.friendCount || 0}</span>
                                 </div>
                             </div>
@@ -1705,7 +1748,7 @@
                     
                     // relationship: "friend" (相互フォロー), "following" (フォロー中), "follower" (フォローされている), "none" (関係なし)
                     if (relationship === 'friend') {
-                        followBtn.innerHTML = '<i class="fas fa-user-check me-2"></i>友達';
+                        followBtn.innerHTML = '<i class="fas fa-user-check me-2"></i>フレンド';
                         followBtn.classList.add('following');
                         followBtn.dataset.relationship = 'friend'; // データ属性に関係性を保存
                     } else if (relationship === 'following') {
@@ -1738,13 +1781,13 @@
                 const isFollowing = btnFollowUser.classList.contains('following');
                 const relationship = btnFollowUser.dataset.relationship;
                 
-                // フォロー済み・友達の場合は確認ダイアログを表示
+                // フォロー済み・フレンドの場合は確認ダイアログを表示
                 if (isFollowing) {
                     let confirmMessage = 'フォローを解除しますか？';
                     
-                    // 友達の場合は明示的にメッセージを変更
+                    // フレンドの場合は明示的にメッセージを変更
                     if (relationship === 'friend') {
-                        confirmMessage = '友達関係を解除しますか？\n（相互フォローが解除されます）';
+                        confirmMessage = 'フレンド関係を解除しますか？\n（相互フォローが解除されます）';
                     }
                     
                     const confirmUnfollow = confirm(confirmMessage);
@@ -1781,7 +1824,7 @@
                             console.warn('targetFollowerCount element not found or data missing'); // デバッグログ
                         }
                         
-                        // マイページのフォロー/フォロワー/友達数を更新
+                        // マイページのフォロー/フォロワー/フレンド数を更新
                         const myFollowingCount = document.getElementById('myFollowingCount');
                         if (myFollowingCount && data.followingCount !== undefined) {
                             myFollowingCount.textContent = data.followingCount;
@@ -2027,13 +2070,13 @@
             }
         }
 
-        // ルーム作成時の友達招待リストを読み込む
+        // ルーム作成時のフレンド招待リストを読み込む
         async function loadFriendsForInvite() {
             const container = document.getElementById('friendSelectionContainer');
             if (!container) return;
 
             try {
-                console.log('👥 友達リストを読み込み中...');
+                console.log('👥 フレンドリストを読み込み中...');
                 const response = await fetch('/friends/api/list', {
                     credentials: 'same-origin',
                     headers: {
@@ -2042,19 +2085,19 @@
                 });
 
                 if (!response.ok) {
-                    container.innerHTML = '<p class="error-text">友達リストの読み込みに失敗しました</p>';
+                    container.innerHTML = '<p class="error-text">フレンドリストの読み込みに失敗しました</p>';
                     return;
                 }
 
                 const friends = await response.json();
-                console.log('✅ 友達取得:', friends.length, '人');
+                console.log('✅ フレンド取得:', friends.length, '人');
 
                 if (friends.length === 0) {
-                    container.innerHTML = '<p class="empty-text">友達がいません</p>';
+                    container.innerHTML = '<p class="empty-text">フレンドがいません</p>';
                     return;
                 }
 
-                // 友達リストを表示
+                // フレンドリストを表示
                 let html = '<div class="friend-select-list">';
                 friends.forEach(friend => {
                     const avatarUrl = friend.avatarUrl || '/images/default-avatar.png';
@@ -2070,7 +2113,7 @@
                 container.innerHTML = html;
 
             } catch (error) {
-                console.error('❌ 友達リスト読み込みエラー:', error);
+                console.error('❌ フレンドリスト読み込みエラー:', error);
                 container.innerHTML = '<p class="error-text">エラーが発生しました</p>';
             }
         }
@@ -3158,10 +3201,10 @@
             }
         }
         
-        // 友達のDM会話リストを読み込む
+        // フレンドのDM会話リストを読み込む
         async function loadFriendsDMConversations() {
             try {
-                console.log('📋 友達のDM会話リストを読み込み中...');
+                console.log('📋 フレンドのDM会話リストを読み込み中...');
                 const response = await fetch('/api/dm/conversations/friends');
                 console.log('📡 Friends API Response Status:', response.status);
                 
@@ -3169,27 +3212,27 @@
                 console.log('📦 Friends API Response Data:', data);
                 
                 if (!data.success) {
-                    console.error('❌ 友達のDM会話リストの取得に失敗しました');
+                    console.error('❌ フレンドのDM会話リストの取得に失敗しました');
                     return;
                 }
                 
                 const conversations = data.conversations;
-                console.log('✅ 友達のDM会話リスト取得:', conversations.length, '件');
+                console.log('✅ フレンドのDM会話リスト取得:', conversations.length, '件');
                 console.log('📋 Friends Conversations Detail:', conversations);
                 
                 displayFriendsConversationList(conversations);
             } catch (error) {
-                console.error('❌ 友達のDM会話リスト読み込みエラー:', error);
+                console.error('❌ フレンドのDM会話リスト読み込みエラー:', error);
             }
         }
         
-        // 友達のDM会話リストを表示
+        // フレンドのDM会話リストを表示
         function displayFriendsConversationList(conversations) {
             const chatListContainer = document.querySelector('#friends-chat-tab .chat-list');
             const noChatsElement = chatListContainer.querySelector('.no-chats');
             
             if (!chatListContainer) {
-                console.error('❌ 友達チャットリストコンテナが見つかりません');
+                console.error('❌ フレンドチャットリストコンテナが見つかりません');
                 return;
             }
             
@@ -3198,20 +3241,20 @@
             existingItems.forEach(item => item.remove());
             
             if (conversations.length === 0) {
-                // 会話がない場合は「友達とのチャットがありません」を表示
+                // 会話がない場合は「フレンドとのチャットがありません」を表示
                 if (noChatsElement) {
                     noChatsElement.style.display = 'flex';
                 }
-                console.log('📋 友達のDM会話なし');
+                console.log('📋 フレンドのDM会話なし');
                 return;
             }
             
-            // 会話がある場合は「友達とのチャットがありません」を非表示
+            // 会話がある場合は「フレンドとのチャットがありません」を非表示
             if (noChatsElement) {
                 noChatsElement.style.display = 'none';
             }
             
-            console.log('📋 友達のDM会話を表示:', conversations.length, '件');
+            console.log('📋 フレンドのDM会話を表示:', conversations.length, '件');
             
             // 会話リストを表示（displayConversationListと同じ処理）
             conversations.forEach(conv => {
@@ -3847,11 +3890,11 @@
 
             // グローバルのstompClientを使用（既に接続済みと仮定）
             if (window.stompClient && window.stompClient.connected) {
-                roomSubscription = window.stompClient.subscribe(`/topic/room/${roomId}`, function(message) {
+                roomSubscription = window.stompClient.subscribe(`/topic/chatroom/${roomId}`, function(message) {
                     const chatMessage = JSON.parse(message.body);
                     displayRoomMessage(chatMessage);
                 });
-                console.log('✅ ルーム', roomId, 'のWebSocketに接続しました');
+                console.log('✅ ルーム', roomId, 'のWebSocketに接続しました（/topic/chatroom/' + roomId + '）');
             } else {
                 console.error('❌ WebSocketが接続されていません');
             }
@@ -3861,7 +3904,7 @@
         async function loadRoomMessages(roomId) {
             try {
                 console.log('📨 ルームメッセージを読み込み中...', roomId);
-                const response = await fetch(`/api/messages/room/${roomId}`, {
+                const response = await fetch(`/api/messages/${roomId}`, {
                     credentials: 'same-origin',
                     headers: {
                         'Accept': 'application/json'
@@ -3897,32 +3940,44 @@
 
             // 現在のユーザー名を取得（グローバル変数から）
             const currentUsername = window.currentUser || '';
-            const isOwnMessage = message.sender === currentUsername || message.username === currentUsername;
+            const isOwnMessage = message.senderUsername === currentUsername || message.sender === currentUsername || message.username === currentUsername;
 
-            messageDiv.className = isOwnMessage ? 'dm-message own' : 'dm-message other';
+            messageDiv.className = `dm-message ${isOwnMessage ? 'own' : 'other'}`;
 
             const timestamp = message.timestamp || message.createdAt;
-            const timeStr = timestamp ? formatTime(new Date(timestamp)) : '';
-            const senderName = message.senderDisplayName || message.sender || message.username || '不明';
+            const timeStr = timestamp ? new Date(timestamp).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : '';
+            const senderName = message.senderDisplayName || message.senderUsername || message.sender || message.username || '不明';
 
-            if (isOwnMessage) {
-                messageDiv.innerHTML = `
-                    <div class="dm-message-content own">
-                        <div class="dm-message-text">${escapeHtml(message.content || message.message || '')}</div>
-                        <div class="dm-message-time">${timeStr}</div>
-                    </div>
-                `;
-            } else {
-                messageDiv.innerHTML = `
-                    <div class="dm-message-sender">${escapeHtml(senderName)}</div>
-                    <div class="dm-message-content other">
-                        <div class="dm-message-text">${escapeHtml(message.content || message.message || '')}</div>
-                        <div class="dm-message-time">${timeStr}</div>
-                    </div>
-                `;
+            // アバターのスタイル
+            const avatarUrl = message.senderAvatarUrl || '';
+            const avatarStyle = avatarUrl ? `background-image: url(${avatarUrl})` : '';
+
+            // ユーザーIDを取得
+            console.log('📨 ルームメッセージ:', message);
+            const userId = message.userId || null;
+            console.log('👤 userId:', userId);
+
+            messageDiv.innerHTML = `
+                ${!isOwnMessage ? `<div class="dm-message-avatar room-avatar-clickable" style="${avatarStyle}" data-user-id="${userId}" data-username="${message.senderUsername || message.sender || ''}"></div>` : ''}
+                <div class="dm-message-bubble">
+                    ${!isOwnMessage ? `<div class="dm-message-sender">${escapeHtml(senderName)}</div>` : ''}
+                    <div class="dm-message-content">${escapeHtml(message.content || message.message || '')}</div>
+                    <div class="dm-message-time">${timeStr}</div>
+                </div>
+                ${isOwnMessage ? `<div class="dm-message-avatar" style="${avatarStyle}"></div>` : ''}
+            `;
+
+            // 他人のメッセージのアイコンにクリックイベントを追加
+            if (!isOwnMessage) {
+                const avatar = messageDiv.querySelector('.room-avatar-clickable');
+                if (avatar && userId) {
+                    avatar.style.cursor = 'pointer';
+                    avatar.addEventListener('click', () => showProfilePopup(userId));
+                }
             }
 
             messagesContainer.appendChild(messageDiv);
+            scrollRoomMessagesToBottom();
         }
 
         // ルームメッセージを最下部にスクロール
@@ -3932,6 +3987,223 @@
                 container.scrollTop = container.scrollHeight;
             }
         }
+
+        // プロフィールポップアップを表示
+        let currentPopupUserId = null;
+        async function showProfilePopup(userId) {
+            console.log('🔍 showProfilePopup呼び出し - userId:', userId, '型:', typeof userId);
+            if (!userId) return;
+            currentPopupUserId = userId;
+            console.log('📌 currentPopupUserId設定:', currentPopupUserId, '型:', typeof currentPopupUserId);
+
+            try {
+                const response = await fetch(`/api/users/${userId}/profile`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const user = data.user;
+                    const profile = data.profile;
+
+                    // アバターのHTML
+                    let avatarHtml = '';
+                    if (profile && profile.avatarUrl) {
+                        avatarHtml = `<div class="profile-popup-avatar" style="background-image: url(${profile.avatarUrl}); background-size: cover; background-position: center;"></div>`;
+                    } else {
+                        avatarHtml = `<div class="profile-popup-avatar"><i class="fas fa-user"></i></div>`;
+                    }
+
+                    // タグのHTML
+                    let tagsHtml = '';
+                    if (profile && profile.favoriteThings) {
+                        const tags = profile.favoriteThings.split(',').map(tag => tag.trim()).filter(tag => tag);
+                        if (tags.length > 0) {
+                            tagsHtml = `
+                                <div class="profile-popup-tags">
+                                    ${tags.map(tag => `<span class="profile-popup-tag">${escapeHtml(tag)}</span>`).join('')}
+                                </div>
+                            `;
+                        }
+                    }
+
+                    const popupContent = document.getElementById('profilePopupContent');
+                    popupContent.innerHTML = `
+                        ${avatarHtml}
+                        <div class="profile-popup-name">${escapeHtml(profile && profile.displayName ? profile.displayName : user.username)}</div>
+                        <div class="profile-popup-username">@${escapeHtml(user.username)}</div>
+                        <div class="profile-popup-bio">${profile && profile.bio ? escapeHtml(profile.bio) : '自己紹介が未設定です'}</div>
+                        ${tagsHtml}
+                        <div class="profile-popup-stats">
+                            <div class="profile-popup-stat">
+                                <div class="profile-popup-stat-value">${data.followingCount || 0}</div>
+                                <div class="profile-popup-stat-label">フォロー</div>
+                            </div>
+                            <div class="profile-popup-stat">
+                                <div class="profile-popup-stat-value">${data.followerCount || 0}</div>
+                                <div class="profile-popup-stat-label">フォロワー</div>
+                            </div>
+                            <div class="profile-popup-stat">
+                                <div class="profile-popup-stat-value">${data.friendCount || 0}</div>
+                                <div class="profile-popup-stat-label">フレンド</div>
+                            </div>
+                        </div>
+                    `;
+
+                    // ポップアップを表示
+                    document.getElementById('profilePopupOverlay').classList.add('active');
+
+                    // フォロー状態を取得してボタンを更新
+                    await updatePopupFollowButton(userId);
+                }
+            } catch (error) {
+                console.error('プロフィール取得エラー:', error);
+            }
+        }
+
+        // ポップアップのフォローボタンの状態を更新
+        async function updatePopupFollowButton(userId) {
+            try {
+                const response = await fetch(`/api/users/${userId}/relationship`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const followBtn = document.getElementById('btnPopupFollow');
+                    const relationship = data.relationship;
+
+                    if (relationship === 'friend') {
+                        followBtn.innerHTML = '<i class="fas fa-user-check me-2"></i>フレンド';
+                        followBtn.classList.add('following');
+                        followBtn.dataset.relationship = 'friend';
+                    } else if (relationship === 'following') {
+                        followBtn.innerHTML = '<i class="fas fa-user-check me-2"></i>フォロー中';
+                        followBtn.classList.add('following');
+                        followBtn.dataset.relationship = 'following';
+                    } else if (relationship === 'follower') {
+                        followBtn.innerHTML = '<i class="fas fa-user-plus me-2"></i>フォローバック';
+                        followBtn.classList.remove('following');
+                        followBtn.dataset.relationship = 'follower';
+                    } else {
+                        followBtn.innerHTML = '<i class="fas fa-user-plus me-2"></i>フォロー';
+                        followBtn.classList.remove('following');
+                        followBtn.dataset.relationship = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error('Error getting relationship:', error);
+            }
+        }
+
+        // プロフィールポップアップを閉じる
+        function closeProfilePopup(event) {
+            if (event) event.stopPropagation();
+            document.getElementById('profilePopupOverlay').classList.remove('active');
+            currentPopupUserId = null;
+        }
+
+        // ポップアップのDMボタン
+        document.getElementById('btnPopupChat').addEventListener('click', async function() {
+            if (!currentPopupUserId) return;
+            // closeProfilePopupの前にuserIdを保存（closeで nullにリセットされるため）
+            const targetId = parseInt(currentPopupUserId);
+            closeProfilePopup();
+            // DM会話を開始または取得
+            try {
+                console.log('📤 DM開始リクエスト - targetUserId:', targetId);
+                const response = await fetch('/api/dm/conversations/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ targetUserId: targetId })
+                });
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ DM開始エラーレスポンス:', response.status, errorText);
+                    alert('DMの開始に失敗しました: ' + response.status);
+                    return;
+                }
+                const data = await response.json();
+                console.log('📥 DM開始レスポンス:', data);
+                if (data.success && data.conversation) {
+                    // ルームチャット画面を非表示
+                    const roomChatSection = document.getElementById('room-chat-section');
+                    if (roomChatSection) {
+                        roomChatSection.style.display = 'none';
+                        roomChatSection.classList.remove('active');
+                    }
+                    // メンバーパネルも閉じる
+                    const membersSection = document.getElementById('room-members-section');
+                    if (membersSection) {
+                        membersSection.style.display = 'none';
+                        membersSection.classList.remove('active');
+                    }
+                    // DM画面を開く
+                    await openDMScreen(data.conversation.conversationId);
+                }
+            } catch (error) {
+                console.error('DM開始エラー:', error);
+                alert('DMの開始に失敗しました');
+            }
+        });
+
+        // ポップアップのフォローボタン
+        document.getElementById('btnPopupFollow').addEventListener('click', async function() {
+            if (!currentPopupUserId) return;
+
+            const followBtn = document.getElementById('btnPopupFollow');
+            const isFollowing = followBtn.classList.contains('following');
+            const relationship = followBtn.dataset.relationship;
+
+            // フォロー済み・フレンドの場合は確認ダイアログを表示
+            if (isFollowing) {
+                let confirmMessage = 'フォローを解除しますか？';
+                if (relationship === 'friend') {
+                    confirmMessage = 'フレンド関係を解除しますか？\n（相互フォローが解除されます）';
+                }
+                if (!confirm(confirmMessage)) {
+                    return;
+                }
+            }
+
+            const endpoint = isFollowing ? 'unfollow' : 'follow';
+
+            // ボタンを一時的に無効化
+            followBtn.disabled = true;
+            const originalText = followBtn.innerHTML;
+            followBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>処理中...';
+
+            try {
+                const response = await fetch(`/api/users/${currentPopupUserId}/${endpoint}`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    // ボタンの状態を即座に更新
+                    await updatePopupFollowButton(currentPopupUserId);
+
+                    // ポップアップ内のフォロワー数を更新
+                    const statsContainer = document.querySelector('.profile-popup-stats');
+                    if (statsContainer && data.targetFollowerCount !== undefined) {
+                        const followerStat = statsContainer.querySelectorAll('.profile-popup-stat')[1];
+                        if (followerStat) {
+                            const valueEl = followerStat.querySelector('.profile-popup-stat-value');
+                            if (valueEl) {
+                                valueEl.textContent = data.targetFollowerCount;
+                            }
+                        }
+                    }
+                } else {
+                    alert(data.message || 'エラーが発生しました');
+                    followBtn.innerHTML = originalText;
+                }
+            } catch (error) {
+                console.error('Error toggling follow:', error);
+                alert('エラーが発生しました');
+                followBtn.innerHTML = originalText;
+            } finally {
+                followBtn.disabled = false;
+            }
+        });
 
         // ルームメッセージ送信
         document.getElementById('roomSendBtn').addEventListener('click', function() {
@@ -3959,13 +4231,13 @@
             }
 
             const chatMessage = {
-                roomId: currentRoomId,
+                chatRoomId: currentRoomId,
                 content: message,
                 type: 'CHAT'
             };
 
             try {
-                window.stompClient.send(`/app/chat.sendMessage/${currentRoomId}`, {}, JSON.stringify(chatMessage));
+                window.stompClient.send('/app/chat.sendMessage', {}, JSON.stringify(chatMessage));
                 input.value = '';
 
                 // 自動でサイズをリセット
@@ -3980,6 +4252,258 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // ========================================
+        // フォロー/フォロワー/フレンド一覧機能
+        // ========================================
+        let currentRelationsTab = 'following';
+
+        // マイページの統計をクリック可能にする
+        document.querySelectorAll('.stat-clickable').forEach(stat => {
+            stat.style.cursor = 'pointer';
+            stat.addEventListener('click', function() {
+                const tab = this.dataset.tab;
+                openRelationsSection(tab);
+            });
+        });
+
+        // 一覧画面を開く
+        function openRelationsSection(tab) {
+            currentRelationsTab = tab;
+
+            // セクションを切り替え
+            const sections = document.querySelectorAll('.app-section');
+            sections.forEach(section => section.classList.remove('active'));
+
+            const relationsSection = document.getElementById('relations-section');
+            relationsSection.style.display = 'block';
+            relationsSection.classList.add('active');
+
+            // フッターを非表示
+            const bottomNav = document.querySelector('.bottom-nav');
+            if (bottomNav) bottomNav.style.display = 'none';
+            const createPostBtn = document.getElementById('btnCreatePost');
+            if (createPostBtn) createPostBtn.style.display = 'none';
+
+            // タブをアクティブにする
+            document.querySelectorAll('.relations-tab').forEach(t => {
+                t.classList.remove('active');
+                if (t.dataset.tab === tab) t.classList.add('active');
+            });
+
+            // 一覧を読み込む
+            loadRelationsList(tab);
+        }
+
+        // 戻るボタン
+        document.getElementById('backFromRelationsBtn').addEventListener('click', function() {
+            const relationsSection = document.getElementById('relations-section');
+            relationsSection.style.display = 'none';
+            relationsSection.classList.remove('active');
+
+            // マイページに戻る
+            const sections = document.querySelectorAll('.app-section');
+            sections.forEach(section => section.classList.remove('active'));
+            document.getElementById('mypage-section').classList.add('active');
+
+            // フッターを表示
+            const bottomNav = document.querySelector('.bottom-nav');
+            if (bottomNav) bottomNav.style.display = 'flex';
+        });
+
+        // タブ切り替え
+        document.querySelectorAll('.relations-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabName = this.dataset.tab;
+                currentRelationsTab = tabName;
+
+                // タブをアクティブにする
+                document.querySelectorAll('.relations-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                // 一覧を読み込む
+                loadRelationsList(tabName);
+            });
+        });
+
+        // 一覧を読み込む
+        async function loadRelationsList(tab) {
+            const listContainer = document.getElementById('relationsList');
+            listContainer.innerHTML = '<div class="relations-empty"><i class="fas fa-spinner fa-spin"></i><p>読み込み中...</p></div>';
+
+            try {
+                const response = await fetch(`/api/users/me/${tab}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    displayRelationsList(data.users, tab);
+                } else {
+                    listContainer.innerHTML = '<div class="relations-empty"><i class="fas fa-exclamation-circle"></i><p>読み込みに失敗しました</p></div>';
+                }
+            } catch (error) {
+                console.error('一覧読み込みエラー:', error);
+                listContainer.innerHTML = '<div class="relations-empty"><i class="fas fa-exclamation-circle"></i><p>読み込みに失敗しました</p></div>';
+            }
+        }
+
+        // 一覧を表示
+        async function displayRelationsList(users, tab) {
+            const listContainer = document.getElementById('relationsList');
+
+            if (!users || users.length === 0) {
+                const emptyMessages = {
+                    following: 'フォローしているユーザーはいません',
+                    followers: 'フォロワーはいません',
+                    friends: 'フレンドはいません'
+                };
+                listContainer.innerHTML = `<div class="relations-empty"><i class="fas fa-user-friends"></i><p>${emptyMessages[tab]}</p></div>`;
+                return;
+            }
+
+            listContainer.innerHTML = users.map(user => {
+                const avatarStyle = user.avatarUrl
+                    ? `background-image: url(${user.avatarUrl}); background-size: cover; background-position: center;`
+                    : '';
+                const displayName = user.displayName || user.username;
+
+                return `
+                    <div class="relation-item" data-user-id="${user.id}">
+                        <div class="relation-avatar-clickable" style="${avatarStyle}" data-user-id="${user.id}">
+                            ${!user.avatarUrl ? '<i class="fas fa-user"></i>' : ''}
+                        </div>
+                        <div class="relation-info">
+                            <div class="relation-name">${escapeHtml(displayName)}</div>
+                        </div>
+                        <div class="relation-actions">
+                            <button class="relation-dm-btn" data-user-id="${user.id}">
+                                <i class="fas fa-comment"></i>
+                            </button>
+                            <button class="relation-follow-btn" data-user-id="${user.id}" data-relationship="">
+                                <i class="fas fa-user-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // 各ユーザーの関係性を取得してフォローボタンを更新
+            for (const user of users) {
+                await updateRelationFollowButton(user.id);
+            }
+
+            // アバタークリックでプロフィール表示
+            listContainer.querySelectorAll('.relation-avatar-clickable').forEach(avatar => {
+                avatar.style.cursor = 'pointer';
+                avatar.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const userId = this.dataset.userId;
+                    document.getElementById('relations-section').style.display = 'none';
+                    document.getElementById('relations-section').classList.remove('active');
+                    viewUserProfile(parseInt(userId));
+                });
+            });
+
+            // DMボタン
+            listContainer.querySelectorAll('.relation-dm-btn').forEach(btn => {
+                btn.addEventListener('click', async function(e) {
+                    e.stopPropagation();
+                    const userId = parseInt(this.dataset.userId);
+                    try {
+                        const response = await fetch('/api/dm/conversations/start', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ targetUserId: userId })
+                        });
+                        const data = await response.json();
+                        if (data.success && data.conversation) {
+                            document.getElementById('relations-section').style.display = 'none';
+                            document.getElementById('relations-section').classList.remove('active');
+                            await openDMScreen(data.conversation.conversationId);
+                        }
+                    } catch (error) {
+                        console.error('DM開始エラー:', error);
+                    }
+                });
+            });
+
+            // フォローボタン
+            listContainer.querySelectorAll('.relation-follow-btn').forEach(btn => {
+                btn.addEventListener('click', async function(e) {
+                    e.stopPropagation();
+                    const userId = parseInt(this.dataset.userId);
+                    const isFollowing = this.classList.contains('following');
+                    const relationship = this.dataset.relationship;
+
+                    if (isFollowing) {
+                        let confirmMessage = 'フォローを解除しますか？';
+                        if (relationship === 'friend') {
+                            confirmMessage = 'フレンド関係を解除しますか？\n（相互フォローが解除されます）';
+                        }
+                        if (!confirm(confirmMessage)) return;
+                    }
+
+                    const endpoint = isFollowing ? 'unfollow' : 'follow';
+                    this.disabled = true;
+
+                    try {
+                        const response = await fetch(`/api/users/${userId}/${endpoint}`, { method: 'POST' });
+                        const data = await response.json();
+                        if (data.success) {
+                            await updateRelationFollowButton(userId);
+                            // マイページの数値も更新
+                            if (data.followingCount !== undefined) {
+                                document.getElementById('myFollowingCount').textContent = data.followingCount;
+                            }
+                            if (data.followerCount !== undefined) {
+                                document.getElementById('myFollowerCount').textContent = data.followerCount;
+                            }
+                            if (data.friendCount !== undefined) {
+                                document.getElementById('myFriendCount').textContent = data.friendCount;
+                            }
+                        }
+                    } catch (error) {
+                        console.error('フォロー切り替えエラー:', error);
+                    } finally {
+                        this.disabled = false;
+                    }
+                });
+            });
+        }
+
+        // 一覧のフォローボタンを更新
+        async function updateRelationFollowButton(userId) {
+            try {
+                const response = await fetch(`/api/users/${userId}/relationship`);
+                const data = await response.json();
+                if (data.success) {
+                    const btn = document.querySelector(`.relation-follow-btn[data-user-id="${userId}"]`);
+                    if (!btn) return;
+
+                    const relationship = data.relationship;
+                    btn.dataset.relationship = relationship;
+
+                    if (relationship === 'friend') {
+                        btn.innerHTML = '<i class="fas fa-user-check"></i>';
+                        btn.classList.add('following');
+                        btn.title = 'フレンド';
+                    } else if (relationship === 'following') {
+                        btn.innerHTML = '<i class="fas fa-user-check"></i>';
+                        btn.classList.add('following');
+                        btn.title = 'フォロー中';
+                    } else if (relationship === 'follower') {
+                        btn.innerHTML = '<i class="fas fa-user-plus"></i>';
+                        btn.classList.remove('following');
+                        btn.title = 'フォローバック';
+                    } else {
+                        btn.innerHTML = '<i class="fas fa-user-plus"></i>';
+                        btn.classList.remove('following');
+                        btn.title = 'フォロー';
+                    }
+                }
+            } catch (error) {
+                console.error('関係性取得エラー:', error);
+            }
         }
     </script>
 </body>

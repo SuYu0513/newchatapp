@@ -1848,6 +1848,17 @@ body:has(.match-header[style*="display: block"]) #match-section .section-content
     flex: 1;
 }
 
+.stat-item.stat-clickable {
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+}
+
+.stat-item.stat-clickable:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
 .stat-label {
     font-size: 0.75rem;
     color: rgba(255, 255, 255, 0.6);
@@ -2050,6 +2061,13 @@ body:has(.match-header[style*="display: block"]) #match-section .section-content
     text-align: right;
 }
 
+.dm-message-sender {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+
 /* DM入力エリア（フッター固定） */
 .dm-input-area {
     display: flex;
@@ -2164,6 +2182,387 @@ body.dm-active .bottom-nav {
     pointer-events: none !important;
     z-index: -9999 !important;
     transform: translateY(200%) !important;
+}
+
+/* ======================================
+   プロフィールポップアップ
+   ====================================== */
+.profile-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    backdrop-filter: blur(4px);
+}
+
+.profile-popup-overlay.active {
+    display: flex;
+}
+
+.profile-popup {
+    width: 85%;
+    max-width: 350px;
+    max-height: 70vh;
+    background: linear-gradient(145deg, rgba(40, 40, 60, 0.98), rgba(25, 25, 40, 0.98));
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-popup-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.profile-popup-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.profile-popup-content {
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.profile-popup-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    font-size: 2rem;
+    color: rgba(255, 255, 255, 0.8);
+    background-size: cover;
+    background-position: center;
+}
+
+.profile-popup-name {
+    text-align: center;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 0.25rem;
+}
+
+.profile-popup-username {
+    text-align: center;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 1rem;
+}
+
+.profile-popup-bio {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.5;
+    text-align: center;
+    margin-bottom: 1rem;
+    padding: 0 0.5rem;
+}
+
+.profile-popup-tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.profile-popup-tag {
+    background: rgba(102, 126, 234, 0.2);
+    color: #a8b4ff;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+}
+
+.profile-popup-stats {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 0.75rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.profile-popup-stat {
+    text-align: center;
+}
+
+.profile-popup-stat-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: white;
+}
+
+.profile-popup-stat-label {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.profile-popup-actions {
+    display: flex;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-popup-action {
+    flex: 1;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.btn-popup-chat {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.btn-popup-chat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-popup-follow {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.btn-popup-follow:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.btn-popup-follow.following {
+    background: rgba(102, 126, 234, 0.3);
+    color: #a8b4ff;
+}
+
+.btn-popup-follow.following:hover {
+    background: rgba(220, 53, 69, 0.3);
+    color: #ff8a8a;
+}
+
+/* ======================================
+   フォロー/フォロワー/友達一覧
+   ====================================== */
+.relations-header {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.relations-tabs {
+    display: flex;
+    flex: 1;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.relations-tab {
+    padding: 0.5rem 1rem;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 20px;
+    transition: all 0.2s ease;
+}
+
+.relations-tab:hover {
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.relations-tab.active {
+    color: white;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.relations-list-container {
+    padding: 1rem;
+    overflow-y: auto;
+    height: calc(100vh - 120px);
+}
+
+.relations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.relation-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    gap: 0.75rem;
+}
+
+.relation-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.8);
+    background-size: cover;
+    background-position: center;
+}
+
+.relation-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.relation-name {
+    font-weight: 600;
+    color: white;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.relation-username {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.relation-bio {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.relations-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.relations-empty i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.relation-avatar-clickable {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.8);
+    background-size: cover;
+    background-position: center;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.relation-avatar-clickable:hover {
+    transform: scale(1.05);
+}
+
+.relation-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.relation-dm-btn,
+.relation-follow-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+}
+
+.relation-dm-btn {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.relation-dm-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.relation-follow-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.relation-follow-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.relation-follow-btn.following {
+    background: rgba(102, 126, 234, 0.3);
+    color: #a8b4ff;
+}
+
+.relation-follow-btn.following:hover {
+    background: rgba(220, 53, 69, 0.3);
+    color: #ff8a8a;
 }
 
 /* ======================================

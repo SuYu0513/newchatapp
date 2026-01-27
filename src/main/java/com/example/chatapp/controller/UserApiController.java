@@ -298,9 +298,105 @@ public class UserApiController {
             
             response.put("success", true);
             response.put("relationship", relationship);
-            
+
             return ResponseEntity.ok(response);
-            
+
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * 自分のフォロー一覧を取得
+     */
+    @GetMapping("/me/following")
+    public ResponseEntity<Map<String, Object>> getMyFollowing(Principal principal) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            String username = principal.getName();
+            User currentUser = userService.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("ユーザーが見つかりません"));
+
+            List<User> following = friendshipService.getFollowing(currentUser);
+            List<Map<String, Object>> users = following.stream().map(user -> {
+                Map<String, Object> userMap = new HashMap<>();
+                userMap.put("id", user.getId());
+                userMap.put("username", user.getUsername());
+                userMap.put("displayName", user.getProfile() != null ? user.getProfile().getDisplayName() : user.getUsername());
+                userMap.put("avatarUrl", user.getProfile() != null ? user.getProfile().getAvatarUrl() : null);
+                userMap.put("bio", user.getProfile() != null ? user.getProfile().getBio() : null);
+                return userMap;
+            }).collect(java.util.stream.Collectors.toList());
+
+            response.put("success", true);
+            response.put("users", users);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * 自分のフォロワー一覧を取得
+     */
+    @GetMapping("/me/followers")
+    public ResponseEntity<Map<String, Object>> getMyFollowers(Principal principal) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            String username = principal.getName();
+            User currentUser = userService.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("ユーザーが見つかりません"));
+
+            List<User> followers = friendshipService.getFollowers(currentUser);
+            List<Map<String, Object>> users = followers.stream().map(user -> {
+                Map<String, Object> userMap = new HashMap<>();
+                userMap.put("id", user.getId());
+                userMap.put("username", user.getUsername());
+                userMap.put("displayName", user.getProfile() != null ? user.getProfile().getDisplayName() : user.getUsername());
+                userMap.put("avatarUrl", user.getProfile() != null ? user.getProfile().getAvatarUrl() : null);
+                userMap.put("bio", user.getProfile() != null ? user.getProfile().getBio() : null);
+                return userMap;
+            }).collect(java.util.stream.Collectors.toList());
+
+            response.put("success", true);
+            response.put("users", users);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * 自分の友達一覧を取得
+     */
+    @GetMapping("/me/friends")
+    public ResponseEntity<Map<String, Object>> getMyFriends(Principal principal) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            String username = principal.getName();
+            User currentUser = userService.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("ユーザーが見つかりません"));
+
+            List<User> friends = friendshipService.getFriends(currentUser);
+            List<Map<String, Object>> users = friends.stream().map(user -> {
+                Map<String, Object> userMap = new HashMap<>();
+                userMap.put("id", user.getId());
+                userMap.put("username", user.getUsername());
+                userMap.put("displayName", user.getProfile() != null ? user.getProfile().getDisplayName() : user.getUsername());
+                userMap.put("avatarUrl", user.getProfile() != null ? user.getProfile().getAvatarUrl() : null);
+                userMap.put("bio", user.getProfile() != null ? user.getProfile().getBio() : null);
+                return userMap;
+            }).collect(java.util.stream.Collectors.toList());
+
+            response.put("success", true);
+            response.put("users", users);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", e.getMessage());
