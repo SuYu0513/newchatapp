@@ -19,6 +19,10 @@ public class WebConfig implements WebMvcConfigurer {
         // アップロードされたアバター画像の静的リソースマッピング
         registry.addResourceHandler("/uploads/avatars/**")
                 .addResourceLocations("file:src/main/resources/static/uploads/avatars/");
+
+        // マッチング用写真の静的リソースマッピング
+        registry.addResourceHandler("/uploads/matching/**")
+                .addResourceLocations("file:src/main/resources/static/uploads/matching/");
         
         // CSS/JSファイルにキャッシュ制御ヘッダーを追加（開発環境向け）
         registry.addResourceHandler("/css/**", "/js/**")

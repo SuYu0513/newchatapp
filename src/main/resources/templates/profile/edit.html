@@ -11,93 +11,129 @@
     <link href="/css/profile-edit.css" rel="stylesheet">
     <link href="/css/create-profile.css" rel="stylesheet">
     <style>
-        .avatar-preview {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid var(--primary-color);
-            transition: all 0.3s ease;
+        body {
+            min-height: 100vh;
+            background:
+                radial-gradient(ellipse at 20% 10%, rgba(135, 206, 250, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(176, 224, 230, 0.1) 0%, transparent 40%),
+                linear-gradient(to bottom,
+                    #0a0e27 0%,
+                    #1a1f3a 25%,
+                    #0f1929 50%,
+                    #1e2740 75%,
+                    #0d1321 100%
+                );
+            background-attachment: fixed;
         }
-        
-        .avatar-upload-area {
-            position: relative;
-            display: inline-block;
+
+        .card {
+            background: rgba(46, 40, 75, 0.95);
+            border: none;
+            border-radius: 15px;
+            opacity: 0.9;
         }
-        
-        .avatar-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
+
+        .card-header {
+            background: rgba(36, 3, 97, 0.9);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 15px 15px 0 0 !important;
+        }
+
+        h2, .text-muted {
+            color: rgba(66, 8, 8, 0.9) !important;
+        }
+
+        /* 星のキラキラ効果 */
+        .star {
+            position: fixed;
+            width: 2px;
+            height: 2px;
+            background: #e0f0ff;
             border-radius: 50%;
+            animation: twinkle 3s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 1;
+            box-shadow: 0 0 3px rgba(224, 240, 255, 0.8),
+                        0 0 6px rgba(135, 206, 250, 0.6),
+                        0 0 10px rgba(135, 206, 250, 0.4);
+        }
+
+        .star.large {
+            width: 3px;
+            height: 3px;
+            box-shadow: 0 0 4px rgba(224, 240, 255, 1),
+                        0 0 8px rgba(135, 206, 250, 0.8),
+                        0 0 15px rgba(135, 206, 250, 0.5);
+        }
+
+        @keyframes twinkle {
+            0%, 100% {
+                opacity: 0.3;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.5);
+            }
+        }
+
+        /* シンプルヘッダー */
+        .simple-header {
             display: flex;
             align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            padding: 15px 20px;
+            background: rgba(20, 30, 50, 0.85);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .simple-header .back-btn {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
             cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
         }
-        
-        .avatar-upload-area:hover .avatar-overlay {
-            opacity: 1;
+
+        .simple-header .back-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
-        
-        .character-counter {
-            font-size: 0.8rem;
-            text-align: right;
+
+        .simple-header .header-title {
+            flex: 1;
+            text-align: center;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
         }
-        
-        .character-counter.warning {
-            color: #f39c12;
-        }
-        
-        .character-counter.danger {
-            color: #e74c3c;
+
+        .simple-header .header-spacer {
+            width: 80px;
         }
     </style>
 </head>
 <body>
-    <!-- ナビゲーションバー -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="/chat">
-                <i class="fas fa-comments me-2"></i>チャットアプリ
-            </a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link" th:href="@{/chat}">
-                    <i class="fas fa-comment me-1"></i>チャット
-                </a>
-                <a class="nav-link" th:href="@{/rooms}">
-                    <i class="fas fa-list me-1"></i>ルーム一覧
-                </a>
-                <a class="nav-link" th:href="@{/profile}">
-                    <i class="fas fa-user me-1"></i>プロフィール
-                </a>
-                <a class="nav-link" th:href="@{/logout}">
-                    <i class="fas fa-sign-out-alt me-1"></i>ログアウト
-                </a>
-            </div>
-        </div>
-    </nav>
+    <!-- シンプルヘッダー -->
+    <header class="simple-header">
+        <a href="/home?tab=mypage" class="back-btn">
+            <i class="fas fa-chevron-left"></i>
+            <span>戻る</span>
+        </a>
+        <h1 class="header-title">プロフ編集</h1>
+        <div class="header-spacer"></div>
+    </header>
 
     <div class="container mt-4">
-        <!-- ページヘッダー -->
-        <div class="row mb-4">
-            <div class="col">
-                <h2>
-                    <i class="fas fa-user-edit me-2"></i>プロフィール編集
-                </h2>
-                <p class="text-muted">あなたの情報を設定・変更できます</p>
-            </div>
-            <div class="col-auto">
-                <a th:href="@{/home}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left me-1"></i>戻る
-                </a>
-            </div>
-        </div>
 
         <!-- 成功・エラーメッセージ -->
         <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
@@ -385,74 +421,6 @@
                         </div>
                     </div>
                     
-                    <!-- プライバシー設定 -->
-                    <div class="card mt-3">
-                        <div class="card-header">
-                            <h6 class="mb-0">
-                                <i class="fas fa-shield-alt me-2"></i>プライバシー設定
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <!-- プロフィール公開レベル -->
-                            <div class="mb-3">
-                                <label for="privacyLevel" class="form-label">
-                                    <i class="fas fa-eye me-1"></i>プロフィール公開レベル
-                                </label>
-                                <select class="form-select" id="privacyLevel" name="privacyLevel">
-                                    <option value="PUBLIC" 
-                                            th:selected="${profile.privacyLevel.name() == 'PUBLIC'}">
-                                        誰でも閲覧可能
-                                    </option>
-                                    <option value="FRIENDS_ONLY" 
-                                            th:selected="${profile.privacyLevel.name() == 'FRIENDS_ONLY'}">
-                                        フレンドのみ
-                                    </option>
-                                    <option value="PRIVATE" 
-                                            th:selected="${profile.privacyLevel.name() == 'PRIVATE'}">
-                                        非公開
-                                    </option>
-                                </select>
-                                <small class="text-muted">
-                                    プロフィールを誰が閲覧できるかを設定します
-                                </small>
-                            </div>
-                            
-                            <!-- 検索可能設定 -->
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" 
-                                           type="checkbox" 
-                                           id="isSearchable" 
-                                           name="isSearchable" 
-                                           th:checked="${profile.isSearchable}">
-                                    <label class="form-check-label" for="isSearchable">
-                                        <i class="fas fa-search me-1"></i>検索結果に表示する
-                                    </label>
-                                </div>
-                                <small class="text-muted">
-                                    他のユーザーがあなたを検索できるようになります
-                                </small>
-                            </div>
-                            
-                            <!-- ランダムマッチング設定 -->
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" 
-                                           type="checkbox" 
-                                           id="allowRandomMatching" 
-                                           name="allowRandomMatching" 
-                                           th:checked="${profile.allowRandomMatching}">
-                                    <label class="form-check-label" for="allowRandomMatching">
-                                        <i class="fas fa-random me-1"></i>ランダムマッチングに参加する
-                                    </label>
-                                </div>
-                                <small class="text-muted">
-                                    知らない人とのランダムチャットに参加できます
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-                    
                     <!-- 保存ボタン -->
                     <div class="card mt-3">
                         <div class="card-body">
@@ -485,29 +453,31 @@
                 avatarFile.click();
             });
             
-            // ファイル選択時のプレビュー更新
+            // ファイル選択時 → クロップモーダルを開く
             avatarFile.addEventListener('change', function(e) {
                 const file = e.target.files[0];
-                if (file) {
-                    // ファイルサイズチェック (5MB)
-                    if (file.size > 5 * 1024 * 1024) {
-                        alert('ファイルサイズは5MB以下にしてください。');
-                        this.value = '';
-                        return;
-                    }
-                    
+                if (!file) return;
+
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('ファイルサイズは5MB以下にしてください。');
+                    this.value = '';
+                    return;
+                }
+
+                CropModal.open(file, function(blob) {
                     // プレビュー表示
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        avatarPreview.src = e.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                    
-                    // 削除ボタンを表示
+                    const url = URL.createObjectURL(blob);
+                    avatarPreview.src = url;
+
+                    // クロップ済みBlobをfile inputにセット
+                    const dt = new DataTransfer();
+                    dt.items.add(new File([blob], 'avatar.png', { type: 'image/png' }));
+                    avatarFile.files = dt.files;
+
                     if (removeAvatarBtn) {
                         removeAvatarBtn.style.display = 'block';
                     }
-                }
+                });
             });
             
             // アバター削除
@@ -1434,5 +1404,174 @@
             </div>
         </div>
     </div>
+
+    <!-- 画像クロップモーダル -->
+    <div class="crop-modal-overlay" id="cropModalOverlay">
+        <div class="crop-canvas-wrap" id="cropCanvasWrap">
+            <canvas id="cropCanvas" width="560" height="560"></canvas>
+        </div>
+        <div class="crop-controls">
+            <div class="crop-zoom-row">
+                <i class="fas fa-search-minus"></i>
+                <input type="range" class="crop-zoom-slider" id="cropZoomSlider" min="100" max="400" value="100">
+                <i class="fas fa-search-plus"></i>
+            </div>
+            <div class="crop-btn-row">
+                <button type="button" class="crop-btn crop-btn-cancel" id="cropCancelBtn">キャンセル</button>
+                <button type="button" class="crop-btn crop-btn-confirm" id="cropConfirmBtn">確定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 星空エフェクト -->
+    <script>
+        function createStars() {
+            const starCount = 100;
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = Math.random() > 0.8 ? 'star large' : 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                star.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                document.body.appendChild(star);
+            }
+        }
+        createStars();
+
+        // ========================================
+        // 画像クロップモーダル
+        // ========================================
+        const CropModal = (function() {
+            let canvas, ctx, img;
+            let offsetX = 0, offsetY = 0, scale = 1, minScale = 1;
+            let dragging = false, lastX = 0, lastY = 0;
+            let pinchStartDist = 0, pinchStartScale = 1;
+            let onConfirmCallback = null;
+            const SIZE = 560;
+            const OUT = 300;
+
+            function init() {
+                canvas = document.getElementById('cropCanvas');
+                ctx = canvas.getContext('2d');
+                const wrap = document.getElementById('cropCanvasWrap');
+                const slider = document.getElementById('cropZoomSlider');
+
+                wrap.addEventListener('pointerdown', onPointerDown);
+                wrap.addEventListener('pointermove', onPointerMove);
+                wrap.addEventListener('pointerup', onPointerUp);
+                wrap.addEventListener('pointercancel', onPointerUp);
+                wrap.addEventListener('touchstart', onTouchStart, {passive: false});
+                wrap.addEventListener('touchmove', onTouchMove, {passive: false});
+                wrap.addEventListener('wheel', function(e) {
+                    e.preventDefault();
+                    const delta = e.deltaY > 0 ? -0.05 : 0.05;
+                    setScale(scale + delta);
+                    draw();
+                    slider.value = Math.round(scale / minScale * 100);
+                }, {passive: false});
+                slider.addEventListener('input', function() {
+                    setScale(minScale * (this.value / 100));
+                    draw();
+                });
+                document.getElementById('cropCancelBtn').addEventListener('click', close);
+                document.getElementById('cropConfirmBtn').addEventListener('click', confirm);
+            }
+
+            function open(file, callback) {
+                onConfirmCallback = callback;
+                img = new Image();
+                img.onload = function() {
+                    minScale = SIZE / Math.min(img.width, img.height);
+                    scale = minScale;
+                    offsetX = (SIZE - img.width * scale) / 2;
+                    offsetY = (SIZE - img.height * scale) / 2;
+                    const slider = document.getElementById('cropZoomSlider');
+                    slider.value = 100; slider.min = 100; slider.max = 400;
+                    draw();
+                    document.getElementById('cropModalOverlay').classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                };
+                img.src = URL.createObjectURL(file);
+            }
+
+            function close() {
+                document.getElementById('cropModalOverlay').classList.remove('active');
+                document.body.style.overflow = '';
+                if (img && img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
+                onConfirmCallback = null;
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, SIZE, SIZE);
+                ctx.drawImage(img, offsetX, offsetY, img.width * scale, img.height * scale);
+            }
+
+            function clampOffset() {
+                const w = img.width * scale, h = img.height * scale;
+                offsetX = w >= SIZE ? Math.min(0, Math.max(SIZE - w, offsetX)) : (SIZE - w) / 2;
+                offsetY = h >= SIZE ? Math.min(0, Math.max(SIZE - h, offsetY)) : (SIZE - h) / 2;
+            }
+
+            function setScale(newScale) {
+                const cx = SIZE / 2, cy = SIZE / 2, old = scale;
+                scale = Math.max(minScale, Math.min(minScale * 4, newScale));
+                offsetX = cx - (cx - offsetX) * (scale / old);
+                offsetY = cy - (cy - offsetY) * (scale / old);
+                clampOffset();
+            }
+
+            function onPointerDown(e) {
+                if (e.pointerType === 'touch' && !e.isPrimary) return;
+                dragging = true; lastX = e.clientX; lastY = e.clientY;
+                e.currentTarget.setPointerCapture(e.pointerId);
+            }
+            function onPointerMove(e) {
+                if (!dragging) return;
+                const r = SIZE / canvas.getBoundingClientRect().width;
+                offsetX += (e.clientX - lastX) * r;
+                offsetY += (e.clientY - lastY) * r;
+                lastX = e.clientX; lastY = e.clientY;
+                clampOffset(); draw();
+            }
+            function onPointerUp() { dragging = false; }
+
+            function onTouchStart(e) {
+                if (e.touches.length === 2) {
+                    e.preventDefault();
+                    pinchStartDist = getTouchDist(e.touches);
+                    pinchStartScale = scale;
+                }
+            }
+            function onTouchMove(e) {
+                if (e.touches.length === 2) {
+                    e.preventDefault();
+                    setScale(pinchStartScale * (getTouchDist(e.touches) / pinchStartDist));
+                    draw();
+                    document.getElementById('cropZoomSlider').value = Math.round(scale / minScale * 100);
+                }
+            }
+            function getTouchDist(t) {
+                const dx = t[0].clientX - t[1].clientX, dy = t[0].clientY - t[1].clientY;
+                return Math.sqrt(dx * dx + dy * dy);
+            }
+
+            function confirm() {
+                const oc = document.createElement('canvas');
+                oc.width = OUT; oc.height = OUT;
+                const octx = oc.getContext('2d');
+                octx.beginPath(); octx.arc(OUT/2, OUT/2, OUT/2, 0, Math.PI*2); octx.closePath(); octx.clip();
+                const r = OUT / SIZE;
+                octx.drawImage(img, offsetX*r, offsetY*r, img.width*scale*r, img.height*scale*r);
+                oc.toBlob(function(blob) {
+                    if (onConfirmCallback) onConfirmCallback(blob);
+                    close();
+                }, 'image/png');
+            }
+
+            return { init, open, close };
+        })();
+        CropModal.init();
+    </script>
 </body>
 </html>

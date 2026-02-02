@@ -1,19 +1,30 @@
 package com.example.chatapp.service;
 
 import com.example.chatapp.entity.ChatRoom;
+import com.example.chatapp.entity.RoomInvitation;
 import com.example.chatapp.entity.User;
 import com.example.chatapp.repository.ChatRoomRepository;
+import com.example.chatapp.repository.RoomInvitationRepository;
 import com.example.chatapp.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,6 +38,9 @@ public class ChatRoomService {
 
     @Autowired
     private com.example.chatapp.repository.RoomJoinRequestRepository roomJoinRequestRepository;
+
+    @Autowired
+    private RoomInvitationRepository roomInvitationRepository;
 
     @Value("${app.debug.enabled:false}")
     private boolean debugEnabled;
@@ -622,5 +636,255 @@ public class ChatRoomService {
         }
 
         System.out.println("✅ 申請を拒否しました: " + applicantUsername + " -> " + room.getName());
+    }
+
+    /**
+     * ユーザーをルームに招待
+     */
+    public void inviteUserToRoom(Long chatRoomId, String inviterUsername, String inviteeUsername) {
+        Optional<ChatRoom> roomOpt = chatRoomRepository.findById(chatRoomId);
+        Optional<User> inviterOpt = userRepository.findByUsername(inviterUsername);
+        Optional<User> inviteeOpt = userRepository.findByUsername(inviteeUsername);
+
+        if (roomOpt.isEmpty() || inviterOpt.isEmpty() || inviteeOpt.isEmpty()) {
+            throw new RuntimeException("ルームまたはユーザーが見つかりません");
+        }
+
+        ChatRoom room = roomOpt.get();
+        User inviter = inviterOpt.get();
+        User invitee = inviteeOpt.get();
+
+        // 既に参加している場合はエラー
+        if (room.getUsers().contains(invitee)) {
+            throw new RuntimeException("このユーザーは既にルームに参加しています");
+        }
+
+        // 既に招待済みかチェック
+        List<RoomInvitation> existingInvitations =
+                roomInvitationRepository.findAllByChatRoomAndInvitee(room, invitee);
+
+        for (RoomInvitation invitation : existingInvitations) {
+            if (invitation.getStatus() == RoomInvitation.InvitationStatus.PENDING) {
+                throw new RuntimeException("既に招待済みです");
+            }
+        }
+
+        // 新規招待を作成
+        RoomInvitation newInvitation = new RoomInvitation(room, inviter, invitee);
+        roomInvitationRepository.save(newInvitation);
+
+        if (debugEnabled) {
+            System.out.println(inviterUsername + " が " + inviteeUsername + " をルーム " + room.getName() + " に招待しました");
+        }
+    }
+
+    /**
+     * 受け取った招待一覧を取得
+     */
+    public List<Map<String, Object>> getReceivedInvitations(String username) {
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (!userOpt.isPresent()) {
+            return List.of();
+        }
+
+        User user = userOpt.get();
+
+        // PENDING状態の招待を取得
+        List<RoomInvitation> invitations =
+                roomInvitationRepository.findByInviteeAndStatus(user, RoomInvitation.InvitationStatus.PENDING);
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (RoomInvitation invitation : invitations) {
+            Map<String, Object> invitationInfo = new HashMap<>();
+            ChatRoom room = invitation.getChatRoom();
+            User inviter = invitation.getInviter();
+
+            invitationInfo.put("invitationId", invitation.getId());
+            invitationInfo.put("roomId", room.getId());
+            invitationInfo.put("roomName", room.getName());
+            invitationInfo.put("roomDescription", room.getDescription());
+            invitationInfo.put("inviterUsername", inviter.getUsername());
+            invitationInfo.put("inviterDisplayName", inviter.getProfile() != null ?
+                    inviter.getProfile().getDisplayName() : inviter.getUsername());
+            invitationInfo.put("inviterAvatarUrl", inviter.getProfile() != null ?
+                    inviter.getProfile().getAvatarUrl() : null);
+            invitationInfo.put("invitedAt", invitation.getCreatedAt());
+
+            result.add(invitationInfo);
+        }
+
+        return result;
+    }
+
+    /**
+     * 招待を承認
+     */
+    public void acceptInvitation(Long invitationId, String username) {
+        Optional<RoomInvitation> invitationOpt = roomInvitationRepository.findById(invitationId);
+        Optional<User> userOpt = userRepository.findByUsername(username);
+
+        if (invitationOpt.isEmpty() || userOpt.isEmpty()) {
+            throw new RuntimeException("招待またはユーザーが見つかりません");
+        }
+
+        RoomInvitation invitation = invitationOpt.get();
+        User user = userOpt.get();
+
+        // 招待されたユーザー本人かチェック
+        if (!invitation.getInvitee().equals(user)) {
+            throw new RuntimeException("この招待はあなた宛てではありません");
+        }
+
+        // 既に処理済みかチェック
+        if (invitation.getStatus() != RoomInvitation.InvitationStatus.PENDING) {
+            throw new RuntimeException("この招待は既に処理されています");
+        }
+
+        // 招待を承認済みに
+        invitation.setStatus(RoomInvitation.InvitationStatus.ACCEPTED);
+        invitation.setProcessedAt(java.time.LocalDateTime.now());
+        roomInvitationRepository.save(invitation);
+
+        // ユーザーをルームに追加
+        joinChatRoom(invitation.getChatRoom().getId(), username);
+
+        if (debugEnabled) {
+            System.out.println(username + " が招待を承認してルーム " + invitation.getChatRoom().getName() + " に参加しました");
+        }
+    }
+
+    /**
+     * 招待を拒否
+     */
+    public void rejectInvitation(Long invitationId, String username) {
+        Optional<RoomInvitation> invitationOpt = roomInvitationRepository.findById(invitationId);
+        Optional<User> userOpt = userRepository.findByUsername(username);
+
+        if (invitationOpt.isEmpty() || userOpt.isEmpty()) {
+            throw new RuntimeException("招待またはユーザーが見つかりません");
+        }
+
+        RoomInvitation invitation = invitationOpt.get();
+        User user = userOpt.get();
+
+        // 招待されたユーザー本人かチェック
+        if (!invitation.getInvitee().equals(user)) {
+            throw new RuntimeException("この招待はあなた宛てではありません");
+        }
+
+        // 既に処理済みかチェック
+        if (invitation.getStatus() != RoomInvitation.InvitationStatus.PENDING) {
+            throw new RuntimeException("この招待は既に処理されています");
+        }
+
+        // 招待を拒否済みに
+        invitation.setStatus(RoomInvitation.InvitationStatus.REJECTED);
+        invitation.setProcessedAt(java.time.LocalDateTime.now());
+        roomInvitationRepository.save(invitation);
+
+        if (debugEnabled) {
+            System.out.println(username + " が招待を拒否しました: ルーム " + invitation.getChatRoom().getName());
+        }
+    }
+
+    /**
+     * ルームへの送信済み招待一覧を取得（PENDING状態のもの）
+     */
+    public List<Map<String, Object>> getSentInvitationsForRoom(Long roomId, String inviterUsername) {
+        Optional<ChatRoom> roomOpt = chatRoomRepository.findById(roomId);
+        Optional<User> inviterOpt = userRepository.findByUsername(inviterUsername);
+
+        if (roomOpt.isEmpty() || inviterOpt.isEmpty()) {
+            return List.of();
+        }
+
+        ChatRoom room = roomOpt.get();
+
+        // このルームへのPENDING状態の招待を取得
+        List<RoomInvitation> invitations =
+                roomInvitationRepository.findByChatRoomAndStatus(room, RoomInvitation.InvitationStatus.PENDING);
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (RoomInvitation invitation : invitations) {
+            Map<String, Object> invitationInfo = new HashMap<>();
+            User invitee = invitation.getInvitee();
+
+            invitationInfo.put("invitationId", invitation.getId());
+            invitationInfo.put("inviteeUsername", invitee.getUsername());
+            invitationInfo.put("inviteeDisplayName", invitee.getProfile() != null ?
+                    invitee.getProfile().getDisplayName() : invitee.getUsername());
+            invitationInfo.put("invitedAt", invitation.getCreatedAt());
+
+            result.add(invitationInfo);
+        }
+
+        return result;
+    }
+
+    // ============================
+    // ルームアイコン関連
+    // ============================
+
+    private static final String ROOM_ICON_UPLOAD_DIR = "src/main/resources/static/uploads/rooms/";
+    private static final String[] ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif"};
+    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+    /**
+     * ルームアイコンをアップロード（作成者のみ）
+     */
+    public ChatRoom uploadRoomIcon(Long roomId, String username, MultipartFile file) throws IOException {
+        Optional<ChatRoom> roomOpt = chatRoomRepository.findById(roomId);
+        if (roomOpt.isEmpty()) {
+            throw new IllegalArgumentException("ルームが見つかりません");
+        }
+
+        ChatRoom room = roomOpt.get();
+
+        // 作成者チェック
+        if (room.getCreatedBy() == null || !room.getCreatedBy().getUsername().equals(username)) {
+            throw new IllegalArgumentException("ルームの作成者のみアイコンを変更できます");
+        }
+
+        // ファイルバリデーション
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("ファイルが空です");
+        }
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new IllegalArgumentException("ファイルサイズは5MB以下にしてください");
+        }
+
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || originalFilename.isEmpty()) {
+            throw new IllegalArgumentException("ファイル名が不正です");
+        }
+
+        String extension = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase();
+        boolean validExt = Arrays.stream(ALLOWED_EXTENSIONS).anyMatch(ext -> ext.equals(extension));
+        if (!validExt) {
+            throw new IllegalArgumentException("許可されていないファイル形式です（jpg, jpeg, png, gifのみ）");
+        }
+
+        // ディレクトリ作成
+        Path uploadPath = Paths.get(ROOM_ICON_UPLOAD_DIR);
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+
+        // 旧アイコンファイルを削除
+        if (room.getIconUrl() != null && room.getIconUrl().startsWith("/uploads/rooms/")) {
+            String oldFilename = room.getIconUrl().replace("/uploads/rooms/", "");
+            Path oldFile = Paths.get(ROOM_ICON_UPLOAD_DIR + oldFilename);
+            Files.deleteIfExists(oldFile);
+        }
+
+        // ファイル保存
+        String newFilename = "room_" + roomId + "_" + UUID.randomUUID() + extension;
+        Path filePath = uploadPath.resolve(newFilename);
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+        // DB更新
+        String iconUrl = "/uploads/rooms/" + newFilename;
+        room.setIconUrl(iconUrl);
+        return chatRoomRepository.save(room);
     }
 }

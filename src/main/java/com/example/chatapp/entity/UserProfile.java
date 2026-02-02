@@ -74,6 +74,9 @@ public class UserProfile {
     @Column(name = "personality_traits", columnDefinition = "TEXT")
     private String personalityTraits; // カンマ区切りの性格特性
 
+    @Column(name = "matching_photos", columnDefinition = "TEXT")
+    private String matchingPhotos; // カンマ区切りのマッチング用写真URLリスト（最大6枚）
+
     @Column(name = "last_seen")
     private LocalDateTime lastSeen;
 
@@ -247,6 +250,14 @@ public class UserProfile {
 
     public void setPersonalityTraits(String personalityTraits) {
         this.personalityTraits = personalityTraits;
+    }
+
+    public String getMatchingPhotos() {
+        return matchingPhotos;
+    }
+
+    public void setMatchingPhotos(String matchingPhotos) {
+        this.matchingPhotos = matchingPhotos;
     }
 
     public LocalDateTime getLastSeen() {

@@ -25,13 +25,19 @@
         <!-- ホーム画面 -->
         <section class="app-section active" id="home-section">
             <div class="section-content">
+                <!-- ホームヘッダー -->
+                <div class="home-header">
+                    <button class="home-tab-btn active" data-home-tab="all">すべて</button>
+                    <button class="home-tab-btn" data-home-tab="following">フォロー</button>
+                </div>
+
                 <!-- 成功メッセージ -->
                 <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
                     <i class="fas fa-check-circle me-1"></i>
                     <span th:text="${success}"></span>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
-                
+
                 <!-- 投稿リスト -->
                 <div class="posts-container">
                     <div th:if="${posts == null or posts.isEmpty()}" class="no-posts">
@@ -157,6 +163,7 @@
                     </button>
                     <button class="tab-btn" id="btnRoomInvite">
                         招待
+                        <span class="badge" id="inviteBadge" style="display: none;">0</span>
                     </button>
                 </div>
                 
@@ -202,10 +209,10 @@
 
                 <!-- 招待 -->
                 <div class="tab-content" id="invite-tab">
-                    <div class="chat-list room-list">
+                    <div class="chat-list room-list" id="invitations-list">
                         <div class="no-chats" style="display: none;">
-                            <i class="fas fa-user-plus"></i>
-                            <p>招待機能は準備中です</p>
+                            <i class="fas fa-envelope-open"></i>
+                            <p>招待がありません</p>
                         </div>
                     </div>
                 </div>
@@ -283,13 +290,84 @@
         <!-- マッチ画面 -->
         <section class="app-section" id="match-section">
             <div class="section-content">
-                <div class="welcome-section">
-                    <h1>🎲 マッチ</h1>
-                    <p class="text-white-50">準備中...</p>
+                <div class="match-header" id="matchHeader">
+                    <button class="match-type-btn" data-match-type="nearby">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>近所</span>
+                    </button>
+                    <button class="match-type-btn" data-match-type="hobby">
+                        <i class="fas fa-heart"></i>
+                        <span>趣味</span>
+                    </button>
+                    <button class="match-type-btn" data-match-type="age">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>年齢</span>
+                    </button>
+                    <button class="match-type-btn" data-match-type="destiny">
+                        <i class="fas fa-star"></i>
+                        <span>運命</span>
+                    </button>
+                </div>
+                <div class="match-content" id="matchContent">
+                    <!-- カードスタック -->
+                    <div class="swipe-card-stack" id="swipeCardStack">
+                        <!-- JSで動的に生成 -->
+                    </div>
+
+                    <!-- 候補者なし表示 -->
+                    <div class="swipe-empty" id="swipeEmpty" style="display: none;">
+                        <i class="fas fa-search fa-3x" style="color: rgba(255,255,255,0.3); margin-bottom: 16px;"></i>
+                        <p style="color: rgba(255,255,255,0.5);">候補者が見つかりませんでした</p>
+                    </div>
+
+                    <!-- ローディング -->
+                    <div class="swipe-loading" id="swipeLoading" style="display: none;">
+                        <i class="fas fa-spinner fa-spin fa-2x" style="color: rgba(255,255,255,0.5);"></i>
+                    </div>
+
+                    <!-- アクションボタン -->
+                    <div class="swipe-actions" id="swipeActions" style="display: none;">
+                        <button class="swipe-btn swipe-btn-skip" id="btnSwipeSkip" title="スキップ">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <button class="swipe-btn swipe-btn-like" id="btnSwipeLike" title="いいね">
+                            <i class="fas fa-heart"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- いいね一覧パネル（タブ切替で表示） -->
+                <div class="match-like-panel" id="matchLikePanel" style="display: none;">
+                    <div class="match-like-list" id="matchLikeList">
+                        <!-- JSで動的に描画 -->
+                    </div>
+                </div>
+
+                <!-- サブフッター -->
+                <div class="match-sub-footer">
+                    <button class="match-sub-tab active" data-like-tab="swipe">
+                        <i class="fas fa-clone"></i>
+                        <span>スワイプ</span>
+                    </button>
+                    <button class="match-sub-tab" data-like-tab="sent">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>いいね</span>
+                        <span class="match-badge" id="badgeLikeSent" style="display:none;">0</span>
+                    </button>
+                    <button class="match-sub-tab" data-like-tab="received">
+                        <i class="fas fa-inbox"></i>
+                        <span>もらった</span>
+                        <span class="match-badge" id="badgeLikeReceived" style="display:none;">0</span>
+                    </button>
+                    <button class="match-sub-tab" data-like-tab="mutual">
+                        <i class="fas fa-handshake"></i>
+                        <span>マッチ</span>
+                        <span class="match-badge" id="badgeLikeMutual" style="display:none;">0</span>
+                    </button>
                 </div>
             </div>
         </section>
-        
+
         <!-- チャット画面 -->
         <section class="app-section" id="chat-section">
             <div class="section-content">
@@ -384,16 +462,17 @@
                     <button class="back-btn" id="backFromRoomChatBtn">
                         <i class="fas fa-arrow-left"></i>
                     </button>
+                    <input type="file" id="roomIconInput" accept="image/jpeg,image/png,image/gif" style="display: none;">
                     <div class="dm-user-info" id="roomChatInfo" style="cursor: pointer;" title="メンバー一覧を表示">
-                        <div class="dm-avatar">
+                        <div class="dm-avatar" id="roomChatAvatar">
                             <i class="fas fa-users"></i>
                         </div>
-                        <div style="display: flex; flex-direction: column; align-items: flex-start;">
-                            <span class="dm-username" id="roomChatName"></span>
-                            <span style="font-size: 0.75rem; color: #6c757d;" id="roomChatMemberCount"></span>
-                        </div>
-                        <i class="fas fa-chevron-right" style="margin-left: auto; color: #6c757d; font-size: 0.9rem;"></i>
+                        <span class="dm-username" id="roomChatName"></span>
+                        <span style="font-size: 0.75rem; color: #6c757d;" id="roomChatMemberCount"></span>
                     </div>
+                    <button class="room-invite-btn" id="roomInviteBtn" style="display: none;" title="フォロワーを招待">
+                        <i class="fas fa-user-plus"></i>
+                    </button>
                 </div>
 
                 <!-- ルームメッセージエリア -->
@@ -437,6 +516,31 @@
                 <div class="members-list-container" style="padding: 1rem; overflow-y: auto; flex: 1;">
                     <div id="membersList" class="members-list">
                         <!-- メンバーがここに表示されます -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ルーム追加招待画面 -->
+        <section class="app-section" id="room-invite-section" style="display: none;">
+            <div class="section-content">
+                <div class="dm-header">
+                    <button class="back-btn" id="backFromRoomInviteBtn">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <div class="dm-user-info">
+                        <div class="dm-avatar">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                            <span class="dm-username">フォロワーを招待</span>
+                            <span style="font-size: 0.75rem; color: #6c757d;" id="inviteRoomName"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="members-list-container" style="padding: 1rem; overflow-y: auto; flex: 1;">
+                    <div id="followerInviteList" class="members-list">
+                        <!-- フォロワーがここに表示されます -->
                     </div>
                 </div>
             </div>
@@ -503,6 +607,19 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- 自分の投稿一覧 -->
+                <div class="my-posts-section">
+                    <div class="my-posts-header">
+                        <h3 class="my-posts-title"><i class="fas fa-pen me-2"></i>自分の投稿</h3>
+                    </div>
+                    <div class="my-posts-container" id="myPostsContainer">
+                        <div class="loading-posts">
+                            <i class="fas fa-spinner fa-spin fa-2x"></i>
+                            <p>読み込み中...</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
         
@@ -517,6 +634,19 @@
                     </button>
                     <div class="profile-main" id="viewedProfileContent">
                         <!-- JavaScriptで動的にロードされる -->
+                    </div>
+                </div>
+
+                <!-- そのユーザーの投稿一覧 -->
+                <div class="user-posts-section">
+                    <div class="my-posts-header">
+                        <h3 class="my-posts-title"><i class="fas fa-pen me-2"></i>投稿</h3>
+                    </div>
+                    <div class="my-posts-container" id="viewedUserPostsContainer">
+                        <div class="loading-posts">
+                            <i class="fas fa-spinner fa-spin fa-2x"></i>
+                            <p>読み込み中...</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -563,6 +693,24 @@
             <i class="fas fa-times"></i>
         </button>
         <img class="image-modal-content" id="modalImage" src="" alt="拡大画像">
+    </div>
+
+    <!-- 画像クロップモーダル -->
+    <div class="crop-modal-overlay" id="cropModalOverlay">
+        <div class="crop-canvas-wrap" id="cropCanvasWrap">
+            <canvas id="cropCanvas" width="560" height="560"></canvas>
+        </div>
+        <div class="crop-controls">
+            <div class="crop-zoom-row">
+                <i class="fas fa-search-minus"></i>
+                <input type="range" class="crop-zoom-slider" id="cropZoomSlider" min="100" max="400" value="100">
+                <i class="fas fa-search-plus"></i>
+            </div>
+            <div class="crop-btn-row">
+                <button class="crop-btn crop-btn-cancel" id="cropCancelBtn">キャンセル</button>
+                <button class="crop-btn crop-btn-confirm" id="cropConfirmBtn">確定</button>
+            </div>
+        </div>
     </div>
 
     <!-- ユーザープロフィールポップアップ -->
@@ -617,6 +765,9 @@
             <a href="/profile/edit" class="slide-menu-item">
                 <i class="fas fa-user-edit me-3"></i>プロフィール編集
             </a>
+            <a href="/random-matching/settings" class="slide-menu-item">
+                <i class="fas fa-sliders-h me-3"></i>マッチング設定
+            </a>
         </nav>
         
         <!-- ログアウト（最下部） -->
@@ -632,25 +783,6 @@
         <i class="fas fa-plus"></i>
     </button>
     
-    <!-- マッチング種類ヘッダー（マッチ画面のみ表示） -->
-    <div class="match-header" id="matchHeader" style="display: none;">
-        <button class="match-type-btn" data-match-type="nearby">
-            <i class="fas fa-map-marker-alt"></i>
-            <span>近所</span>
-        </button>
-        <button class="match-type-btn" data-match-type="hobby">
-            <i class="fas fa-heart"></i>
-            <span>趣味</span>
-        </button>
-        <button class="match-type-btn" data-match-type="age">
-            <i class="fas fa-calendar-alt"></i>
-            <span>年齢</span>
-        </button>
-        <button class="match-type-btn" data-match-type="destiny">
-            <i class="fas fa-star"></i>
-            <span>運命</span>
-        </button>
-    </div>
     
     <!-- フッターナビゲーション -->
     <footer class="bottom-nav">
@@ -701,6 +833,192 @@
             const color = colors[Math.abs(hash) % colors.length];
             avatarElement.style.backgroundColor = color;
         }
+
+        // ========================================
+        // 画像クロップモーダル
+        // ========================================
+        const CropModal = (function() {
+            let canvas, ctx, img;
+            let offsetX = 0, offsetY = 0, scale = 1, minScale = 1;
+            let dragging = false, lastX = 0, lastY = 0;
+            let pinchStartDist = 0, pinchStartScale = 1;
+            let onConfirmCallback = null;
+            const SIZE = 560; // canvas解像度
+            const OUT = 300;  // 出力サイズ
+
+            function init() {
+                canvas = document.getElementById('cropCanvas');
+                ctx = canvas.getContext('2d');
+                const wrap = document.getElementById('cropCanvasWrap');
+                const slider = document.getElementById('cropZoomSlider');
+
+                // ドラッグ
+                wrap.addEventListener('pointerdown', onPointerDown);
+                wrap.addEventListener('pointermove', onPointerMove);
+                wrap.addEventListener('pointerup', onPointerUp);
+                wrap.addEventListener('pointercancel', onPointerUp);
+
+                // ピンチズーム
+                wrap.addEventListener('touchstart', onTouchStart, {passive: false});
+                wrap.addEventListener('touchmove', onTouchMove, {passive: false});
+
+                // スクロールズーム
+                wrap.addEventListener('wheel', function(e) {
+                    e.preventDefault();
+                    const delta = e.deltaY > 0 ? -0.05 : 0.05;
+                    setScale(scale + delta);
+                    draw();
+                    slider.value = Math.round(scale / minScale * 100);
+                }, {passive: false});
+
+                // スライダー
+                slider.addEventListener('input', function() {
+                    setScale(minScale * (this.value / 100));
+                    draw();
+                });
+
+                document.getElementById('cropCancelBtn').addEventListener('click', close);
+                document.getElementById('cropConfirmBtn').addEventListener('click', confirm);
+            }
+
+            function open(file, callback) {
+                onConfirmCallback = callback;
+                img = new Image();
+                img.onload = function() {
+                    // 画像が円に収まる最小スケール
+                    minScale = SIZE / Math.min(img.width, img.height);
+                    scale = minScale;
+                    offsetX = (SIZE - img.width * scale) / 2;
+                    offsetY = (SIZE - img.height * scale) / 2;
+
+                    const slider = document.getElementById('cropZoomSlider');
+                    slider.value = 100;
+                    slider.min = 100;
+                    slider.max = 400;
+
+                    draw();
+                    document.getElementById('cropModalOverlay').classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                };
+                img.src = URL.createObjectURL(file);
+            }
+
+            function close() {
+                document.getElementById('cropModalOverlay').classList.remove('active');
+                document.body.style.overflow = '';
+                if (img && img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
+                onConfirmCallback = null;
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, SIZE, SIZE);
+                // 画像描画
+                ctx.drawImage(img, offsetX, offsetY, img.width * scale, img.height * scale);
+            }
+
+            function clampOffset() {
+                const w = img.width * scale;
+                const h = img.height * scale;
+                if (w >= SIZE) {
+                    offsetX = Math.min(0, Math.max(SIZE - w, offsetX));
+                } else {
+                    offsetX = (SIZE - w) / 2;
+                }
+                if (h >= SIZE) {
+                    offsetY = Math.min(0, Math.max(SIZE - h, offsetY));
+                } else {
+                    offsetY = (SIZE - h) / 2;
+                }
+            }
+
+            function setScale(newScale) {
+                const centerX = SIZE / 2;
+                const centerY = SIZE / 2;
+                const oldScale = scale;
+                scale = Math.max(minScale, Math.min(minScale * 4, newScale));
+                // 中心を基準にズーム
+                offsetX = centerX - (centerX - offsetX) * (scale / oldScale);
+                offsetY = centerY - (centerY - offsetY) * (scale / oldScale);
+                clampOffset();
+            }
+
+            // Pointer events（ドラッグ）
+            function onPointerDown(e) {
+                if (e.pointerType === 'touch' && e.isPrimary === false) return;
+                dragging = true;
+                lastX = e.clientX;
+                lastY = e.clientY;
+                e.currentTarget.setPointerCapture(e.pointerId);
+            }
+            function onPointerMove(e) {
+                if (!dragging) return;
+                const rect = canvas.getBoundingClientRect();
+                const ratio = SIZE / rect.width;
+                offsetX += (e.clientX - lastX) * ratio;
+                offsetY += (e.clientY - lastY) * ratio;
+                lastX = e.clientX;
+                lastY = e.clientY;
+                clampOffset();
+                draw();
+            }
+            function onPointerUp() {
+                dragging = false;
+            }
+
+            // ピンチズーム
+            function onTouchStart(e) {
+                if (e.touches.length === 2) {
+                    e.preventDefault();
+                    pinchStartDist = getTouchDist(e.touches);
+                    pinchStartScale = scale;
+                }
+            }
+            function onTouchMove(e) {
+                if (e.touches.length === 2) {
+                    e.preventDefault();
+                    const dist = getTouchDist(e.touches);
+                    const newScale = pinchStartScale * (dist / pinchStartDist);
+                    setScale(newScale);
+                    draw();
+                    document.getElementById('cropZoomSlider').value = Math.round(scale / minScale * 100);
+                }
+            }
+            function getTouchDist(touches) {
+                const dx = touches[0].clientX - touches[1].clientX;
+                const dy = touches[0].clientY - touches[1].clientY;
+                return Math.sqrt(dx * dx + dy * dy);
+            }
+
+            function confirm() {
+                // 出力用Canvas
+                const outCanvas = document.createElement('canvas');
+                outCanvas.width = OUT;
+                outCanvas.height = OUT;
+                const outCtx = outCanvas.getContext('2d');
+
+                // 円形クリップ
+                outCtx.beginPath();
+                outCtx.arc(OUT / 2, OUT / 2, OUT / 2, 0, Math.PI * 2);
+                outCtx.closePath();
+                outCtx.clip();
+
+                // スケーリングして描画
+                const ratio = OUT / SIZE;
+                outCtx.drawImage(img, offsetX * ratio, offsetY * ratio, img.width * scale * ratio, img.height * scale * ratio);
+
+                outCanvas.toBlob(function(blob) {
+                    if (onConfirmCallback) onConfirmCallback(blob);
+                    close();
+                }, 'image/png');
+            }
+
+            return { init, open, close };
+        })();
+
+        // DOMContentLoaded後に初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            CropModal.init();
+        });
         
         // WebSocket接続
         let stompClient = null;
@@ -780,6 +1098,10 @@
 
             // 申請バッジを更新（バックグラウンドで）
             loadRequestedRooms().catch(err => console.error('申請数取得エラー:', err));
+            // 承認バッジを更新（バックグラウンドで）
+            loadPendingApprovals().catch(err => console.error('承認数取得エラー:', err));
+            // 招待バッジを更新（バックグラウンドで）
+            loadReceivedInvitations().catch(err => console.error('招待数取得エラー:', err));
         }
         
         function connectWebSocket() {
@@ -865,8 +1187,427 @@
         window.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 アプリ初期化開始');
             initializeApp();
+
+            // ホームタブの初期化
+            initHomeTabsEvent();
+
+            // URLパラメータでタブを切り替え
+            const urlParams = new URLSearchParams(window.location.search);
+            const tabParam = urlParams.get('tab');
+            if (tabParam === 'mypage') {
+                // マイページタブをアクティブにする
+                setTimeout(function() {
+                    const sections = document.querySelectorAll('.app-section');
+                    const navItems = document.querySelectorAll('.nav-item');
+                    const createPostBtn = document.getElementById('btnCreatePost');
+
+                    sections.forEach(section => section.classList.remove('active'));
+                    document.getElementById('mypage-section').classList.add('active');
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    navItems[navItems.length - 1].classList.add('active');
+                    if (createPostBtn) createPostBtn.style.display = 'none';
+
+                    // 自分の投稿を読み込み、スクロールハンドラを設定
+                    loadMyPosts();
+                    setTimeout(setupMypageScroll, 100);
+
+                    // URLパラメータを削除してきれいなURLに
+                    window.history.replaceState({}, document.title, '/home');
+                }, 100);
+            }
         });
-        
+
+        // 現在のホームタブ
+        let currentHomeTab = 'all';
+
+        // ホームタブのイベント初期化
+        function initHomeTabsEvent() {
+            document.querySelectorAll('.home-tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tab = this.getAttribute('data-home-tab');
+                    if (tab !== currentHomeTab) {
+                        // タブのアクティブ状態を更新
+                        document.querySelectorAll('.home-tab-btn').forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        currentHomeTab = tab;
+
+                        // 投稿を読み込む
+                        loadHomePosts(tab);
+                    }
+                });
+            });
+        }
+
+        // ホームの投稿を読み込む
+        async function loadHomePosts(tab) {
+            const postsContainer = document.querySelector('.posts-container');
+
+            // ローディング表示
+            postsContainer.innerHTML = `
+                <div class="loading-posts">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p>読み込み中...</p>
+                </div>
+            `;
+
+            try {
+                const endpoint = tab === 'following' ? '/api/posts/following' : '/api/posts/all';
+                const response = await fetch(endpoint);
+                const data = await response.json();
+
+                if (data.success) {
+                    renderHomePosts(data.posts);
+                } else {
+                    postsContainer.innerHTML = `
+                        <div class="no-posts">
+                            <i class="fas fa-exclamation-circle fa-3x mb-3 text-muted"></i>
+                            <p class="text-muted">${data.message || 'エラーが発生しました'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('投稿読み込みエラー:', error);
+                postsContainer.innerHTML = `
+                    <div class="no-posts">
+                        <i class="fas fa-exclamation-circle fa-3x mb-3 text-muted"></i>
+                        <p class="text-muted">投稿の読み込みに失敗しました</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 投稿を描画
+        function renderHomePosts(posts) {
+            const postsContainer = document.querySelector('.posts-container');
+
+            if (!posts || posts.length === 0) {
+                const message = currentHomeTab === 'following'
+                    ? 'フォロー中のユーザーの投稿がありません'
+                    : 'まだ投稿がありません';
+                postsContainer.innerHTML = `
+                    <div class="no-posts">
+                        <i class="fas fa-inbox fa-3x mb-3 text-muted"></i>
+                        <p class="text-muted">${message}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            postsContainer.innerHTML = '';
+
+            posts.forEach(post => {
+                const postCard = document.createElement('div');
+                postCard.className = 'post-card';
+
+                const user = post.user;
+                const displayName = user.displayName || user.username;
+                const colorIndex = getUserColor(user.username);
+
+                // アバターHTML
+                let avatarHtml = '';
+                if (user.avatarUrl) {
+                    avatarHtml = `<div class="post-avatar user-profile-link" style="background-image: url(${user.avatarUrl}); background-size: cover; background-position: center; cursor: pointer;" data-user-id="${user.id}" data-friend-code="${user.friendCode || ''}"></div>`;
+                } else {
+                    avatarHtml = `<div class="post-avatar default-avatar user-profile-link" data-username="${user.username}" data-color="${colorIndex}" data-user-id="${user.id}" data-friend-code="${user.friendCode || ''}" style="cursor: pointer;"><i class="fas fa-user"></i></div>`;
+                }
+
+                // メディアHTML
+                let mediaHtml = '';
+                if (post.mediaPath) {
+                    const mediaUrls = post.mediaPath.split(',');
+                    mediaHtml = '<div class="post-media-grid">';
+                    mediaUrls.forEach(url => {
+                        if (url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+                            mediaHtml += `<div class="post-media-item"><img src="${url}" alt="投稿画像" class="post-media-image" loading="lazy" onclick="openImageModal(this.src)"></div>`;
+                        } else if (url.match(/\.(mp4|webm|mov)$/i)) {
+                            mediaHtml += `<div class="post-media-item"><video src="${url}" controls class="post-media-video" preload="metadata"></video></div>`;
+                        }
+                    });
+                    mediaHtml += '</div>';
+                }
+
+                postCard.innerHTML = `
+                    <div class="post-header">
+                        <div class="post-user-info">
+                            ${avatarHtml}
+                            <div class="post-user-details">
+                                <span class="post-username clickable-username user-profile-link" data-user-id="${user.id}" data-friend-code="${user.friendCode || ''}">${displayName}</span>
+                                <span class="post-time">${post.createdAt}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="post-content">
+                        <p>${post.content}</p>
+                        ${mediaHtml}
+                    </div>
+                `;
+
+                // デフォルトアバターの色を設定
+                const defaultAvatar = postCard.querySelector('.default-avatar');
+                if (defaultAvatar) {
+                    setDefaultAvatarColor(defaultAvatar);
+                }
+
+                // クリックイベントを追加
+                postCard.querySelectorAll('.user-profile-link').forEach(element => {
+                    element.addEventListener('click', function() {
+                        const userId = this.getAttribute('data-user-id');
+                        const friendCode = this.getAttribute('data-friend-code');
+                        if (userId) {
+                            viewUserProfile(userId);
+                        }
+                    });
+                });
+
+                postsContainer.appendChild(postCard);
+            });
+        }
+
+        // マイページのプロフィールヘッダー コンパクトモード切り替え
+        function setupMypageScroll() {
+            const mypageSection = document.getElementById('mypage-section');
+            const profileSection = mypageSection?.querySelector('.profile-section');
+            const sectionContent = mypageSection?.querySelector('.section-content');
+
+            if (!profileSection || !sectionContent) return;
+
+            let initialProfileHeight = 0;
+            let isCompact = false;
+
+            // 初期高さを取得
+            function getInitialHeight() {
+                profileSection.classList.remove('compact');
+                initialProfileHeight = profileSection.offsetHeight;
+            }
+
+            // スクロールイベントハンドラ
+            function handleMypageScroll() {
+                const scrollTop = sectionContent.scrollTop;
+                const threshold = initialProfileHeight / 3;
+
+                if (scrollTop > threshold && !isCompact) {
+                    profileSection.classList.add('compact');
+                    isCompact = true;
+                } else if (scrollTop <= threshold && isCompact) {
+                    profileSection.classList.remove('compact');
+                    isCompact = false;
+                }
+            }
+
+            // 初期化
+            getInitialHeight();
+            sectionContent.addEventListener('scroll', handleMypageScroll);
+        }
+
+        // 閲覧中ユーザーのプロフィールヘッダー コンパクトモード切り替え
+        let userProfileScrollHandler = null;
+        function setupUserProfileScroll() {
+            const profileViewSection = document.getElementById('user-profile-view-section');
+            const profileSection = profileViewSection?.querySelector('.profile-section');
+            const sectionContent = profileViewSection?.querySelector('.section-content');
+
+            if (!profileSection || !sectionContent) return;
+
+            // 既存のリスナーを削除
+            if (userProfileScrollHandler) {
+                sectionContent.removeEventListener('scroll', userProfileScrollHandler);
+            }
+
+            // コンパクトモードをリセット
+            profileSection.classList.remove('compact');
+            let initialProfileHeight = profileSection.offsetHeight;
+            let isCompact = false;
+
+            // スクロールイベントハンドラ
+            userProfileScrollHandler = function() {
+                const scrollTop = sectionContent.scrollTop;
+                const threshold = initialProfileHeight / 3;
+
+                if (scrollTop > threshold && !isCompact) {
+                    profileSection.classList.add('compact');
+                    isCompact = true;
+                } else if (scrollTop <= threshold && isCompact) {
+                    profileSection.classList.remove('compact');
+                    isCompact = false;
+                }
+            };
+
+            sectionContent.addEventListener('scroll', userProfileScrollHandler);
+
+            // スクロール位置をリセット
+            sectionContent.scrollTop = 0;
+        }
+
+        // 閲覧中ユーザーの投稿を読み込む
+        async function loadUserPosts(userId) {
+            const container = document.getElementById('viewedUserPostsContainer');
+            if (!container) return;
+
+            container.innerHTML = `
+                <div class="loading-posts">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p>読み込み中...</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch(`/api/posts/user/${userId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    renderUserPosts(data.posts, container);
+                } else {
+                    container.innerHTML = `
+                        <div class="no-posts">
+                            <i class="fas fa-exclamation-circle fa-3x mb-3"></i>
+                            <p>${data.message || 'エラーが発生しました'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading user posts:', error);
+                container.innerHTML = `
+                    <div class="no-posts">
+                        <i class="fas fa-exclamation-circle fa-3x mb-3"></i>
+                        <p>投稿の読み込みに失敗しました</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 閲覧中ユーザーの投稿を描画
+        function renderUserPosts(posts, container) {
+            if (!posts || posts.length === 0) {
+                container.innerHTML = `
+                    <div class="no-posts">
+                        <i class="fas fa-pen fa-3x mb-3"></i>
+                        <p>まだ投稿がありません</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            posts.forEach(post => {
+                const postCard = document.createElement('div');
+                postCard.className = 'my-post-card';
+
+                let mediaHtml = '';
+                if (post.mediaPath) {
+                    const isVideo = /\.(mp4|webm|mov)$/i.test(post.mediaPath);
+                    if (isVideo) {
+                        mediaHtml = `
+                            <div class="my-post-media">
+                                <video class="my-post-video" controls>
+                                    <source src="${post.mediaPath}" type="video/mp4">
+                                </video>
+                            </div>
+                        `;
+                    } else {
+                        mediaHtml = `
+                            <div class="my-post-media">
+                                <img src="${post.mediaPath}" class="my-post-image" alt="投稿画像">
+                            </div>
+                        `;
+                    }
+                }
+
+                postCard.innerHTML = `
+                    <div class="my-post-content">
+                        <p>${post.content}</p>
+                    </div>
+                    ${mediaHtml}
+                    <div class="my-post-time">${post.createdAt}</div>
+                `;
+
+                container.appendChild(postCard);
+            });
+        }
+
+        // 自分の投稿を読み込む
+        async function loadMyPosts() {
+            const container = document.getElementById('myPostsContainer');
+            if (!container) return;
+
+            container.innerHTML = `
+                <div class="loading-posts">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p>読み込み中...</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch('/api/posts/my');
+                const data = await response.json();
+
+                if (data.success) {
+                    renderMyPosts(data.posts);
+                } else {
+                    container.innerHTML = `
+                        <div class="no-posts">
+                            <i class="fas fa-exclamation-circle fa-3x mb-3"></i>
+                            <p>${data.message || 'エラーが発生しました'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('自分の投稿の取得に失敗:', error);
+                container.innerHTML = `
+                    <div class="no-posts">
+                        <i class="fas fa-exclamation-circle fa-3x mb-3"></i>
+                        <p>投稿の取得に失敗しました</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 自分の投稿を描画
+        function renderMyPosts(posts) {
+            const container = document.getElementById('myPostsContainer');
+
+            if (!posts || posts.length === 0) {
+                container.innerHTML = `
+                    <div class="no-posts">
+                        <i class="fas fa-pen fa-3x mb-3"></i>
+                        <p>まだ投稿がありません</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+
+            posts.forEach(post => {
+                const postCard = document.createElement('div');
+                postCard.className = 'my-post-card';
+
+                // メディアHTML
+                let mediaHtml = '';
+                if (post.mediaPath) {
+                    const mediaUrls = post.mediaPath.split(',');
+                    mediaHtml = '<div class="my-post-media">';
+                    mediaUrls.forEach(url => {
+                        if (url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+                            mediaHtml += `<img src="${url}" alt="投稿画像" class="my-post-image" onclick="openImageModal(this.src)">`;
+                        } else if (url.match(/\.(mp4|webm|mov)$/i)) {
+                            mediaHtml += `<video src="${url}" controls class="my-post-video" preload="metadata"></video>`;
+                        }
+                    });
+                    mediaHtml += '</div>';
+                }
+
+                postCard.innerHTML = `
+                    <div class="my-post-content">
+                        <p>${post.content}</p>
+                    </div>
+                    ${mediaHtml}
+                    <div class="my-post-time">${post.createdAt}</div>
+                `;
+
+                container.appendChild(postCard);
+            });
+        }
+
         // 新規投稿をDOMに追加
         function addNewPostToDOM(postData) {
             const postsContainer = document.querySelector('.posts-container');
@@ -1150,32 +1891,23 @@
         const navItems = document.querySelectorAll('.nav-item');
         const sections = document.querySelectorAll('.app-section');
         const createPostBtn = document.getElementById('btnCreatePost');
-        const matchHeader = document.getElementById('matchHeader');
-        
         navItems.forEach(item => {
             item.addEventListener('click', () => {
                 const sectionName = item.dataset.section;
-                
+
                 // 全てのナビゲーションアイテムとセクションから active を削除
                 navItems.forEach(nav => nav.classList.remove('active'));
                 sections.forEach(section => section.classList.remove('active'));
-                
+
                 // クリックされたアイテムと対応するセクションに active を追加
                 item.classList.add('active');
                 document.getElementById(sectionName + '-section').classList.add('active');
-                
+
                 // ホーム画面の場合のみ＋ボタンを表示
                 if (sectionName === 'home') {
                     createPostBtn.style.display = 'flex';
                 } else {
                     createPostBtn.style.display = 'none';
-                }
-                
-                // マッチ画面の場合のみマッチヘッダーを表示
-                if (sectionName === 'match') {
-                    matchHeader.style.display = 'flex';
-                } else {
-                    matchHeader.style.display = 'none';
                 }
                 
                 // チャット画面に遷移した時にDM会話リストを読み込む
@@ -1186,6 +1918,12 @@
                 // ルーム画面に遷移した時にルームリストを読み込む
                 if (sectionName === 'room') {
                     loadJoinedRooms();
+                }
+
+                // マイページに遷移した時に自分の投稿を読み込み、スクロールハンドラを設定
+                if (sectionName === 'mypage') {
+                    loadMyPosts();
+                    setTimeout(setupMypageScroll, 100);
                 }
             });
         });
@@ -1263,42 +2001,539 @@
             });
         });
         
-        // マッチング開始関数（各マッチタイプに応じた処理）
+        // ========================================
+        // スワイプマッチングシステム
+        // ========================================
+        let swipeCandidates = [];
+        let swipeIndex = 0;
+        let currentMatchType = null;
+
+        const swipeStack = document.getElementById('swipeCardStack');
+        const swipeEmpty = document.getElementById('swipeEmpty');
+        const swipeLoading = document.getElementById('swipeLoading');
+        const swipeActions = document.getElementById('swipeActions');
+
+        // マッチタイプ切り替え → カード読み込み
         function startMatching(matchType) {
-            const matchSection = document.getElementById('match-section');
-            const welcomeSection = matchSection.querySelector('.welcome-section');
-            
-            switch(matchType) {
-                case 'nearby':
-                    welcomeSection.innerHTML = `
-                        <h1>📍 近所でマッチング</h1>
-                        <p class="text-white-50">近くにいるユーザーを探しています...</p>
-                    `;
-                    break;
-                case 'hobby':
-                    welcomeSection.innerHTML = `
-                        <h1>❤️ 趣味でマッチング</h1>
-                        <p class="text-white-50">共通の趣味を持つユーザーを探しています...</p>
-                    `;
-                    break;
-                case 'age':
-                    welcomeSection.innerHTML = `
-                        <h1>📅 年齢でマッチング</h1>
-                        <p class="text-white-50">同年代のユーザーを探しています...</p>
-                    `;
-                    break;
-                case 'destiny':
-                    welcomeSection.innerHTML = `
-                        <h1>⭐ 運命のマッチング</h1>
-                        <p class="text-white-50">運命の相手を探しています...</p>
-                    `;
-                    break;
-            }
-            
-            // TODO: 実際のマッチング処理をここに実装
-            // 例: APIを呼び出して適切なユーザーを検索し、結果を表示
+            currentMatchType = matchType;
+            swipeCandidates = [];
+            swipeIndex = 0;
+
+            swipeStack.innerHTML = '';
+            swipeEmpty.style.display = 'none';
+            swipeActions.style.display = 'none';
+            swipeLoading.style.display = 'flex';
+
+            fetch('/random-matching/api/candidates?type=' + matchType)
+                .then(r => r.json())
+                .then(data => {
+                    swipeLoading.style.display = 'none';
+                    if (data.success && data.candidates.length > 0) {
+                        swipeCandidates = data.candidates;
+                        swipeIndex = 0;
+                        renderSwipeCards();
+                        swipeActions.style.display = 'flex';
+                    } else {
+                        swipeEmpty.style.display = 'flex';
+                    }
+                })
+                .catch(() => {
+                    swipeLoading.style.display = 'none';
+                    swipeEmpty.style.display = 'flex';
+                });
         }
-        
+
+        // カードを最大2枚描画（現在 + 次）
+        function renderSwipeCards() {
+            swipeStack.innerHTML = '';
+            for (let i = Math.min(swipeIndex + 1, swipeCandidates.length - 1); i >= swipeIndex; i--) {
+                if (i >= swipeCandidates.length) continue;
+                const card = createSwipeCard(swipeCandidates[i], i === swipeIndex);
+                swipeStack.appendChild(card);
+            }
+        }
+
+        // カードDOM生成
+        function createSwipeCard(candidate, isTop) {
+            const card = document.createElement('div');
+            card.className = 'swipe-card';
+            if (!isTop) {
+                card.style.transform = 'scale(0.95) translateY(10px)';
+                card.style.zIndex = '0';
+            } else {
+                card.style.zIndex = '1';
+            }
+
+            // タグHTML
+            let tagsHtml = '';
+            if (candidate.favoriteThings) {
+                const tags = candidate.favoriteThings.split(',');
+                tagsHtml = '<div class="swipe-card-tags">' +
+                    tags.map(t => '<span class="swipe-card-tag">' + t.trim() + '</span>').join('') +
+                    '</div>';
+            }
+
+            // 住所
+            let locationHtml = '';
+            if (candidate.location) {
+                locationHtml = '<div class="swipe-card-location"><i class="fas fa-map-marker-alt"></i>' + candidate.location + '</div>';
+            }
+
+            card.innerHTML =
+                '<div class="swipe-card-photo" style="background-image: url(\'' + candidate.photo + '\');"></div>' +
+                '<div class="swipe-card-name">' + candidate.displayName + '</div>' +
+                locationHtml +
+                '<div class="swipe-stamp swipe-stamp-like">LIKE</div>' +
+                '<div class="swipe-stamp swipe-stamp-skip">NOPE</div>' +
+                '<div class="swipe-card-info">' +
+                    tagsHtml +
+                    '<div class="swipe-card-bio">' + (candidate.bio || '') + '</div>' +
+                '</div>';
+
+            if (isTop) {
+                initSwipeGesture(card);
+            }
+
+            return card;
+        }
+
+        // スワイプジェスチャー
+        function initSwipeGesture(card) {
+            let startX = 0, startY = 0, currentX = 0, isDragging = false;
+            const threshold = 100;
+
+            function onStart(e) {
+                isDragging = true;
+                const point = e.touches ? e.touches[0] : e;
+                startX = point.clientX;
+                startY = point.clientY;
+                card.style.transition = 'none';
+            }
+
+            function onMove(e) {
+                if (!isDragging) return;
+                const point = e.touches ? e.touches[0] : e;
+                currentX = point.clientX - startX;
+                const rotate = currentX * 0.08;
+                card.style.transform = 'translateX(' + currentX + 'px) rotate(' + rotate + 'deg)';
+
+                // スタンプ表示
+                const likeStamp = card.querySelector('.swipe-stamp-like');
+                const skipStamp = card.querySelector('.swipe-stamp-skip');
+                const progress = Math.min(Math.abs(currentX) / threshold, 1);
+                if (currentX > 0) {
+                    likeStamp.style.opacity = progress;
+                    skipStamp.style.opacity = 0;
+                } else {
+                    skipStamp.style.opacity = progress;
+                    likeStamp.style.opacity = 0;
+                }
+            }
+
+            function onEnd() {
+                if (!isDragging) return;
+                isDragging = false;
+
+                if (currentX > threshold) {
+                    animateOut(card, 'right');
+                } else if (currentX < -threshold) {
+                    animateOut(card, 'left');
+                } else {
+                    // 戻す
+                    card.style.transition = 'transform 0.3s ease';
+                    card.style.transform = '';
+                    card.querySelector('.swipe-stamp-like').style.opacity = 0;
+                    card.querySelector('.swipe-stamp-skip').style.opacity = 0;
+                }
+                currentX = 0;
+            }
+
+            card.addEventListener('pointerdown', onStart);
+            card.addEventListener('pointermove', onMove);
+            card.addEventListener('pointerup', onEnd);
+            card.addEventListener('pointerleave', onEnd);
+        }
+
+        // カード飛ばしアニメーション
+        function animateOut(card, direction) {
+            card.classList.add('animating');
+            const xOut = direction === 'right' ? 500 : -500;
+            const rotate = direction === 'right' ? 30 : -30;
+            card.style.transform = 'translateX(' + xOut + 'px) rotate(' + rotate + 'deg)';
+            card.style.opacity = '0';
+
+            const candidate = swipeCandidates[swipeIndex];
+            if (direction === 'right' && candidate) {
+                fetch('/random-matching/api/like', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'targetUserId=' + candidate.userId
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.mutual) {
+                        showMatchNotification(candidate.displayName);
+                    }
+                    refreshMatchBadges();
+                })
+                .catch(err => console.error('Like送信エラー:', err));
+            }
+
+            setTimeout(() => {
+                swipeIndex++;
+                if (swipeIndex < swipeCandidates.length) {
+                    renderSwipeCards();
+                } else {
+                    swipeStack.innerHTML = '';
+                    swipeActions.style.display = 'none';
+                    swipeEmpty.style.display = 'flex';
+                    swipeEmpty.querySelector('p').textContent = '候補者を全て確認しました';
+                }
+            }, 400);
+        }
+
+        // ボタンでのスワイプ操作
+        document.getElementById('btnSwipeSkip').addEventListener('click', function() {
+            const topCard = swipeStack.querySelector('.swipe-card[style*="z-index: 1"]') ||
+                            swipeStack.querySelector('.swipe-card:last-child');
+            if (topCard) animateOut(topCard, 'left');
+        });
+
+        document.getElementById('btnSwipeLike').addEventListener('click', function() {
+            const topCard = swipeStack.querySelector('.swipe-card[style*="z-index: 1"]') ||
+                            swipeStack.querySelector('.swipe-card:last-child');
+            if (topCard) animateOut(topCard, 'right');
+        });
+
+        // ========================================
+        // マッチ サブフッター タブ切り替え
+        // ========================================
+        const matchContent = document.getElementById('matchContent');
+        const matchLikePanel = document.getElementById('matchLikePanel');
+        const matchLikeList = document.getElementById('matchLikeList');
+        let currentLikeTab = 'swipe';
+        let likeSwipeCandidates = [];
+        let likeSwipeIndex = 0;
+
+        document.querySelectorAll('.match-sub-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const likeTab = this.dataset.likeTab;
+                if (likeTab === currentLikeTab) return;
+
+                document.querySelectorAll('.match-sub-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                currentLikeTab = likeTab;
+
+                if (likeTab === 'swipe') {
+                    matchContent.style.display = 'flex';
+                    matchLikePanel.style.display = 'none';
+                } else if (likeTab === 'sent' || likeTab === 'received') {
+                    matchContent.style.display = 'none';
+                    matchLikePanel.style.display = 'block';
+                    loadLikeSwipe(likeTab);
+                } else {
+                    matchContent.style.display = 'none';
+                    matchLikePanel.style.display = 'block';
+                    loadLikeList(likeTab);
+                }
+            });
+        });
+
+        // いいね/もらったをスワイプカードで表示
+        function loadLikeSwipe(kind) {
+            matchLikeList.innerHTML = '<div style="text-align:center;padding:40px 0;"><i class="fas fa-spinner fa-spin fa-2x" style="color:rgba(255,255,255,0.3);"></i></div>';
+
+            fetch('/random-matching/api/likes/' + kind)
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.success || data.users.length === 0) {
+                        const emptyMessages = {
+                            sent: 'まだいいねしていません',
+                            received: 'まだいいねをもらっていません'
+                        };
+                        matchLikeList.innerHTML =
+                            '<div class="match-like-empty">' +
+                            '<i class="fas fa-heart-broken"></i>' +
+                            '<p>' + emptyMessages[kind] + '</p></div>';
+                        return;
+                    }
+
+                    likeSwipeCandidates = data.users;
+                    likeSwipeIndex = 0;
+                    renderLikeSwipeCards(kind);
+                })
+                .catch(() => {
+                    matchLikeList.innerHTML = '<div class="match-like-empty"><p>読み込みに失敗しました</p></div>';
+                });
+        }
+
+        function renderLikeSwipeCards(kind) {
+            matchLikeList.innerHTML = '';
+
+            if (likeSwipeIndex >= likeSwipeCandidates.length) {
+                const doneMsg = kind === 'sent' ? 'すべて確認しました' : 'すべて確認しました';
+                matchLikeList.innerHTML =
+                    '<div class="match-like-empty">' +
+                    '<i class="fas fa-check-circle"></i>' +
+                    '<p>' + doneMsg + '</p></div>';
+                return;
+            }
+
+            // スワイプカードスタック
+            const stack = document.createElement('div');
+            stack.className = 'swipe-card-stack';
+            stack.style.flex = '1';
+
+            for (let i = Math.min(likeSwipeIndex + 1, likeSwipeCandidates.length - 1); i >= likeSwipeIndex; i--) {
+                if (i >= likeSwipeCandidates.length) continue;
+                const isTop = (i === likeSwipeIndex);
+                const card = createSwipeCard(likeSwipeCandidates[i], isTop);
+
+                // スワイプジェスチャーを上書き（方向制限付き）
+                if (isTop) {
+                    // 既存のジェスチャーを無効化してから制限付きを設定
+                    card.replaceWith(card.cloneNode(true));
+                    const freshCard = stack.querySelector('.swipe-card:last-child') || card;
+                    initLikeSwipeGesture(freshCard, kind);
+                }
+
+                stack.appendChild(card);
+            }
+
+            matchLikeList.appendChild(stack);
+
+            // アクションボタン
+            const actions = document.createElement('div');
+            actions.className = 'swipe-actions';
+
+            if (kind === 'sent') {
+                // いいねタブ: 左スワイプ（取り消し）のみ
+                actions.innerHTML =
+                    '<button class="swipe-btn swipe-btn-skip" id="btnLikeSwipeSkip">' +
+                    '<i class="fas fa-times"></i></button>';
+            } else {
+                // もらったタブ: 左（拒否）+ 右（いいね返し）
+                actions.innerHTML =
+                    '<button class="swipe-btn swipe-btn-skip" id="btnLikeSwipeSkip">' +
+                    '<i class="fas fa-times"></i></button>' +
+                    '<button class="swipe-btn swipe-btn-like" id="btnLikeSwipeLike">' +
+                    '<i class="fas fa-heart"></i></button>';
+            }
+
+            matchLikeList.appendChild(actions);
+
+            // ボタンイベント
+            const skipBtn = document.getElementById('btnLikeSwipeSkip');
+            if (skipBtn) {
+                skipBtn.addEventListener('click', function() {
+                    const topCard = stack.querySelector('.swipe-card[style*="z-index: 1"]') ||
+                                    stack.querySelector('.swipe-card:last-child');
+                    if (topCard) animateLikeOut(topCard, 'left', kind);
+                });
+            }
+            const likeBtn = document.getElementById('btnLikeSwipeLike');
+            if (likeBtn) {
+                likeBtn.addEventListener('click', function() {
+                    const topCard = stack.querySelector('.swipe-card[style*="z-index: 1"]') ||
+                                    stack.querySelector('.swipe-card:last-child');
+                    if (topCard) animateLikeOut(topCard, 'right', kind);
+                });
+            }
+        }
+
+        // 方向制限付きスワイプジェスチャー
+        function initLikeSwipeGesture(card, kind) {
+            let startX = 0, currentX = 0, isDragging = false;
+            const threshold = 100;
+
+            function onStart(e) {
+                isDragging = true;
+                const point = e.touches ? e.touches[0] : e;
+                startX = point.clientX;
+                card.style.transition = 'none';
+            }
+
+            function onMove(e) {
+                if (!isDragging) return;
+                const point = e.touches ? e.touches[0] : e;
+                currentX = point.clientX - startX;
+
+                // いいねタブ: 右スワイプを制限
+                if (kind === 'sent' && currentX > 0) {
+                    currentX = currentX * 0.2; // 抵抗感を出す
+                }
+
+                const rotate = currentX * 0.08;
+                card.style.transform = 'translateX(' + currentX + 'px) rotate(' + rotate + 'deg)';
+
+                const likeStamp = card.querySelector('.swipe-stamp-like');
+                const skipStamp = card.querySelector('.swipe-stamp-skip');
+                const progress = Math.min(Math.abs(currentX) / threshold, 1);
+
+                if (currentX > 0 && kind !== 'sent') {
+                    likeStamp.style.opacity = progress;
+                    skipStamp.style.opacity = 0;
+                } else if (currentX < 0) {
+                    skipStamp.style.opacity = progress;
+                    likeStamp.style.opacity = 0;
+                } else {
+                    likeStamp.style.opacity = 0;
+                    skipStamp.style.opacity = 0;
+                }
+            }
+
+            function onEnd() {
+                if (!isDragging) return;
+                isDragging = false;
+
+                if (currentX > threshold && kind !== 'sent') {
+                    animateLikeOut(card, 'right', kind);
+                } else if (currentX < -threshold) {
+                    animateLikeOut(card, 'left', kind);
+                } else {
+                    card.style.transition = 'transform 0.3s ease';
+                    card.style.transform = '';
+                    card.querySelector('.swipe-stamp-like').style.opacity = 0;
+                    card.querySelector('.swipe-stamp-skip').style.opacity = 0;
+                }
+                currentX = 0;
+            }
+
+            card.addEventListener('pointerdown', onStart);
+            card.addEventListener('pointermove', onMove);
+            card.addEventListener('pointerup', onEnd);
+            card.addEventListener('pointerleave', onEnd);
+        }
+
+        // いいね/もらったカードのアニメーション飛ばし
+        function animateLikeOut(card, direction, kind) {
+            card.classList.add('animating');
+            const xOut = direction === 'right' ? 500 : -500;
+            const rotate = direction === 'right' ? 30 : -30;
+            card.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
+            card.style.transform = 'translateX(' + xOut + 'px) rotate(' + rotate + 'deg)';
+            card.style.opacity = '0';
+
+            const user = likeSwipeCandidates[likeSwipeIndex];
+            if (!user) return;
+
+            if (kind === 'sent' && direction === 'left') {
+                // いいねタブ: 左スワイプ → いいね取り消し
+                fetch('/random-matching/api/unlike', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'targetUserId=' + user.userId
+                }).then(() => refreshMatchBadges()).catch(err => console.error('Unlike error:', err));
+            } else if (kind === 'received' && direction === 'right') {
+                // もらったタブ: 右スワイプ → いいね返し
+                fetch('/random-matching/api/like', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'targetUserId=' + user.userId
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.mutual) {
+                        showMatchNotification(user.displayName);
+                    }
+                    refreshMatchBadges();
+                })
+                .catch(err => console.error('Like error:', err));
+            } else if (kind === 'received' && direction === 'left') {
+                // もらったタブ: 左スワイプ → 拒否
+                fetch('/random-matching/api/reject', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'fromUserId=' + user.userId
+                }).then(() => refreshMatchBadges()).catch(err => console.error('Reject error:', err));
+            }
+
+            setTimeout(() => {
+                likeSwipeIndex++;
+                renderLikeSwipeCards(kind);
+            }, 400);
+        }
+
+        // マッチ一覧をリスト表示（mutualタブ用）
+        function loadLikeList(kind) {
+            matchLikeList.innerHTML = '<div style="text-align:center;padding:40px 0;"><i class="fas fa-spinner fa-spin fa-2x" style="color:rgba(255,255,255,0.3);"></i></div>';
+
+            fetch('/random-matching/api/likes/' + kind)
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.success || data.users.length === 0) {
+                        matchLikeList.innerHTML =
+                            '<div class="match-like-empty">' +
+                            '<i class="fas fa-heart-broken"></i>' +
+                            '<p>まだマッチが成立していません</p></div>';
+                        return;
+                    }
+                    matchLikeList.innerHTML = '';
+                    data.users.forEach(u => {
+                        const item = document.createElement('div');
+                        item.className = 'match-like-item';
+                        item.dataset.userId = u.userId;
+
+                        let avatarHtml;
+                        if (u.photo) {
+                            avatarHtml = '<img src="' + u.photo + '" alt="">';
+                        } else {
+                            avatarHtml = '<i class="fas fa-user"></i>';
+                        }
+
+                        item.innerHTML =
+                            '<div class="match-like-avatar">' + avatarHtml + '</div>' +
+                            '<div class="match-like-info">' +
+                                '<div class="match-like-name">' + u.displayName + '</div>' +
+                                '<div class="match-like-bio">' + (u.bio || '') + '</div>' +
+                            '</div>';
+
+                        item.addEventListener('click', function() {
+                            viewUserProfile(u.userId);
+                        });
+
+                        matchLikeList.appendChild(item);
+                    });
+                })
+                .catch(() => {
+                    matchLikeList.innerHTML = '<div class="match-like-empty"><p>読み込みに失敗しました</p></div>';
+                });
+        }
+
+        // バッジ更新
+        function refreshMatchBadges() {
+            ['sent', 'received', 'mutual'].forEach(kind => {
+                fetch('/random-matching/api/likes/' + kind)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (!data.success) return;
+                        const badge = document.getElementById('badgeLike' + kind.charAt(0).toUpperCase() + kind.slice(1));
+                        if (data.count > 0) {
+                            badge.textContent = data.count;
+                            badge.style.display = 'flex';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    })
+                    .catch(() => {});
+            });
+        }
+
+        // マッチ成立通知
+        function showMatchNotification(name) {
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;animation:fadeIn 0.3s;';
+            overlay.innerHTML =
+                '<div style="text-align:center;color:white;">' +
+                '<i class="fas fa-heart" style="font-size:4rem;color:#ff6b6b;margin-bottom:16px;"></i>' +
+                '<h2 style="margin:0 0 8px;">マッチ成立!</h2>' +
+                '<p style="color:rgba(255,255,255,0.7);">' + name + ' さんとマッチしました</p>' +
+                '</div>';
+            overlay.addEventListener('click', () => overlay.remove());
+            document.body.appendChild(overlay);
+            setTimeout(() => overlay.remove(), 3000);
+        }
+
         // 参加ボタン
         document.querySelectorAll('.btn-join').forEach(btn => {
             btn.addEventListener('click', async function(e) {
@@ -1412,7 +2647,7 @@
                 } else if (button.id === 'btnRoomInvite') {
                     console.log('👥 招待タブがクリックされました');
                     document.getElementById('invite-tab').classList.add('active');
-                    // TODO: 招待機能
+                    await loadReceivedInvitations();
                 }
             });
         });
@@ -1729,6 +2964,12 @@
                         bottomNav.style.display = 'none';
                     }
                     createPostBtn.style.display = 'none';
+
+                    // そのユーザーの投稿を読み込む
+                    loadUserPosts(userId);
+
+                    // スクロールハンドラを設定
+                    setTimeout(() => setupUserProfileScroll(), 100);
                 }
             } catch (error) {
                 console.error('Error loading user profile:', error);
@@ -2467,6 +3708,212 @@
             }
         }
 
+        // 受け取った招待一覧を読み込む
+        async function loadReceivedInvitations() {
+            try {
+                console.log('📬 招待一覧を読み込み中...');
+                const response = await fetch('/rooms/api/invitations', {
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+
+                if (!response.ok) {
+                    console.error('❌ API呼び出し失敗:', response.status);
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    console.error('❌ 招待一覧取得失敗:', data.message);
+                    return;
+                }
+
+                const invitations = data.invitations || [];
+                console.log('✅ 招待一覧取得:', invitations.length, '件');
+
+                displayInvitationsList(invitations);
+                updateInviteBadge(invitations.length);
+            } catch (error) {
+                console.error('❌ 招待一覧読み込みエラー:', error);
+            }
+        }
+
+        // 招待一覧を表示
+        function displayInvitationsList(invitations) {
+            const inviteTab = document.getElementById('invite-tab');
+            const listContainer = document.getElementById('invitations-list');
+            const noItemsElement = listContainer.querySelector('.no-chats');
+
+            if (!listContainer) {
+                console.error('❌ 招待リストコンテナが見つかりません');
+                return;
+            }
+
+            // 既存のアイテムを削除
+            const existingItems = listContainer.querySelectorAll('.chat-item');
+            existingItems.forEach(item => item.remove());
+
+            if (invitations.length === 0) {
+                if (noItemsElement) {
+                    noItemsElement.style.display = 'block';
+                }
+                console.log('📬 招待なし');
+                return;
+            }
+
+            if (noItemsElement) {
+                noItemsElement.style.display = 'none';
+            }
+
+            console.log('📬 招待を表示:', invitations.length, '件');
+
+            invitations.forEach(invitation => {
+                const invitationItem = document.createElement('div');
+                invitationItem.className = 'chat-item';
+                invitationItem.dataset.invitationId = invitation.invitationId;
+
+                // 招待者アバター
+                const avatarUrl = invitation.inviterAvatarUrl || '/images/default-avatar.png';
+                const inviterAvatar = `<div class="chat-avatar"><img src="${escapeHtml(avatarUrl)}" alt="avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"></div>`;
+
+                invitationItem.innerHTML = `
+                    ${inviterAvatar}
+                    <div class="chat-info" style="flex: 1;">
+                        <div class="chat-name-row">
+                            <span class="chat-name">${escapeHtml(invitation.roomName)}</span>
+                        </div>
+                        <div class="chat-message-preview">
+                            ${escapeHtml(invitation.inviterDisplayName)}さんからの招待
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-left: 10px;">
+                        <button class="accept-invite-btn" data-invitation-id="${invitation.invitationId}" style="white-space: nowrap; background: #4CAF50; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; font-weight: 500;">
+                            承認
+                        </button>
+                        <button class="reject-invite-btn" data-invitation-id="${invitation.invitationId}" style="white-space: nowrap; background: #f44336; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; font-weight: 500;">
+                            拒否
+                        </button>
+                    </div>
+                `;
+
+                // 承認ボタンのイベント
+                const acceptBtn = invitationItem.querySelector('.accept-invite-btn');
+                acceptBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const invitationId = acceptBtn.dataset.invitationId;
+
+                    if (confirm(`${invitation.roomName}への招待を承認しますか?`)) {
+                        await acceptRoomInvitation(invitationId);
+                    }
+                });
+
+                // 拒否ボタンのイベント
+                const rejectBtn = invitationItem.querySelector('.reject-invite-btn');
+                rejectBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const invitationId = rejectBtn.dataset.invitationId;
+
+                    if (confirm(`${invitation.roomName}への招待を拒否しますか?`)) {
+                        await rejectRoomInvitation(invitationId);
+                    }
+                });
+
+                listContainer.appendChild(invitationItem);
+            });
+        }
+
+        // 招待バッジを更新
+        function updateInviteBadge(count) {
+            const badge = document.getElementById('inviteBadge');
+            if (badge) {
+                if (count > 0) {
+                    badge.textContent = count;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+
+        // 招待を承認
+        async function acceptRoomInvitation(invitationId) {
+            try {
+                console.log('✅ 招待を承認中... invitationId:', invitationId);
+                const response = await fetch(`/rooms/invitation/${invitationId}/accept`, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    console.error('❌ 承認失敗:', response.status);
+                    alert('承認に失敗しました');
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log('✅ 招待を承認しました');
+                    alert(data.message || '招待を承認しました');
+
+                    // 招待一覧を再読み込み
+                    await loadReceivedInvitations();
+                    // 参加中ルームも再読み込み
+                    await loadJoinedRooms();
+                } else {
+                    console.error('❌ 承認失敗:', data.message);
+                    alert(data.message || '承認に失敗しました');
+                }
+            } catch (error) {
+                console.error('❌ 承認エラー:', error);
+                alert('承認中にエラーが発生しました');
+            }
+        }
+
+        // 招待を拒否
+        async function rejectRoomInvitation(invitationId) {
+            try {
+                console.log('❌ 招待を拒否中... invitationId:', invitationId);
+                const response = await fetch(`/rooms/invitation/${invitationId}/reject`, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    console.error('❌ 拒否失敗:', response.status);
+                    alert('拒否に失敗しました');
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log('✅ 招待を拒否しました');
+                    alert(data.message || '招待を拒否しました');
+
+                    // 招待一覧を再読み込み
+                    await loadReceivedInvitations();
+                } else {
+                    console.error('❌ 拒否失敗:', data.message);
+                    alert(data.message || '拒否に失敗しました');
+                }
+            } catch (error) {
+                console.error('❌ 拒否エラー:', error);
+                alert('拒否中にエラーが発生しました');
+            }
+        }
+
         // 参加可能ルームリストを表示（申請ボタン付き）
         function displayAvailableRoomList(rooms, tabId) {
             const tabElement = document.getElementById(tabId);
@@ -3037,6 +4484,18 @@
                     loadAvailableRooms();     // 参加可能タブを更新（申請ボタンに戻る）
                     alert('😢 「' + roomData.roomName + '」への参加が拒否されました');
                 }
+            } else if (roomData.type === 'room_invitation') {
+                // ルーム招待が届いた
+                console.log('📬 招待受信:', roomData.inviterUsername, 'が', roomData.inviteeUsername, 'を', roomData.roomName, 'に招待');
+
+                const currentUsername = window.currentUser || '';
+
+                // 招待されたユーザー本人の場合：招待タブを更新
+                if (roomData.inviteeUsername === currentUsername) {
+                    console.log('🎉 自分に招待が届いた！');
+                    loadReceivedInvitations();
+                    alert('📬 「' + roomData.roomName + '」への招待が届きました！');
+                }
             } else if (roomData.type === 'member_kicked') {
                 // メンバーが退会させられた
                 console.log('👢 メンバー退会:', roomData.kickedUsername, 'が', roomData.roomName, 'から退会させられた');
@@ -3597,6 +5056,8 @@
         // ========================================
 
         let currentRoomId = null;
+        let currentRoomName = null;
+        let currentRoomCreator = null;
         let roomStompClient = null;
         let roomSubscription = null;
 
@@ -3605,6 +5066,8 @@
             console.log('🚪 ルームチャット画面を開く:', room);
 
             currentRoomId = room.id;
+            currentRoomName = room.name;
+            currentRoomCreator = room.creatorUsername;
 
             // ルームチャット画面を表示
             const sections = document.querySelectorAll('.app-section');
@@ -3617,6 +5080,38 @@
             // ヘッダー情報を設定
             document.getElementById('roomChatName').textContent = room.name;
             document.getElementById('roomChatMemberCount').textContent = `メンバー${room.memberCount || 0}人`;
+
+            // ルームアイコンを設定
+            const roomAvatar = document.getElementById('roomChatAvatar');
+            if (roomAvatar) {
+                if (room.iconUrl) {
+                    roomAvatar.style.backgroundImage = `url(${room.iconUrl})`;
+                    roomAvatar.style.backgroundSize = 'cover';
+                    roomAvatar.style.backgroundPosition = 'center';
+                    roomAvatar.innerHTML = '';
+                } else {
+                    roomAvatar.style.backgroundImage = '';
+                    roomAvatar.innerHTML = '<i class="fas fa-users"></i>';
+                }
+            }
+
+            // 招待ボタン・アイコン変更はルーム作成者のみ
+            const inviteBtn = document.getElementById('roomInviteBtn');
+            const currentUsername = document.querySelector('.app-container').dataset.currentUsername;
+            const isCreator = room.createdByUsername && room.createdByUsername === currentUsername;
+
+            if (inviteBtn) {
+                inviteBtn.style.display = isCreator ? 'flex' : 'none';
+            }
+
+            // 作成者ならアイコンタップで変更可能（メンバー一覧への遷移を止める）
+            if (roomAvatar) {
+                roomAvatar.style.cursor = isCreator ? 'pointer' : 'default';
+                roomAvatar.onclick = isCreator ? (e) => {
+                    e.stopPropagation();
+                    document.getElementById('roomIconInput').click();
+                } : null;
+            }
 
             // フッターナビゲーションを非表示
             const bottomNav = document.querySelector('.bottom-nav');
@@ -3698,6 +5193,238 @@
             roomChatSection.style.display = 'block';
             roomChatSection.classList.add('active');
         });
+
+        // ルームアイコンアップロード処理
+        document.getElementById('roomIconInput').addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file || !currentRoomId) return;
+            const roomId = currentRoomId;
+
+            CropModal.open(file, async function(blob) {
+                const formData = new FormData();
+                formData.append('icon', blob, 'icon.png');
+
+                try {
+                    const res = await fetch(`/rooms/${roomId}/upload-icon`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await res.json();
+                    if (data.success && data.iconUrl) {
+                        const avatar = document.getElementById('roomChatAvatar');
+                        avatar.style.backgroundImage = `url(${data.iconUrl})`;
+                        avatar.style.backgroundSize = 'cover';
+                        avatar.style.backgroundPosition = 'center';
+                        avatar.innerHTML = '';
+                    }
+                } catch (e) {
+                    console.error('アイコンアップロードエラー:', e);
+                }
+            });
+            this.value = '';
+        });
+
+        // ルーム招待ボタンのクリックハンドラー
+        const inviteBtn = document.getElementById('roomInviteBtn');
+        if (inviteBtn) {
+            inviteBtn.addEventListener('click', function() {
+                if (currentRoomId) {
+                    showRoomInviteScreen(currentRoomId);
+                }
+            });
+        }
+
+        // 招待画面の戻るボタン
+        document.getElementById('backFromRoomInviteBtn').addEventListener('click', function() {
+            const inviteSection = document.getElementById('room-invite-section');
+            inviteSection.style.display = 'none';
+            inviteSection.classList.remove('active');
+
+            // ルームチャット画面に戻る
+            const roomChatSection = document.getElementById('room-chat-section');
+            roomChatSection.style.display = 'block';
+            roomChatSection.classList.add('active');
+        });
+
+        // 招待画面を表示
+        async function showRoomInviteScreen(roomId) {
+            console.log('👥 招待画面を表示:', roomId);
+
+            // ルームチャット画面を非表示
+            const roomChatSection = document.getElementById('room-chat-section');
+            roomChatSection.style.display = 'none';
+            roomChatSection.classList.remove('active');
+
+            // 招待画面を表示
+            const inviteSection = document.getElementById('room-invite-section');
+            inviteSection.style.display = 'block';
+            inviteSection.classList.add('active');
+
+            // ルーム名を設定
+            document.getElementById('inviteRoomName').textContent = currentRoomName || '';
+
+            // ローディング表示
+            document.getElementById('followerInviteList').innerHTML = `
+                <div class="members-loading" style="text-align: center; padding: 2rem; color: rgba(255,255,255,0.6);">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p style="margin-top: 1rem;">フォロワーを読み込み中...</p>
+                </div>
+            `;
+
+            // フォロワーリストと現在のルームメンバー、招待状況を取得
+            await loadFollowersForRoomInvite(roomId);
+        }
+
+        // 招待用フォロワーリストを読み込む
+        async function loadFollowersForRoomInvite(roomId) {
+            try {
+                // フォロワー、ルームメンバー、招待状況を並行して取得
+                const [followersRes, membersRes, invitationsRes] = await Promise.all([
+                    fetch('/api/users/me/followers'),
+                    fetch(`/rooms/${roomId}/api/members`),
+                    fetch('/rooms/api/invitations-sent?roomId=' + roomId)
+                ]);
+
+                const followersData = await followersRes.json();
+                const membersData = await membersRes.json();
+
+                // 招待状況を取得（エラーの場合は空配列）
+                let invitedUsernames = [];
+                if (invitationsRes.ok) {
+                    const invitationsData = await invitationsRes.json();
+                    if (invitationsData.success && invitationsData.invitations) {
+                        invitedUsernames = invitationsData.invitations.map(inv => inv.inviteeUsername);
+                    }
+                }
+
+                if (!followersData.success) {
+                    document.getElementById('followerInviteList').innerHTML = `
+                        <div style="text-align: center; padding: 2rem; color: rgba(255,255,255,0.6);">
+                            <i class="fas fa-exclamation-circle fa-2x"></i>
+                            <p style="margin-top: 1rem;">フォロワーの取得に失敗しました</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const followers = followersData.users || [];
+
+                // 現在のメンバーのusernameリストを作成
+                const memberUsernames = membersData.success && membersData.members
+                    ? membersData.members.map(m => m.username)
+                    : [];
+
+                displayFollowersForRoomInvite(followers, memberUsernames, invitedUsernames, roomId);
+            } catch (error) {
+                console.error('❌ フォロワー読み込みエラー:', error);
+                document.getElementById('followerInviteList').innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: rgba(255,255,255,0.6);">
+                        <i class="fas fa-exclamation-circle fa-2x"></i>
+                        <p style="margin-top: 1rem;">読み込み中にエラーが発生しました</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 招待用フォロワーリストを表示
+        function displayFollowersForRoomInvite(followers, memberUsernames, invitedUsernames, roomId) {
+            const listContainer = document.getElementById('followerInviteList');
+
+            if (followers.length === 0) {
+                listContainer.innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: rgba(255,255,255,0.6);">
+                        <i class="fas fa-users fa-2x"></i>
+                        <p style="margin-top: 1rem;">フォロワーがいません</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listContainer.innerHTML = '';
+
+            followers.forEach(follower => {
+                const item = document.createElement('div');
+                item.className = 'invite-list-item';
+                item.dataset.username = follower.username;
+
+                // アバター
+                let avatarHtml = '';
+                if (follower.avatarUrl) {
+                    avatarHtml = `<div class="invite-avatar" style="background-image: url(${escapeHtml(follower.avatarUrl)}); background-size: cover;"></div>`;
+                } else {
+                    avatarHtml = `<div class="invite-avatar"><i class="fas fa-user"></i></div>`;
+                }
+
+                // ボタン状態を判定
+                const isMember = memberUsernames.includes(follower.username);
+                const isInvited = invitedUsernames.includes(follower.username);
+
+                let buttonHtml = '';
+                if (isMember) {
+                    buttonHtml = `<button class="invite-btn already-member" disabled>参加中</button>`;
+                } else if (isInvited) {
+                    buttonHtml = `<button class="invite-btn already-invited" disabled>招待済</button>`;
+                } else {
+                    buttonHtml = `<button class="invite-btn can-invite" data-username="${escapeHtml(follower.username)}">招待</button>`;
+                }
+
+                item.innerHTML = `
+                    ${avatarHtml}
+                    <div class="invite-info">
+                        <div class="invite-name">${escapeHtml(follower.displayName || follower.username)}</div>
+                    </div>
+                    ${buttonHtml}
+                `;
+
+                // 招待ボタンのクリックハンドラー
+                const inviteBtn = item.querySelector('.invite-btn.can-invite');
+                if (inviteBtn) {
+                    inviteBtn.addEventListener('click', async function() {
+                        const username = this.dataset.username;
+                        await sendRoomInvite(roomId, username, this);
+                    });
+                }
+
+                listContainer.appendChild(item);
+            });
+        }
+
+        // ルーム招待を送信
+        async function sendRoomInvite(roomId, username, buttonElement) {
+            try {
+                // ボタンを無効化
+                buttonElement.disabled = true;
+                buttonElement.textContent = '送信中...';
+
+                const response = await fetch(`/rooms/${roomId}/invite?username=${encodeURIComponent(username)}`, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log('✅ 招待送信成功:', username);
+                    // ボタンを招待済みに変更
+                    buttonElement.className = 'invite-btn already-invited';
+                    buttonElement.textContent = '招待済';
+                } else {
+                    console.error('❌ 招待送信失敗:', data.message);
+                    alert(data.message || '招待の送信に失敗しました');
+                    // ボタンを元に戻す
+                    buttonElement.disabled = false;
+                    buttonElement.textContent = '招待';
+                }
+            } catch (error) {
+                console.error('❌ 招待送信エラー:', error);
+                alert('招待の送信中にエラーが発生しました');
+                buttonElement.disabled = false;
+                buttonElement.textContent = '招待';
+            }
+        }
 
         // メンバー一覧パネルを表示
         async function showMembersPanel(roomId) {

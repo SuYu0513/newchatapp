@@ -3,43 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ランダムマッチング設定 - ChatApp</title>
+    <title>マッチング設定 - ChatApp</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="/css/chat-style.css" rel="stylesheet">
     <style>
+        body {
+            min-height: 100vh;
+            background:
+                radial-gradient(ellipse at 20% 10%, rgba(135, 206, 250, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(176, 224, 230, 0.1) 0%, transparent 40%),
+                linear-gradient(to bottom,
+                    #0a0e27 0%,
+                    #1a1f3a 25%,
+                    #0f1929 50%,
+                    #1e2740 75%,
+                    #0d1321 100%
+                );
+            background-attachment: fixed;
+        }
+
         .settings-card {
             border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
             border: none;
             margin-bottom: 20px;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: rgba(255, 255, 255, 0.95);
         }
-        
+
         .settings-card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
         }
-        
+
+        .settings-card .card-header {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px 15px 0 0;
+        }
+
+        .settings-card .card-header h5 {
+            color: #333;
+        }
+
+        .settings-card .card-header small {
+            color: #666;
+        }
+
         .setting-item {
             padding: 20px;
             border-bottom: 1px solid #f0f0f0;
         }
-        
+
         .setting-item:last-child {
             border-bottom: none;
         }
-        
+
         .setting-label {
             font-weight: 600;
             color: #333;
             margin-bottom: 8px;
         }
-        
+
         .setting-description {
-            color: #6c757d;
+            color: #555;
             font-size: 0.9rem;
             margin-bottom: 15px;
+        }
+
+        .interests-toggle-wrap {
+            margin-bottom: 8px;
+            text-align: right;
+        }
+
+        .interests-toggle-btn {
+            background: none;
+            border: none;
+            color: #667eea;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 2px 0;
+        }
+
+        .interests-toggle-btn:hover {
+            text-decoration: underline;
+        }
+
+        .form-check-label {
+            color: #333;
+        }
+
+        .form-label {
+            color: #333;
+        }
+
+        .text-muted {
+            color: #666 !important;
         }
         
         .page-header {
@@ -136,52 +196,193 @@
             background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
             color: white;
         }
+
+        /* シンプルヘッダー */
+        .simple-header {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(20, 30, 50, 0.85);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .simple-header .back-btn {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .simple-header .back-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .simple-header .header-title {
+            flex: 1;
+            text-align: center;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .simple-header .header-spacer {
+            width: 80px;
+        }
+
+        /* 星のキラキラ効果 */
+        .star {
+            position: fixed;
+            width: 2px;
+            height: 2px;
+            background: #e0f0ff;
+            border-radius: 50%;
+            animation: twinkle 3s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 1;
+            box-shadow: 0 0 3px rgba(224, 240, 255, 0.8),
+                        0 0 6px rgba(135, 206, 250, 0.6),
+                        0 0 10px rgba(135, 206, 250, 0.4);
+        }
+
+        .star.large {
+            width: 3px;
+            height: 3px;
+            box-shadow: 0 0 4px rgba(224, 240, 255, 1),
+                        0 0 8px rgba(135, 206, 250, 0.8),
+                        0 0 15px rgba(135, 206, 250, 0.5);
+        }
+
+        @keyframes twinkle {
+            0%, 100% {
+                opacity: 0.3;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.5);
+            }
+        }
+        /* マッチング写真グリッド */
+        .matching-photos-section {
+            margin-top: 15px;
+        }
+
+        .matching-photos-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .photo-slot {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px dashed #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .photo-slot:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .photo-slot.filled {
+            border: 2px solid transparent;
+            cursor: default;
+        }
+
+        .photo-slot img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-slot .add-icon {
+            color: #aaa;
+            font-size: 1.5rem;
+            transition: color 0.3s;
+        }
+
+        .photo-slot:hover .add-icon {
+            color: #667eea;
+        }
+
+        .photo-slot .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .photo-slot.filled:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .photo-count {
+            text-align: right;
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 6px;
+        }
+
+        .photo-validation-error {
+            display: none;
+            color: #dc3545;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: rgba(220, 53, 69, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(220, 53, 69, 0.2);
+        }
+
+        .photo-validation-error.show {
+            display: block;
+        }
     </style>
 </head>
 <body>
-    <!-- ナビゲーションバー -->
-    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-        <div class="container">
-            <a class="navbar-brand" href="/chat">
-                <i class="fas fa-comments me-2"></i>ChatApp
-            </a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="/chat">
-                    <i class="fas fa-home me-1"></i>ホーム
-                </a>
-                <a class="nav-link" href="/random-matching">
-                    <i class="fas fa-random me-1"></i>ランダムマッチング
-                </a>
-                <a class="nav-link" href="/rooms">
-                    <i class="fas fa-door-open me-1"></i>ルーム一覧
-                </a>
-                <a class="nav-link" href="/profile">
-                    <i class="fas fa-user me-1"></i>プロフィール
-                </a>
-                <a class="nav-link" href="/logout">
-                    <i class="fas fa-sign-out-alt me-1"></i>ログアウト
-                </a>
-            </div>
-        </div>
-    </nav>
+    <!-- シンプルヘッダー -->
+    <header class="simple-header">
+        <a href="/home?tab=mypage" class="back-btn">
+            <i class="fas fa-chevron-left"></i>
+            <span>戻る</span>
+        </a>
+        <h1 class="header-title">マッチ設定</h1>
+        <div class="header-spacer"></div>
+    </header>
 
     <div class="container mt-4">
-        <!-- ページヘッダー -->
-        <div class="page-header">
-            <div class="row align-items-center">
-                <div class="col">
-                    <h2 class="mb-0">
-                        <i class="fas fa-cog me-3"></i>ランダムマッチング設定
-                    </h2>
-                    <p class="mb-0 mt-2 opacity-75">マッチングの条件や動作を設定できます</p>
-                </div>
-                <div class="col-auto">
-                    <a href="/random-matching" class="btn btn-light btn-custom">
-                        <i class="fas fa-arrow-left me-2"></i>マッチングに戻る
-                    </a>
-                </div>
-            </div>
-        </div>
 
         <form th:action="@{/random-matching/settings}" method="post" id="settingsForm">
             <div class="row">
@@ -195,23 +396,47 @@
                                 </div>
                                 <div>
                                     <h5 class="mb-0">基本設定</h5>
-                                    <small class="text-muted">ランダムマッチングの基本的な動作設定</small>
+                                    <small class="text-muted">マッチングの基本的な動作設定</small>
                                 </div>
                             </div>
                         </div>
                         <div class="card-body">
                             <div class="setting-item">
-                                <div class="setting-label">ランダムマッチングを許可</div>
-                                <div class="setting-description">他のユーザーからのランダムマッチング要求を受け入れるかどうか</div>
+                                <div class="setting-label">マッチングを許可</div>
+                                <div class="setting-description">他のユーザーからのマッチング要求を受け入れるかどうか</div>
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" id="allowRandomMatching" 
                                            name="allowRandomMatching" th:checked="${profile.allowRandomMatching}">
                                     <label class="form-check-label" for="allowRandomMatching">
-                                        ランダムマッチングを有効にする
+                                        マッチングを有効にする
                                     </label>
                                 </div>
+
+                                <!-- マッチング用写真 -->
+                                <div class="matching-photos-section" id="matchingPhotosSection">
+                                    <div class="setting-label" style="margin-top: 15px;">マッチング用の写真</div>
+                                    <div class="setting-description">マッチング相手に表示される写真です（最大6枚）</div>
+                                    <input type="file" id="matchingPhotoInput" accept="image/jpeg,image/png,image/gif" style="display: none;">
+                                    <div class="matching-photos-grid" id="matchingPhotosGrid">
+                                        <!-- 既存の写真をサーバーからセット -->
+                                        <th:block th:if="${profile.matchingPhotos != null and !profile.matchingPhotos.isEmpty()}">
+                                            <div th:each="photo : ${#strings.arraySplit(profile.matchingPhotos, ',')}"
+                                                 class="photo-slot filled" th:data-url="${photo.trim()}">
+                                                <img th:src="${photo.trim()}" alt="マッチング写真">
+                                                <button type="button" class="delete-btn" th:data-url="${photo.trim()}">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </th:block>
+                                    </div>
+                                    <div class="photo-count" id="photoCount">0 / 6</div>
+                                    <div class="photo-validation-error" id="photoValidationError">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        マッチング用の写真が設定されていません。
+                                    </div>
+                                </div>
                             </div>
-                            
+
                             <div class="setting-item">
                                 <div class="setting-label">自動マッチング</div>
                                 <div class="setting-description">条件に合うユーザーが見つかったときに自動的にマッチングする</div>
@@ -262,21 +487,22 @@
                             </div>
                             
                             <div class="setting-item">
-                                <div class="setting-label">興味・趣味</div>
-                                <div class="setting-description">共通の興味を持つユーザーとマッチングしやすくする</div>
-                                <select class="form-select" name="preferredInterests" multiple>
-                                    <option value="games">ゲーム</option>
-                                    <option value="music">音楽</option>
-                                    <option value="movies">映画</option>
-                                    <option value="sports">スポーツ</option>
-                                    <option value="reading">読書</option>
-                                    <option value="travel">旅行</option>
-                                    <option value="cooking">料理</option>
-                                    <option value="art">アート</option>
-                                    <option value="technology">テクノロジー</option>
-                                    <option value="anime">アニメ</option>
-                                </select>
-                                <small class="text-muted">複数選択可能（Ctrlキーを押しながらクリック）</small>
+                                <div class="setting-label">好きなもの</div>
+                                <div class="setting-description">共通の好きなものを持つユーザーとマッチングしやすくする</div>
+                                <div th:if="${profile.favoriteThings != null and !profile.favoriteThings.isEmpty()}">
+                                    <div class="interests-toggle-wrap">
+                                        <button type="button" class="interests-toggle-btn" id="toggleAllInterests">すべて選択</button>
+                                    </div>
+                                    <select class="form-select" id="preferredInterestsSelect" name="preferredInterests" multiple>
+                                        <option th:each="item : ${#strings.arraySplit(profile.favoriteThings, ',')}"
+                                                th:value="${item.trim()}"
+                                                th:text="${item.trim()}">項目</option>
+                                    </select>
+                                </div>
+                                <div th:if="${profile.favoriteThings == null or profile.favoriteThings.isEmpty()}" class="alert alert-info mb-0">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    プロフィール編集で「好きなもの」を登録すると、ここに表示されます
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -351,7 +577,7 @@
                             
                             <div class="setting-item">
                                 <div class="setting-label">メッセージ通知</div>
-                                <div class="setting-description">ランダムマッチングのチャットでメッセージを受信したときに通知</div>
+                                <div class="setting-description">マッチングのチャットでメッセージを受信したときに通知</div>
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" id="messageNotification" 
                                            name="messageNotification" checked>
@@ -409,23 +635,143 @@
                 document.getElementById('matchNotification').checked = true;
                 document.getElementById('messageNotification').checked = true;
                 
-                // 興味の選択をリセット
+                // 好きなものの選択をリセット
                 const interestsSelect = document.querySelector('[name="preferredInterests"]');
-                for (let option of interestsSelect.options) {
-                    option.selected = false;
+                if (interestsSelect) {
+                    for (let option of interestsSelect.options) {
+                        option.selected = false;
+                    }
                 }
                 
                 updateAgeRange();
             }
         }
 
+        // ========================================
+        // マッチング写真グリッド
+        // ========================================
+        const MAX_PHOTOS = 6;
+        const photosGrid = document.getElementById('matchingPhotosGrid');
+        const photoInput = document.getElementById('matchingPhotoInput');
+        const photoCountEl = document.getElementById('photoCount');
+        const photoError = document.getElementById('photoValidationError');
+
+        function getFilledSlots() {
+            return photosGrid.querySelectorAll('.photo-slot.filled');
+        }
+
+        function updatePhotoGrid() {
+            // 空きスロットを全て削除
+            photosGrid.querySelectorAll('.photo-slot:not(.filled)').forEach(s => s.remove());
+
+            const filledCount = getFilledSlots().length;
+            photoCountEl.textContent = filledCount + ' / ' + MAX_PHOTOS;
+
+            // 空きスロットを追加（最大6枚まで）
+            const emptyNeeded = MAX_PHOTOS - filledCount;
+            for (let i = 0; i < emptyNeeded; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'photo-slot';
+                slot.innerHTML = '<i class="fas fa-plus add-icon"></i>';
+                slot.addEventListener('click', function() {
+                    photoInput.click();
+                });
+                photosGrid.appendChild(slot);
+            }
+
+            // エラー非表示にリセット
+            photoError.classList.remove('show');
+        }
+
+        // 写真アップロード
+        photoInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) return;
+            this.value = '';
+
+            if (getFilledSlots().length >= MAX_PHOTOS) {
+                alert('写真は最大' + MAX_PHOTOS + '枚までです');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/random-matching/photos/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const slot = document.createElement('div');
+                    slot.className = 'photo-slot filled';
+                    slot.dataset.url = data.photoUrl;
+                    slot.innerHTML = '<img src="' + data.photoUrl + '" alt="マッチング写真">'
+                        + '<button type="button" class="delete-btn" data-url="' + data.photoUrl + '"><i class="fas fa-times"></i></button>';
+                    // 空きスロットの前に挿入
+                    const firstEmpty = photosGrid.querySelector('.photo-slot:not(.filled)');
+                    if (firstEmpty) {
+                        photosGrid.insertBefore(slot, firstEmpty);
+                    } else {
+                        photosGrid.appendChild(slot);
+                    }
+                    bindDeleteBtn(slot.querySelector('.delete-btn'));
+                    updatePhotoGrid();
+                } else {
+                    alert('アップロード失敗: ' + data.message);
+                }
+            })
+            .catch(() => alert('アップロードに失敗しました'));
+        });
+
+        // 削除ボタン
+        function bindDeleteBtn(btn) {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const url = this.dataset.url;
+                if (!confirm('この写真を削除しますか？')) return;
+
+                fetch('/random-matching/photos/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'photoUrl=' + encodeURIComponent(url)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        this.closest('.photo-slot').remove();
+                        updatePhotoGrid();
+                    } else {
+                        alert('削除失敗: ' + data.message);
+                    }
+                })
+                .catch(() => alert('削除に失敗しました'));
+            });
+        }
+
+        // 既存の削除ボタンにイベントをバインド
+        photosGrid.querySelectorAll('.delete-btn').forEach(bindDeleteBtn);
+        updatePhotoGrid();
+
+        // ========================================
         // フォーム送信時の処理
+        // ========================================
         document.getElementById('settingsForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
+
+            // バリデーション: マッチング許可時に写真が1枚もなければエラー
+            const allowMatching = document.getElementById('allowRandomMatching').checked;
+            if (allowMatching && getFilledSlots().length === 0) {
+                photoError.classList.add('show');
+                document.getElementById('matchingPhotosSection').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+            photoError.classList.remove('show');
+
             // FormData を作成
             const formData = new FormData(this);
-            
+
             // fetch で送信
             fetch('/random-matching/settings', {
                 method: 'POST',
@@ -450,6 +796,39 @@
 
         // ページ読み込み時に年齢範囲を更新
         document.addEventListener('DOMContentLoaded', updateAgeRange);
+
+        // 星を生成
+        function createStars() {
+            const starCount = 100;
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = Math.random() > 0.8 ? 'star large' : 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                star.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                document.body.appendChild(star);
+            }
+        }
+        createStars();
+
+        // 「すべて選択 / すべて解除」トグルボタン
+        const toggleBtn = document.getElementById('toggleAllInterests');
+        const interestsSelect = document.getElementById('preferredInterestsSelect');
+        if (toggleBtn && interestsSelect) {
+            toggleBtn.addEventListener('click', function() {
+                const options = Array.from(interestsSelect.options);
+                const allSelected = options.every(o => o.selected);
+                options.forEach(o => o.selected = !allSelected);
+                this.textContent = allSelected ? 'すべて選択' : 'すべて解除';
+            });
+
+            interestsSelect.addEventListener('change', function() {
+                const options = Array.from(this.options);
+                const allSelected = options.every(o => o.selected);
+                toggleBtn.textContent = allSelected ? 'すべて解除' : 'すべて選択';
+            });
+        }
     </script>
 </body>
 </html>

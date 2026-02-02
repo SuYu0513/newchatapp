@@ -86,7 +86,21 @@ public class HomeController {
             }
 
             // ルーム情報も追加
-            model.addAttribute("userRooms", chatRoomService.getUserChatRooms(username));
+            List<com.example.chatapp.entity.ChatRoom> userRooms = chatRoomService.getUserChatRooms(username);
+            model.addAttribute("userRooms", userRooms);
+
+            // ルームごとのisRoomOwner判定（Thymeleafで使うため）
+            Map<Long, Boolean> isRoomOwnerMap = new HashMap<>();
+            Optional<User> userOptForOwner = userService.findByUsername(username);
+            if (userOptForOwner.isPresent()) {
+                User currentUser = userOptForOwner.get();
+                for (com.example.chatapp.entity.ChatRoom room : userRooms) {
+                    boolean isOwner = room.getCreatedBy() != null && room.getCreatedBy().getId().equals(currentUser.getId());
+                    isRoomOwnerMap.put(room.getId(), isOwner);
+                }
+            }
+            model.addAttribute("isRoomOwnerMap", isRoomOwnerMap);
+
             model.addAttribute("availableRooms", chatRoomService.getAvailablePublicRooms(username));
         }
         System.out.println("=== main-app テンプレートを返します ===");

@@ -24,6 +24,9 @@ public class ChatRoom {
     @Column(length = 500)
     private String description;
 
+    @Column(name = "icon_url", length = 500)
+    private String iconUrl;
+
     @NotNull(message = "チャットルームのタイプは必須です")
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 20)
@@ -91,6 +94,14 @@ public class ChatRoom {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getIconUrl() {
+        return iconUrl;
+    }
+
+    public void setIconUrl(String iconUrl) {
+        this.iconUrl = iconUrl;
     }
 
     public ChatRoomType getType() {

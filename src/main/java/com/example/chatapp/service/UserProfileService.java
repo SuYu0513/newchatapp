@@ -148,6 +148,88 @@ public class UserProfileService {
         return savedProfile;
     }
     
+    private static final String MATCHING_PHOTO_DIR = "src/main/resources/static/uploads/matching/";
+    private static final int MAX_MATCHING_PHOTOS = 6;
+
+    /**
+     * マッチング用写真のアップロード
+     */
+    public String uploadMatchingPhoto(User user, MultipartFile file) throws IOException {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("ファイルが選択されていません");
+        }
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new IllegalArgumentException("ファイルサイズが大きすぎます (最大5MB)");
+        }
+
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null) {
+            throw new IllegalArgumentException("ファイル名が不正です");
+        }
+
+        String extension = getFileExtension(originalFilename).toLowerCase();
+        boolean isValidExtension = false;
+        for (String allowedExt : ALLOWED_EXTENSIONS) {
+            if (extension.equals(allowedExt)) {
+                isValidExtension = true;
+                break;
+            }
+        }
+        if (!isValidExtension) {
+            throw new IllegalArgumentException("サポートされていないファイル形式です");
+        }
+
+        UserProfile profile = getOrCreateProfile(user);
+        String currentPhotos = profile.getMatchingPhotos();
+        int currentCount = (currentPhotos != null && !currentPhotos.isEmpty())
+                ? currentPhotos.split(",").length : 0;
+        if (currentCount >= MAX_MATCHING_PHOTOS) {
+            throw new IllegalArgumentException("マッチング写真は最大" + MAX_MATCHING_PHOTOS + "枚までです");
+        }
+
+        Path uploadPath = Paths.get(MATCHING_PHOTO_DIR);
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+
+        String filename = "match_" + user.getId() + "_" + UUID.randomUUID().toString() + extension;
+        Path filePath = uploadPath.resolve(filename);
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+        String photoUrl = "/uploads/matching/" + filename;
+
+        // カンマ区切りで追加
+        if (currentPhotos != null && !currentPhotos.isEmpty()) {
+            profile.setMatchingPhotos(currentPhotos + "," + photoUrl);
+        } else {
+            profile.setMatchingPhotos(photoUrl);
+        }
+        userProfileRepository.save(profile);
+
+        return photoUrl;
+    }
+
+    /**
+     * マッチング用写真の削除
+     */
+    public void deleteMatchingPhoto(User user, String photoUrl) throws IOException {
+        UserProfile profile = getOrCreateProfile(user);
+        String currentPhotos = profile.getMatchingPhotos();
+        if (currentPhotos == null || currentPhotos.isEmpty()) {
+            return;
+        }
+
+        List<String> photoList = new ArrayList<>(List.of(currentPhotos.split(",")));
+        photoList.remove(photoUrl);
+        profile.setMatchingPhotos(photoList.isEmpty() ? null : String.join(",", photoList));
+        userProfileRepository.save(profile);
+
+        // ファイルを削除
+        String filename = photoUrl.replace("/uploads/matching/", "");
+        Path filePath = Paths.get(MATCHING_PHOTO_DIR).resolve(filename);
+        Files.deleteIfExists(filePath);
+    }
+
     /**
      * ユーザーの表示名を取得（プロフィールのdisplayNameまたはusername）
      */

@@ -18,6 +18,7 @@ public class ChatRoomDto {
     private LocalDateTime createdAt;
     private LocalDateTime lastActivityAt;
     private int memberCount;
+    private String iconUrl;
 
     // デフォルトコンストラクタ
     public ChatRoomDto() {}
@@ -34,6 +35,7 @@ public class ChatRoomDto {
         // 最終アクティビティ時間は、最新メッセージのタイムスタンプまたは作成時間
         this.lastActivityAt = chatRoom.getCreatedAt(); // 仮設定：後でメッセージから取得
         this.memberCount = chatRoom.getUsers() != null ? chatRoom.getUsers().size() : 0;
+        this.iconUrl = chatRoom.getIconUrl();
     }
 
     // Getters and Setters
@@ -107,5 +109,13 @@ public class ChatRoomDto {
 
     public void setMemberCount(int memberCount) {
         this.memberCount = memberCount;
+    }
+
+    public String getIconUrl() {
+        return iconUrl;
+    }
+
+    public void setIconUrl(String iconUrl) {
+        this.iconUrl = iconUrl;
     }
 }

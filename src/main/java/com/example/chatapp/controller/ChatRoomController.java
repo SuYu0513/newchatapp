@@ -12,6 +12,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
 import java.util.HashMap;
@@ -103,16 +104,28 @@ public class ChatRoomController {
                 ChatRoom.ChatRoomType roomType = ChatRoom.ChatRoomType.valueOf(type.toUpperCase());
                 ChatRoom newRoom = chatRoomService.createChatRoom(name, description, authentication.getName(), roomType, isPublic);
 
-                // 招待されたユーザーをルームに追加
+                // 招待されたユーザーに招待を送信
                 if (invitedUsernames != null && !invitedUsernames.trim().isEmpty()) {
                     String[] usernames = invitedUsernames.split(",");
                     for (String username : usernames) {
                         username = username.trim();
                         if (!username.isEmpty()) {
                             try {
-                                chatRoomService.joinChatRoom(newRoom.getId(), username);
+                                chatRoomService.inviteUserToRoom(newRoom.getId(), authentication.getName(), username);
+
+                                // WebSocketで招待通知を送信
+                                User invitee = userService.findByUsername(username).orElse(null);
+                                if (invitee != null) {
+                                    Map<String, Object> notification = new HashMap<>();
+                                    notification.put("type", "room_invitation");
+                                    notification.put("roomId", newRoom.getId());
+                                    notification.put("roomName", newRoom.getName());
+                                    notification.put("inviterUsername", authentication.getName());
+                                    notification.put("inviteeUsername", username);
+                                    messagingTemplate.convertAndSend("/topic/rooms", notification);
+                                }
                             } catch (Exception e) {
-                                System.err.println("ユーザー " + username + " の追加に失敗: " + e.getMessage());
+                                System.err.println("ユーザー " + username + " への招待に失敗: " + e.getMessage());
                             }
                         }
                     }
@@ -658,6 +671,183 @@ public class ChatRoomController {
         } else {
             response.put("success", false);
             response.put("message", "ログインが必要です");
+        }
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * API: 受け取った招待一覧取得
+     */
+    @GetMapping("/api/invitations")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getReceivedInvitations(Authentication authentication) {
+        Map<String, Object> response = new HashMap<>();
+
+        if (authentication != null) {
+            try {
+                List<Map<String, Object>> invitations = chatRoomService.getReceivedInvitations(authentication.getName());
+                response.put("success", true);
+                response.put("invitations", invitations);
+            } catch (Exception e) {
+                response.put("success", false);
+                response.put("message", "招待一覧の取得に失敗しました: " + e.getMessage());
+            }
+        } else {
+            response.put("success", false);
+            response.put("message", "ログインが必要です");
+        }
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * API: 招待を承認
+     */
+    @PostMapping("/invitation/{invitationId}/accept")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> acceptInvitation(@PathVariable Long invitationId,
+                                                                 Authentication authentication) {
+        Map<String, Object> response = new HashMap<>();
+
+        if (authentication != null) {
+            try {
+                chatRoomService.acceptInvitation(invitationId, authentication.getName());
+
+                response.put("success", true);
+                response.put("message", "招待を承認しました");
+            } catch (Exception e) {
+                response.put("success", false);
+                response.put("message", "招待の承認に失敗しました: " + e.getMessage());
+            }
+        } else {
+            response.put("success", false);
+            response.put("message", "ログインが必要です");
+        }
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * API: 招待を拒否
+     */
+    @PostMapping("/invitation/{invitationId}/reject")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> rejectInvitation(@PathVariable Long invitationId,
+                                                                 Authentication authentication) {
+        Map<String, Object> response = new HashMap<>();
+
+        if (authentication != null) {
+            try {
+                chatRoomService.rejectInvitation(invitationId, authentication.getName());
+
+                response.put("success", true);
+                response.put("message", "招待を拒否しました");
+            } catch (Exception e) {
+                response.put("success", false);
+                response.put("message", "招待の拒否に失敗しました: " + e.getMessage());
+            }
+        } else {
+            response.put("success", false);
+            response.put("message", "ログインが必要です");
+        }
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * API: ルームにユーザーを招待
+     */
+    @PostMapping("/{roomId}/invite")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> inviteUserToRoom(@PathVariable Long roomId,
+                                                                 @RequestParam String username,
+                                                                 Authentication authentication) {
+        Map<String, Object> response = new HashMap<>();
+
+        if (authentication != null) {
+            try {
+                chatRoomService.inviteUserToRoom(roomId, authentication.getName(), username);
+
+                // WebSocketで招待通知を送信
+                ChatRoom room = chatRoomService.getChatRoom(roomId).orElse(null);
+                if (room != null) {
+                    Map<String, Object> notification = new HashMap<>();
+                    notification.put("type", "room_invitation");
+                    notification.put("roomId", roomId);
+                    notification.put("roomName", room.getName());
+                    notification.put("inviterUsername", authentication.getName());
+                    notification.put("inviteeUsername", username);
+                    messagingTemplate.convertAndSend("/topic/rooms", notification);
+                }
+
+                response.put("success", true);
+                response.put("message", "招待を送信しました");
+            } catch (Exception e) {
+                response.put("success", false);
+                response.put("message", e.getMessage());
+            }
+        } else {
+            response.put("success", false);
+            response.put("message", "ログインが必要です");
+        }
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * API: ルームへの送信済み招待一覧取得
+     */
+    @GetMapping("/api/invitations-sent")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getSentInvitations(@RequestParam Long roomId,
+                                                                   Authentication authentication) {
+        Map<String, Object> response = new HashMap<>();
+
+        if (authentication != null) {
+            try {
+                List<Map<String, Object>> invitations = chatRoomService.getSentInvitationsForRoom(roomId, authentication.getName());
+                response.put("success", true);
+                response.put("invitations", invitations);
+            } catch (Exception e) {
+                response.put("success", false);
+                response.put("message", "招待一覧の取得に失敗しました: " + e.getMessage());
+            }
+        } else {
+            response.put("success", false);
+            response.put("message", "ログインが必要です");
+        }
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * ルームアイコンをアップロード（作成者のみ）
+     */
+    @PostMapping("/{roomId}/upload-icon")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> uploadRoomIcon(
+            @PathVariable Long roomId,
+            @RequestParam("icon") MultipartFile file,
+            Authentication authentication) {
+        Map<String, Object> response = new HashMap<>();
+
+        if (authentication == null) {
+            response.put("success", false);
+            response.put("message", "ログインが必要です");
+            return ResponseEntity.ok(response);
+        }
+
+        try {
+            ChatRoom room = chatRoomService.uploadRoomIcon(roomId, authentication.getName(), file);
+            response.put("success", true);
+            response.put("iconUrl", room.getIconUrl());
+        } catch (IllegalArgumentException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "アイコンのアップロードに失敗しました");
         }
 
         return ResponseEntity.ok(response);
