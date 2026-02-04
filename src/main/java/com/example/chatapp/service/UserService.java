@@ -122,4 +122,13 @@ public class UserService {
     public List<User> findAll() {
         return userRepository.findAll();
     }
+    
+    /**
+     * パスワードを更新
+     */
+    public void updatePassword(User user, String newPassword) {
+        String hashedPassword = passwordEncoder.encode(newPassword);
+        user.setPassword(hashedPassword);
+        userRepository.save(user);
+    }
 }

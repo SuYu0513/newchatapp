@@ -18,6 +18,9 @@ public class UserRegistrationDto {
     @NotBlank(message = "メールアドレスは必須です")
     private String email;
     
+    @NotBlank(message = "パスワード確認は必須です")
+    private String confirmPassword;
+    
     // デフォルトコンストラクタ
     public UserRegistrationDto() {}
     
@@ -51,5 +54,18 @@ public class UserRegistrationDto {
     
     public void setEmail(String email) {
         this.email = email;
+    }
+    
+    public String getConfirmPassword() {
+        return confirmPassword;
+    }
+    
+    public void setConfirmPassword(String confirmPassword) {
+        this.confirmPassword = confirmPassword;
+    }
+    
+    // パスワード一致チェック
+    public boolean isPasswordMatching() {
+        return password != null && password.equals(confirmPassword);
     }
 }

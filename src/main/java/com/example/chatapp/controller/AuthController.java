@@ -11,9 +11,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Optional;
 
 @Controller
 public class AuthController {
@@ -66,6 +71,11 @@ public class AuthController {
         model.addAttribute("user", new UserRegistrationDto());
         return "register";
     }
+    
+    @GetMapping("/password-reset")
+    public String passwordResetPage() {
+        return "password-reset";
+    }
 
     @PostMapping("/register")
     public String registerUser(@Valid @ModelAttribute("user") UserRegistrationDto userDto,
@@ -73,6 +83,12 @@ public class AuthController {
                              Model model,
                              HttpSession session) {
         if (result.hasErrors()) {
+            return "register";
+        }
+        
+        // パスワード一致チェック
+        if (!userDto.isPasswordMatching()) {
+            model.addAttribute("error", "パスワードが一致しません");
             return "register";
         }
 
@@ -99,5 +115,81 @@ public class AuthController {
             model.addAttribute("error", e.getMessage());
             return "register";
         }
+    }
+    
+    // パスワードリセット用エンドポイント
+    @PostMapping("/api/auth/verify-user")
+    @ResponseBody
+    public Map<String, Object> verifyUser(@RequestBody Map<String, String> request) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            String username = request.get("username");
+            String email = request.get("email");
+
+            if (username == null || username.trim().isEmpty() || email == null || email.trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "ユーザー名とメールアドレスを入力してください");
+                return response;
+            }
+
+            Optional<User> userOpt = userService.findByUsername(username.trim());
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                String userEmail = user.getEmail();
+                if (userEmail != null && userEmail.equals(email.trim())) {
+                    response.put("success", true);
+                    response.put("userId", user.getId());
+                    return response;
+                }
+            }
+
+            response.put("success", false);
+            response.put("message", "ユーザー名またはメールアドレスが一致しません");
+        } catch (Exception e) {
+            System.err.println("ユーザー確認エラー: " + e.getMessage());
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "エラーが発生しました。もう一度お試しください。");
+        }
+        return response;
+    }
+    
+    @PostMapping("/api/auth/reset-password")
+    @ResponseBody
+    public Map<String, Object> resetPassword(@RequestBody Map<String, Object> request) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            Object userIdObj = request.get("userId");
+            Object newPasswordObj = request.get("newPassword");
+
+            if (userIdObj == null || newPasswordObj == null) {
+                response.put("success", false);
+                response.put("message", "必要な情報が不足しています");
+                return response;
+            }
+
+            Long userId = Long.valueOf(userIdObj.toString());
+            String newPassword = newPasswordObj.toString();
+
+            Optional<User> userOpt = userService.findById(userId);
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                userService.updatePassword(user, newPassword);
+                response.put("success", true);
+                response.put("message", "パスワードが正常に更新されました");
+            } else {
+                response.put("success", false);
+                response.put("message", "ユーザーが見つかりません");
+            }
+        } catch (Exception e) {
+            System.err.println("パスワードリセットエラー: " + e.getMessage());
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "パスワードの更新中にエラーが発生しました");
+        }
+
+        return response;
     }
 }

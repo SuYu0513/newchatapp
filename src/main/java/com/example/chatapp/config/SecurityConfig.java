@@ -9,6 +9,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -49,20 +50,22 @@ public class SecurityConfig {
         http
             .userDetailsService(userDetailsService)
             .authorizeHttpRequests(authz -> authz
-                // 完全に公開されるリソース（認証不要）
-                .requestMatchers("/login", "/register").permitAll()
+                // 完全に公開されるリソース（認証不要） - 最優先
+                .requestMatchers("/login", "/register", "/password-reset", "/api/auth/**").permitAll()
                 // プロフィール作成（新規登録直後のみ）
                 .requestMatchers("/profile/create").permitAll()
-                // APIエンドポイント（認証済みユーザーのみ）
-                .requestMatchers("/api/**").authenticated()
-                // アイコンジェネレーター（認証不要）
-                .requestMatchers("/icon-generator.html").permitAll()
                 // 静的リソース（認証不要だが制限）
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/manifest.json", "/sw.js", "/icon-*.png").permitAll()
                 // デバッグモード関連（特別扱い）
                 .requestMatchers("/login/ondbg", "/login/offdbg", "/login/dbgmode").permitAll()
                 // H2 Console（開発時のみ）
                 .requestMatchers("/h2-console/**").permitAll()
+                // アイコンジェネレーター（認証不要）
+                .requestMatchers("/icon-generator.html").permitAll()
+                // エラーページ（認証不要 - 例外時のフォワード用）
+                .requestMatchers("/error").permitAll()
+                // APIエンドポイント（認証済みユーザーのみ）
+                .requestMatchers("/api/**").authenticated()
                 // その他すべてのリクエストは認証が必要
                 .anyRequest().authenticated()
             )

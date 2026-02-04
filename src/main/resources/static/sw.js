@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chat-app-v19'; // スワイプUI修正
+const CACHE_NAME = 'chat-app-v20'; // API POST修正
 const urlsToCache = [
   '/css/chat-style.css',
   '/css/kawaii-theme.css',
@@ -30,22 +30,20 @@ self.addEventListener('fetch', function(event) {
     return;
   }
   
-  // APIリクエストは常にネットワークから取得（キャッシュしない）
+  // POSTリクエストはサービスワーカーを通さずそのまま通す
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
+  // APIリクエスト（GET）は常にネットワークから取得（キャッシュしない）
   if (url.pathname.startsWith('/api/') ||
       url.pathname.includes('/api/') ||
       url.pathname.startsWith('/rooms/')) {
     event.respondWith(
       fetch(event.request, {
-        cache: 'no-store',  // ブラウザキャッシュも無効化
-        redirect: 'follow'
+        cache: 'no-store'
       })
     );
-    return;
-  }
-  
-  // POSTリクエストはキャッシュせずそのまま通す
-  if (event.request.method !== 'GET') {
-    event.respondWith(fetch(event.request));
     return;
   }
   
