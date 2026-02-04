@@ -125,6 +125,7 @@ public class ProfileController {
     /**
      * フレンド関係の状態を取得
      */
+    @SuppressWarnings("unused")
     private String getFriendshipStatus(User currentUser, User targetUser) {
         String status = friendshipService.getRelationship(currentUser, targetUser);
         

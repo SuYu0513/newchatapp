@@ -182,7 +182,6 @@ public class LeonardoService {
     /**
      * 複数の画像URLを取得（選択用）
      */
-    @SuppressWarnings("unchecked")
     public List<String> generateAvatars(String gender, String ageGroup, String personality) {
         if (!isConfigured()) {
             return List.of();
