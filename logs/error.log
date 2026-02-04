@@ -1868,3 +1868,17 @@ java.lang.RuntimeException: ユーザーが見つかりません: ゆうと
 	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:658)
 	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63)
 	at java.base/java.lang.Thread.run(Thread.java:1447)
+2026-02-04 11:11:34.448 [restartedMain] ERROR o.s.b.d.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 9090 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 9090 or configure this application to listen on another port.
+

@@ -612,6 +612,20 @@ public class RandomMatchingController {
                 default:         likes = matchLikeRepository.findMutualLikes(me); break;
             }
 
+            // sent/received からマッチ成立済み（相互いいね）を除外
+            if ("sent".equals(kind) || "received".equals(kind)) {
+                java.util.Set<Long> mutualUserIds = new java.util.HashSet<>();
+                for (MatchLike ml : matchLikeRepository.findMutualLikes(me)) {
+                    mutualUserIds.add(ml.getLiked().getId());
+                }
+                likes = likes.stream()
+                    .filter(ml -> {
+                        User other = "received".equals(kind) ? ml.getLiker() : ml.getLiked();
+                        return !mutualUserIds.contains(other.getId());
+                    })
+                    .collect(java.util.stream.Collectors.toList());
+            }
+
             List<Map<String, Object>> users = new java.util.ArrayList<>();
             for (MatchLike ml : likes) {
                 User other = kind.equals("received") ? ml.getLiker() : ml.getLiked();

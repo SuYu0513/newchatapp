@@ -1,7 +1,17 @@
 {
   "permissions": {
     "allow": [
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(mvnw.cmd compile:*)",
+      "Bash(cmd.exe /c \"mvnw.cmd compile -q\")",
+      "Bash(python:*)",
+      "Bash(py:*)",
+      "Bash(where:*)",
+      "Bash(cmd.exe /c \"python --version\")",
+      "Bash(cmd.exe /c \"python -c \"\"print\\(''hello''\\)\"\"\")",
+      "Bash(npm install:*)",
+      "Bash(node:*)",
+      "Bash(./mvnw compile:*)"
     ]
   }
 }

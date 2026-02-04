@@ -1,6 +1,5 @@
 package com.example.chatapp.service;
 
-import com.example.chatapp.entity.Friendship;
 import com.example.chatapp.entity.User;
 import com.example.chatapp.entity.UserProfile;
 import com.example.chatapp.repository.FriendshipRepository;

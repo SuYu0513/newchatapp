@@ -3,7 +3,6 @@ package com.example.chatapp.controller;
 import com.example.chatapp.dto.ChatRoomDto;
 import com.example.chatapp.entity.ChatRoom;
 import com.example.chatapp.service.ChatRoomService;
-import com.example.chatapp.service.UserStatisticsService;
 import com.example.chatapp.service.UserService;
 import com.example.chatapp.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;

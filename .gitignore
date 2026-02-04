@@ -32,6 +32,12 @@ build/
 ### VS Code ###
 .vscode/
 
+### Environment Variables ###
+.env
+.env.local
+application-local.properties
+application-secret.properties
+
 ### Database ###
 *.db
 *.sqlite
@@ -45,6 +51,9 @@ logs/
 ### Uploads ###
 src/main/resources/static/uploads/
 uploads/
+
+### Node modules ###
+node_modules/
 
 ### SQL files (開発用) ###
 *.sql

@@ -375,12 +375,28 @@
                     <div class="header-tabs">
                         <button class="tab-btn active" data-tab="all-chat">すべて</button>
                         <button class="tab-btn" data-tab="friends-chat">フレンド</button>
+                        <button class="tab-btn" data-tab="ai-chat">AI</button>
                     </div>
                 </div>
                 
                 <!-- すべてのチャット -->
                 <div class="tab-content active" id="all-chat-tab">
                     <div class="chat-list">
+                        <!-- AIチャット -->
+                        <div class="chat-item" id="openAiChatBtnAll" style="cursor: pointer;">
+                            <div class="chat-avatar">
+                                <i class="fas fa-robot" style="font-size: 24px; color: #667eea;"></i>
+                            </div>
+                            <div class="chat-content">
+                                <div class="chat-top">
+                                    <span class="chat-name" id="aiListNameAll">AIアシスタント</span>
+                                </div>
+                                <div class="chat-bottom">
+                                    <p class="chat-message" id="aiListStatusAll">タップしてチャットを開始</p>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="no-chats">
                             <i class="fas fa-comments fa-3x mb-3 text-muted"></i>
                             <p class="text-muted">チャットがありません</p>
@@ -416,9 +432,200 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- AIチャット（タブ内はプレースホルダーのみ） -->
+                <div class="tab-content" id="ai-chat-tab">
+                    <div class="chat-list">
+                        <div class="chat-item" id="openAiChatBtn" style="cursor: pointer;">
+                            <div class="chat-avatar">
+                                <i class="fas fa-robot" style="font-size: 24px; color: #667eea;"></i>
+                            </div>
+                            <div class="chat-content">
+                                <div class="chat-top">
+                                    <span class="chat-name" id="aiListName">AIアシスタント</span>
+                                </div>
+                                <div class="chat-bottom">
+                                    <p class="chat-message" id="aiListStatus">タップしてチャットを開始</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
-        
+
+        <!-- AIチャット画面（DM画面と同じ構造） -->
+        <section class="app-section" id="ai-section" style="display: none;">
+            <div class="section-content">
+                <!-- AIヘッダー -->
+                <div class="dm-header">
+                    <button class="back-btn" id="backFromAiBtn">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <div class="dm-user-info">
+                        <div class="dm-avatar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="fas fa-robot" style="color: white;"></i>
+                        </div>
+                        <span class="dm-username" id="aiHeaderName">AI</span>
+                    </div>
+                    <button class="ai-settings-btn" id="aiHeaderSettingsBtn" title="設定を変更">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+
+                <!-- AIセットアップウィザード -->
+                <div class="ai-setup-wizard" id="aiSetupWizard" style="display: none;">
+                    <div class="wizard-header">
+                        <h3><i class="fas fa-magic"></i> AIキャラクター作成</h3>
+                        <p>あなただけの話し相手を作ろう！</p>
+                    </div>
+                    <div class="wizard-progress">
+                        <div class="progress-step active" data-step="1">1</div>
+                        <div class="progress-line"></div>
+                        <div class="progress-step" data-step="2">2</div>
+                        <div class="progress-line"></div>
+                        <div class="progress-step" data-step="3">3</div>
+                        <div class="progress-line"></div>
+                        <div class="progress-step" data-step="4">4</div>
+                        <div class="progress-line"></div>
+                        <div class="progress-step" data-step="5">5</div>
+                        <div class="progress-line"></div>
+                        <div class="progress-step" data-step="6">6</div>
+                        <div class="progress-line"></div>
+                        <div class="progress-step" data-step="7">7</div>
+                    </div>
+
+                    <!-- Step 1: 関係性 -->
+                    <div class="wizard-step active" id="wizardStep1">
+                        <h4>どんな関係がいい？</h4>
+                        <div class="wizard-options">
+                            <button class="wizard-option" data-value="friend"><i class="fas fa-user-friends"></i><span>友達</span></button>
+                            <button class="wizard-option" data-value="lover"><i class="fas fa-heart"></i><span>恋人</span></button>
+                            <button class="wizard-option" data-value="senior"><i class="fas fa-user-tie"></i><span>先輩</span></button>
+                            <button class="wizard-option" data-value="junior"><i class="fas fa-user-graduate"></i><span>後輩</span></button>
+                            <button class="wizard-option" data-value="teacher"><i class="fas fa-chalkboard-teacher"></i><span>先生</span></button>
+                            <button class="wizard-option" data-value="family"><i class="fas fa-home"></i><span>家族</span></button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: 性別 -->
+                    <div class="wizard-step" id="wizardStep2">
+                        <h4>性別は？</h4>
+                        <div class="wizard-options">
+                            <button class="wizard-option" data-value="male"><i class="fas fa-mars"></i><span>男性</span></button>
+                            <button class="wizard-option" data-value="female"><i class="fas fa-venus"></i><span>女性</span></button>
+                            <button class="wizard-option" data-value="neutral"><i class="fas fa-genderless"></i><span>中性</span></button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: 年齢 -->
+                    <div class="wizard-step" id="wizardStep3">
+                        <h4>年齢層は？</h4>
+                        <div class="wizard-options">
+                            <button class="wizard-option" data-value="teen"><i class="fas fa-child"></i><span>10代</span></button>
+                            <button class="wizard-option" data-value="twenties"><i class="fas fa-running"></i><span>20代</span></button>
+                            <button class="wizard-option" data-value="thirties"><i class="fas fa-briefcase"></i><span>30代</span></button>
+                            <button class="wizard-option" data-value="forties"><i class="fas fa-wine-glass"></i><span>40代+</span></button>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: 性格 -->
+                    <div class="wizard-step" id="wizardStep4">
+                        <h4>どんな性格？</h4>
+                        <div class="wizard-options">
+                            <button class="wizard-option" data-value="cheerful"><i class="fas fa-sun"></i><span>明るい</span></button>
+                            <button class="wizard-option" data-value="calm"><i class="fas fa-moon"></i><span>落ち着いた</span></button>
+                            <button class="wizard-option" data-value="cool"><i class="fas fa-snowflake"></i><span>クール</span></button>
+                            <button class="wizard-option" data-value="tsundere"><i class="fas fa-fire-alt"></i><span>ツンデレ</span></button>
+                            <button class="wizard-option" data-value="gentle"><i class="fas fa-feather"></i><span>優しい</span></button>
+                            <button class="wizard-option" data-value="playful"><i class="fas fa-laugh-beam"></i><span>おちゃめ</span></button>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: 口調 -->
+                    <div class="wizard-step" id="wizardStep5">
+                        <h4>話し方は？</h4>
+                        <div class="wizard-options">
+                            <button class="wizard-option" data-value="casual"><i class="fas fa-comments"></i><span>カジュアル</span></button>
+                            <button class="wizard-option" data-value="polite"><i class="fas fa-handshake"></i><span>丁寧</span></button>
+                            <button class="wizard-option" data-value="formal"><i class="fas fa-user-tie"></i><span>フォーマル</span></button>
+                            <button class="wizard-option" data-value="dialect"><i class="fas fa-map-marker-alt"></i><span>方言</span></button>
+                        </div>
+                    </div>
+
+                    <!-- Step 6: アバター生成・選択 -->
+                    <div class="wizard-step" id="wizardStep6">
+                        <h4>アバターを生成しよう！</h4>
+                        <p style="text-align: center; color: rgba(255,255,255,0.6); margin-bottom: 16px; font-size: 14px;">
+                            AIがあなたの設定に合ったアバターを作成します
+                        </p>
+                        <button class="avatar-generate-btn" id="avatarGenerateBtn">
+                            <i class="fas fa-magic"></i> アバターを生成
+                        </button>
+                        <div class="avatar-loading" id="avatarLoading" style="display: none;">
+                            <div class="avatar-loading-spinner"></div>
+                            <p>アバターを生成中...</p>
+                            <p style="font-size: 12px; color: rgba(255,255,255,0.5);">30秒ほどかかります</p>
+                        </div>
+                        <div class="avatar-selection" id="avatarSelection">
+                            <!-- 生成されたアバターがここに表示される -->
+                        </div>
+                        <button class="avatar-regenerate-btn" id="avatarRegenerateBtn" style="display: none;">
+                            <i class="fas fa-redo"></i> 別のアバターを生成
+                        </button>
+                    </div>
+
+                    <!-- Step 7: 確認・名前入力 -->
+                    <div class="wizard-step" id="wizardStep7">
+                        <h4>設定内容の確認</h4>
+                        <div class="wizard-summary" id="wizardSummary">
+                            <div class="summary-avatar-preview" id="summaryAvatarPreview"></div>
+                            <div class="summary-item"><span class="summary-label">関係性</span><span class="summary-value" id="summaryRelationship">-</span></div>
+                            <div class="summary-item"><span class="summary-label">性別</span><span class="summary-value" id="summaryGender">-</span></div>
+                            <div class="summary-item"><span class="summary-label">年齢</span><span class="summary-value" id="summaryAge">-</span></div>
+                            <div class="summary-item"><span class="summary-label">性格</span><span class="summary-value" id="summaryPersonality">-</span></div>
+                            <div class="summary-item"><span class="summary-label">口調</span><span class="summary-value" id="summarySpeaking">-</span></div>
+                        </div>
+                        <h4 class="name-input-title">名前をつけてあげよう！</h4>
+                        <div class="wizard-name-input">
+                            <input type="text" id="aiNameInput" placeholder="例：はなこ、たろう、そら..." maxlength="20">
+                        </div>
+                        <button class="wizard-complete-btn" id="wizardCompleteBtn">
+                            <i class="fas fa-check"></i> 作成する！
+                        </button>
+                    </div>
+
+                    <div class="wizard-nav">
+                        <button class="wizard-back-btn" id="wizardBackBtn" style="display:none;">
+                            <i class="fas fa-arrow-left"></i> 戻る
+                        </button>
+                    </div>
+                </div>
+
+                <!-- AIメッセージエリア -->
+                <div class="dm-messages-container" id="aiMessagesContainer">
+                    <div class="dm-messages" id="aiChatMessages">
+                        <!-- メッセージがここに表示 -->
+                    </div>
+                </div>
+
+                <!-- AI入力エリア -->
+                <div class="dm-input-area" id="aiInputArea">
+                    <button class="ai-clear-btn" id="aiClearBtn" title="会話をクリア">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                    <textarea
+                        class="dm-input"
+                        id="aiChatInput"
+                        placeholder="メッセージを入力..."
+                        rows="1"></textarea>
+                    <button class="dm-send-btn" id="aiSendBtn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
         <!-- DM画面 -->
         <section class="app-section" id="dm-section" style="display: none;">
             <div class="section-content">
@@ -793,18 +1000,22 @@
         <button class="nav-item" data-section="room">
             <i class="fas fa-door-open"></i>
             <span>ルーム</span>
+            <span class="nav-badge" id="navBadgeRoom" style="display:none;">0</span>
         </button>
         <button class="nav-item" data-section="match">
             <i class="fas fa-random"></i>
             <span>マッチ</span>
+            <span class="nav-badge" id="navBadgeMatch" style="display:none;">0</span>
         </button>
         <button class="nav-item" data-section="chat">
             <i class="fas fa-comments"></i>
             <span>チャット</span>
+            <span class="nav-badge" id="navBadgeChat" style="display:none;">0</span>
         </button>
         <button class="nav-item" data-section="mypage">
             <i class="fas fa-user"></i>
             <span>マイページ</span>
+            <span class="nav-badge" id="navBadgeMypage" style="display:none;">0</span>
         </button>
     </footer>
 
@@ -1102,6 +1313,9 @@
             loadPendingApprovals().catch(err => console.error('承認数取得エラー:', err));
             // 招待バッジを更新（バックグラウンドで）
             loadReceivedInvitations().catch(err => console.error('招待数取得エラー:', err));
+
+            // メインフッターバッジを初期取得
+            refreshFooterBadges();
         }
         
         function connectWebSocket() {
@@ -1132,6 +1346,10 @@
                     console.log('📊 フォロー更新を受信:', message.body);
                     const updateData = JSON.parse(message.body);
                     updateFollowCountsForUser(updateData);
+                    // マイページタブバッジ更新
+                    fetch('/friends/api/notification-count').then(r => r.json()).then(d => {
+                        updateNavBadge('navBadgeMypage', d.count || 0);
+                    }).catch(() => {});
                 });
                 
                 // DMメッセージの購読
@@ -1140,6 +1358,10 @@
                     try {
                         const dmData = JSON.parse(message.body);
                         handleIncomingDM(dmData);
+                        // チャットタブバッジ更新
+                        fetch('/api/dm/unread-count').then(r => r.json()).then(d => {
+                            if (d.success) updateNavBadge('navBadgeChat', d.unreadCount || 0);
+                        }).catch(() => {});
                     } catch (error) {
                         console.error('❌ DMメッセージのパースエラー:', error);
                     }
@@ -1151,6 +1373,10 @@
                     try {
                         const readData = JSON.parse(message.body);
                         handleDMReadNotification(readData);
+                        // チャットタブバッジ更新
+                        fetch('/api/dm/unread-count').then(r => r.json()).then(d => {
+                            if (d.success) updateNavBadge('navBadgeChat', d.unreadCount || 0);
+                        }).catch(() => {});
                     } catch (error) {
                         console.error('❌ DM既読通知のパースエラー:', error);
                     }
@@ -1162,8 +1388,29 @@
                     try {
                         const roomData = JSON.parse(message.body);
                         handleRoomUpdate(roomData);
+                        // ルームタブバッジ更新
+                        Promise.all([
+                            fetch('/rooms/api/invitations').then(r => r.json()).then(d => d.success ? d.invitations.length : 0).catch(() => 0),
+                            fetch('/rooms/api/pending-approvals').then(r => r.json()).then(d => d.success ? d.approvals.length : 0).catch(() => 0),
+                            fetch('/rooms/api/my-requests').then(r => r.json()).then(d => d.success ? d.rooms.length : 0).catch(() => 0)
+                        ]).then(([inv, appr, req]) => updateNavBadge('navBadgeRoom', inv + appr + req));
                     } catch (error) {
                         console.error('❌ ルーム更新のパースエラー:', error);
+                    }
+                });
+
+                // マッチングいいね通知の購読
+                stompClient.subscribe('/user/queue/match-like', function(message) {
+                    try {
+                        const data = JSON.parse(message.body);
+                        if (data.type === 'match') {
+                            showMatchNotification(data.fromDisplayName);
+                        } else if (data.type === 'like') {
+                            showLikeNotification(data.fromDisplayName, data.fromAvatarUrl);
+                        }
+                        refreshMatchBadges();
+                    } catch (error) {
+                        console.error('match-like通知パースエラー:', error);
                     }
                 });
 
@@ -1897,7 +2144,21 @@
 
                 // 全てのナビゲーションアイテムとセクションから active を削除
                 navItems.forEach(nav => nav.classList.remove('active'));
-                sections.forEach(section => section.classList.remove('active'));
+                sections.forEach(section => {
+                    section.classList.remove('active');
+                    section.style.display = '';  // インラインスタイルをクリア
+                });
+
+                // オーバーレイ画面を全て非表示にする
+                document.getElementById('ai-section').style.display = 'none';
+                document.getElementById('dm-section').style.display = 'none';
+                document.getElementById('room-chat-section').style.display = 'none';
+                document.getElementById('room-members-section').style.display = 'none';
+                document.getElementById('room-invite-section').style.display = 'none';
+                document.getElementById('relations-section').style.display = 'none';
+
+                // フッターを確実に表示
+                document.querySelector('.bottom-nav').style.display = 'flex';
 
                 // クリックされたアイテムと対応するセクションに active を追加
                 item.classList.add('active');
@@ -1912,40 +2173,72 @@
                 
                 // チャット画面に遷移した時にDM会話リストを読み込む
                 if (sectionName === 'chat') {
+                    // 「すべて」タブをアクティブに
+                    const chatTabBtnsLocal = document.querySelectorAll('#chat-section .chat-list-header .tab-btn');
+                    const chatTabContents = document.querySelectorAll('#chat-section .tab-content');
+                    chatTabBtnsLocal.forEach(b => b.classList.remove('active'));
+                    chatTabContents.forEach(c => c.classList.remove('active'));
+                    const allTabBtn = Array.from(chatTabBtnsLocal).find(btn => btn.dataset.tab === 'all-chat');
+                    if (allTabBtn) allTabBtn.classList.add('active');
+                    document.getElementById('all-chat-tab').classList.add('active');
+
                     loadDMConversations();
+                    updateNavBadge('navBadgeChat', 0);
                 }
-                
+
                 // ルーム画面に遷移した時にルームリストを読み込む
                 if (sectionName === 'room') {
                     loadJoinedRooms();
+                    updateNavBadge('navBadgeRoom', 0);
+                }
+
+                // マッチ画面に遷移した時にバッジをクリア（全サブタブの既読カウントを保存）
+                if (sectionName === 'match') {
+                    ['sent', 'received', 'mutual'].forEach(k => {
+                        localStorage.setItem('seenLikeCount_' + k, latestLikeCounts[k] || 0);
+                    });
+                    updateNavBadge('navBadgeMatch', 0);
                 }
 
                 // マイページに遷移した時に自分の投稿を読み込み、スクロールハンドラを設定
                 if (sectionName === 'mypage') {
                     loadMyPosts();
                     setTimeout(setupMypageScroll, 100);
+                    updateNavBadge('navBadgeMypage', 0);
                 }
             });
         });
         
-        // チャットタブ切り替え（すべて/フレンド）
-        const chatTabBtns = document.querySelectorAll('.chat-list-header .tab-btn');
+        // チャットタブ切り替え（すべて/フレンド/AI）
+        const chatTabBtns = document.querySelectorAll('#chat-section .chat-list-header .tab-btn');
         chatTabBtns.forEach(btn => {
             btn.addEventListener('click', async () => {
                 const tabName = btn.dataset.tab;
-                
+
                 chatTabBtns.forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.chat-list-header + div, .chat-list-header + div + div').forEach(c => c.classList.remove('active'));
-                
+                document.querySelectorAll('#chat-section .tab-content').forEach(c => c.classList.remove('active'));
+
                 btn.classList.add('active');
                 const targetTab = document.getElementById(tabName + '-tab');
                 if (targetTab) {
                     targetTab.classList.add('active');
                 }
-                
+
                 // フレンドタブに切り替えた場合はフレンドのDMを読み込む
                 if (tabName === 'friends-chat') {
                     await loadFriendsDMConversations();
+                }
+                // AIタブに切り替えた場合は直接AI画面を開く
+                if (tabName === 'ai-chat') {
+                    await updateAiListItem();
+                    // 直接AI画面を開く
+                    setTimeout(() => openAiSection(), 100);
+                } else {
+                    // AI以外のタブに切り替えた場合はAI画面を閉じる
+                    const aiSection = document.getElementById('ai-section');
+                    if (aiSection && aiSection.style.display !== 'none') {
+                        aiSection.style.display = 'none';
+                    }
                 }
             });
         });
@@ -2214,6 +2507,8 @@
         let currentLikeTab = 'swipe';
         let likeSwipeCandidates = [];
         let likeSwipeIndex = 0;
+        // 既読カウントをlocalStorageで永続管理
+        let latestLikeCounts = { sent: 0, received: 0, mutual: 0 };
 
         document.querySelectorAll('.match-sub-tab').forEach(tab => {
             tab.addEventListener('click', function() {
@@ -2224,16 +2519,24 @@
                 this.classList.add('active');
                 currentLikeTab = likeTab;
 
+                // 開いたタブを既読にしてバッジを消す（現在のカウントをlocalStorageに保存）
+                const badgeMap = { sent: 'badgeLikeSent', received: 'badgeLikeReceived', mutual: 'badgeLikeMutual' };
+                if (badgeMap[likeTab]) {
+                    localStorage.setItem('seenLikeCount_' + likeTab, latestLikeCounts[likeTab] || 0);
+                    const b = document.getElementById(badgeMap[likeTab]);
+                    if (b) b.style.display = 'none';
+                }
+
                 if (likeTab === 'swipe') {
                     matchContent.style.display = 'flex';
                     matchLikePanel.style.display = 'none';
                 } else if (likeTab === 'sent' || likeTab === 'received') {
                     matchContent.style.display = 'none';
-                    matchLikePanel.style.display = 'block';
+                    matchLikePanel.style.display = 'flex';
                     loadLikeSwipe(likeTab);
                 } else {
                     matchContent.style.display = 'none';
-                    matchLikePanel.style.display = 'block';
+                    matchLikePanel.style.display = 'flex';
                     loadLikeList(likeTab);
                 }
             });
@@ -2287,16 +2590,13 @@
             for (let i = Math.min(likeSwipeIndex + 1, likeSwipeCandidates.length - 1); i >= likeSwipeIndex; i--) {
                 if (i >= likeSwipeCandidates.length) continue;
                 const isTop = (i === likeSwipeIndex);
-                const card = createSwipeCard(likeSwipeCandidates[i], isTop);
-
-                // スワイプジェスチャーを上書き（方向制限付き）
+                // isTopをfalseで渡して通常のinitSwipeGestureを回避し、制限付きジェスチャーを使う
+                const card = createSwipeCard(likeSwipeCandidates[i], false);
                 if (isTop) {
-                    // 既存のジェスチャーを無効化してから制限付きを設定
-                    card.replaceWith(card.cloneNode(true));
-                    const freshCard = stack.querySelector('.swipe-card:last-child') || card;
-                    initLikeSwipeGesture(freshCard, kind);
+                    card.style.zIndex = '1';
+                    card.style.transform = '';
+                    initLikeSwipeGesture(card, kind);
                 }
-
                 stack.appendChild(card);
             }
 
@@ -2502,21 +2802,75 @@
 
         // バッジ更新
         function refreshMatchBadges() {
-            ['sent', 'received', 'mutual'].forEach(kind => {
+            let totalNew = 0;
+            const promises = ['sent', 'received', 'mutual'].map(kind =>
                 fetch('/random-matching/api/likes/' + kind)
                     .then(r => r.json())
                     .then(data => {
                         if (!data.success) return;
+                        const current = data.count || 0;
+                        latestLikeCounts[kind] = current;
+                        const seen = parseInt(localStorage.getItem('seenLikeCount_' + kind) || '0');
+                        const diff = Math.max(0, current - seen);
+                        totalNew += diff;
+
                         const badge = document.getElementById('badgeLike' + kind.charAt(0).toUpperCase() + kind.slice(1));
-                        if (data.count > 0) {
-                            badge.textContent = data.count;
+                        if (diff > 0) {
+                            badge.textContent = diff;
                             badge.style.display = 'flex';
                         } else {
                             badge.style.display = 'none';
                         }
                     })
-                    .catch(() => {});
+                    .catch(() => {})
+            );
+            Promise.all(promises).then(() => {
+                updateNavBadge('navBadgeMatch', totalNew);
             });
+        }
+
+        // ========================================
+        // メインフッター バッジ更新
+        // ========================================
+        function updateNavBadge(id, count) {
+            const badge = document.getElementById(id);
+            if (!badge) return;
+            if (count > 0) {
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.style.display = '';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function refreshFooterBadges() {
+            // ルームタブ: 招待 + 承認待ち + 申請
+            Promise.all([
+                fetch('/rooms/api/invitations').then(r => r.json()).then(d => d.success ? d.invitations.length : 0).catch(() => 0),
+                fetch('/rooms/api/pending-approvals').then(r => r.json()).then(d => d.success ? d.approvals.length : 0).catch(() => 0),
+                fetch('/rooms/api/my-requests').then(r => r.json()).then(d => d.success ? d.rooms.length : 0).catch(() => 0)
+            ]).then(([inv, appr, req]) => {
+                updateNavBadge('navBadgeRoom', inv + appr + req);
+            });
+
+            // マッチタブ: いいね + もらった
+            refreshMatchBadges();
+
+            // チャットタブ: 未読DM数
+            fetch('/api/dm/unread-count')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) updateNavBadge('navBadgeChat', data.unreadCount || 0);
+                })
+                .catch(() => {});
+
+            // マイページタブ: フレンドリクエスト
+            fetch('/friends/api/notification-count')
+                .then(r => r.json())
+                .then(data => {
+                    updateNavBadge('navBadgeMypage', data.count || 0);
+                })
+                .catch(() => {});
         }
 
         // マッチ成立通知
@@ -2532,6 +2886,23 @@
             overlay.addEventListener('click', () => overlay.remove());
             document.body.appendChild(overlay);
             setTimeout(() => overlay.remove(), 3000);
+        }
+
+        // いいね受信通知（トースト）
+        function showLikeNotification(name, avatarUrl) {
+            const toast = document.createElement('div');
+            toast.className = 'like-toast-notification';
+            let avatarHtml = avatarUrl
+                ? '<img src="' + avatarUrl + '" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover;margin-right:10px;">'
+                : '<i class="fas fa-user" style="font-size:1.2rem;margin-right:10px;color:rgba(255,255,255,0.6);"></i>';
+            toast.innerHTML = avatarHtml +
+                '<span>' + name + ' さんからいいねが届きました</span>';
+            document.body.appendChild(toast);
+            requestAnimationFrame(() => toast.classList.add('show'));
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
         }
 
         // 参加ボタン
@@ -2811,6 +3182,9 @@
             document.querySelectorAll('.profile-avatar').forEach(avatar => {
                 setDefaultAvatarColor(avatar);
             });
+            
+            // AIリストアイテムを更新
+            updateAiListItem();
             
             // スライドメニューの制御
             const mypageMenuBtn = document.getElementById('mypageMenuBtn');
@@ -4577,8 +4951,8 @@
                 return;
             }
             
-            // 既存のチャットアイテムを削除
-            const existingItems = chatListContainer.querySelectorAll('.chat-item');
+            // 既存のチャットアイテムを削除（AIアイテムは除外）
+            const existingItems = chatListContainer.querySelectorAll('.chat-item:not(#openAiChatBtnAll)');
             existingItems.forEach(item => item.remove());
             
             if (conversations.length === 0) {
@@ -4596,6 +4970,9 @@
             }
             
             console.log('📋 DM会話を表示:', conversations.length, '件');
+            
+            // AIアイテムを取得（後で先頭に戻す）
+            const aiItem = chatListContainer.querySelector('#openAiChatBtnAll');
             
             // 会話リストを表示
             conversations.forEach(conv => {
@@ -4638,7 +5015,12 @@
                     await startConversationFromList(conv.conversationId, conv.userId, conv.displayName || conv.username, conv.avatarUrl);
                 });
                 
-                chatListContainer.appendChild(chatItem);
+                // AIの後に挿入
+                if (aiItem) {
+                    aiItem.insertAdjacentElement('afterend', chatItem);
+                } else {
+                    chatListContainer.appendChild(chatItem);
+                }
             });
         }
         
@@ -4759,7 +5141,692 @@
                 chatListContainer.appendChild(chatItem);
             });
         }
-        
+
+        // ============ AIチャット機能 ============
+        let aiChatLoading = false;
+        let aiPersona = { relationship: '', gender: '', ageGroup: '', personality: '', speakingStyle: '', aiName: '', avatarUrl: '' };
+        let wizardStep = 1;
+
+        // ペルソナに基づいてアバターURLを生成
+        function generateAiAvatar(persona) {
+            // DiceBear API を使用してアバター生成（より良い見た目のスタイル）
+            const style = persona.gender === 'male' ? 'avataaars' : persona.gender === 'female' ? 'personas' : 'bottts';
+            const seed = `${persona.relationship}-${persona.gender}-${persona.ageGroup}-${persona.personality}-${persona.aiName || 'ai'}`;
+            
+            // 背景色を性格に基づいて決定
+            const bgColors = {
+                cheerful: 'ffd93d', // 明るい黄色
+                calm: '6BCB77', // 落ち着いた緑
+                cool: '4D96FF', // クールな青
+                tsundere: 'FF6B9D', // ツンデレピンク
+                gentle: 'C3ACD0', // 優しい紫
+                playful: 'FFB6C1' // おちゃめなピンク
+            };
+            
+            const bgColor = bgColors[persona.personality] || '667eea';
+            
+            return `https://api.dicebear.com/7.x/${style}/svg?seed=${encodeURIComponent(seed)}&backgroundColor=${bgColor}`;
+        }
+
+        // AIリストアイテムの表示を更新
+        async function updateAiListItem() {
+            try {
+                const response = await fetch('/api/ai/persona');
+                const data = await response.json();
+
+                const nameEl = document.getElementById('aiListName');
+                const statusEl = document.getElementById('aiListStatus');
+
+                if (data.success && data.setupCompleted) {
+                    aiPersona = {
+                        relationship: data.relationship,
+                        gender: data.gender,
+                        ageGroup: data.ageGroup,
+                        personality: data.personality,
+                        speakingStyle: data.speakingStyle,
+                        aiName: data.aiName,
+                        avatarUrl: data.avatarUrl || generateAiAvatar(data)
+                    };
+                    nameEl.textContent = data.aiName || 'AI';
+                    
+                    // 最新のメッセージを取得して表示
+                    await updateAiLastMessage(statusEl, document.getElementById('aiListStatusAll'));
+                    
+                    // 「すべて」タブのAIリストも更新
+                    if (document.getElementById('aiListNameAll')) {
+                        document.getElementById('aiListNameAll').textContent = data.aiName || 'AI';
+                    }
+                    // アバターも更新
+                    updateAiListAvatar();
+                } else {
+                    nameEl.textContent = 'AIアシスタント';
+                    statusEl.textContent = 'タップしてキャラクターを作成';
+                    // 「すべて」タブのAIリストも更新
+                    if (document.getElementById('aiListNameAll')) {
+                        document.getElementById('aiListNameAll').textContent = 'AIアシスタント';
+                        document.getElementById('aiListStatusAll').textContent = 'タップしてキャラクターを作成';
+                    }
+                    // アバターをデフォルトに戻す
+                    aiPersona = null;
+                    updateAiListAvatar();
+                }
+            } catch (error) {
+                console.error('AIペルソナ取得エラー:', error);
+            }
+        }
+
+        // AIの最新メッセージを取得して一覧に表示
+        async function updateAiLastMessage(statusEl, statusElAll) {
+            try {
+                const response = await fetch('/api/ai/chat/history');
+                const data = await response.json();
+
+                if (data.success && data.history && data.history.length > 0) {
+                    // 最後のメッセージを取得
+                    const lastMsg = data.history[data.history.length - 1];
+                    const messageText = lastMsg.text || '';
+                    
+                    // 最初の1行、10文字まで表示
+                    const firstLine = messageText.split('\n')[0];
+                    const truncatedMessage = firstLine.length > 10 ? firstLine.substring(0, 10) + '...' : firstLine;
+                    
+                    statusEl.textContent = truncatedMessage || 'タップしてチャットを続ける';
+                    if (statusElAll) {
+                        statusElAll.textContent = truncatedMessage || 'タップしてチャットを続ける';
+                    }
+                } else {
+                    statusEl.textContent = 'タップしてチャットを開始';
+                    if (statusElAll) {
+                        statusElAll.textContent = 'タップしてチャットを開始';
+                    }
+                }
+            } catch (error) {
+                console.error('AIチャット履歴取得エラー:', error);
+                statusEl.textContent = 'タップしてチャットを続ける';
+                if (statusElAll) {
+                    statusElAll.textContent = 'タップしてチャットを続ける';
+                }
+            }
+        }
+
+        // AI画面を開く
+        async function openAiSection() {
+            document.getElementById('chat-section').style.display = 'none';
+            document.getElementById('ai-section').style.display = 'block';
+            document.querySelector('.bottom-nav').style.display = 'none';
+
+            try {
+                const response = await fetch('/api/ai/persona');
+                const data = await response.json();
+
+                if (data.success && data.setupCompleted) {
+                    aiPersona = {
+                        relationship: data.relationship,
+                        gender: data.gender,
+                        ageGroup: data.ageGroup,
+                        personality: data.personality,
+                        speakingStyle: data.speakingStyle,
+                        aiName: data.aiName,
+                        avatarUrl: data.avatarUrl || generateAiAvatar(data)
+                    };
+                    showAiChatScreen();
+                    await loadAiChatHistory();
+                } else {
+                    showAiWizard();
+                }
+            } catch (error) {
+                console.error('AIペルソナ取得エラー:', error);
+                showAiWizard();
+            }
+        }
+
+        // AI画面を閉じる
+        function closeAiSection() {
+            // メインセクションのみインラインスタイルをクリア
+            const mainSections = ['home-section', 'chat-section', 'room-section', 'match-section', 'mypage-section'];
+            mainSections.forEach(id => {
+                const section = document.getElementById(id);
+                if (section) {
+                    section.classList.remove('active');
+                    section.style.display = '';
+                }
+            });
+
+            // オーバーレイセクションを非表示
+            document.getElementById('ai-section').style.display = 'none';
+            document.getElementById('dm-section').style.display = 'none';
+            document.getElementById('room-chat-section').style.display = 'none';
+            document.getElementById('room-members-section').style.display = 'none';
+            document.getElementById('room-invite-section').style.display = 'none';
+            document.getElementById('relations-section').style.display = 'none';
+
+            // チャットセクションをアクティブ化
+            document.getElementById('chat-section').classList.add('active');
+
+            document.querySelector('.bottom-nav').style.display = 'flex';
+
+            // 「すべて」タブに切り替え
+            const chatTabBtns = document.querySelectorAll('#chat-section .chat-list-header .tab-btn');
+            const tabContents = document.querySelectorAll('#chat-section .tab-content');
+            chatTabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+
+            // 「すべて」タブをアクティブに
+            const allTabBtn = Array.from(chatTabBtns).find(btn => btn.dataset.tab === 'all-chat');
+            if (allTabBtn) allTabBtn.classList.add('active');
+            document.getElementById('all-chat-tab').classList.add('active');
+        }
+
+        // ウィザード表示
+        function showAiWizard() {
+            document.getElementById('aiSetupWizard').style.display = 'flex';
+            document.getElementById('aiMessagesContainer').style.display = 'none';
+            document.getElementById('aiInputArea').style.display = 'none';
+            document.getElementById('aiHeaderName').textContent = 'キャラクター作成';
+
+            // ヘッダーのアバターをデフォルトに戻す
+            const headerAvatar = document.querySelector('#ai-section .dm-avatar');
+            if (headerAvatar) {
+                headerAvatar.innerHTML = '<i class="fas fa-robot"></i>';
+                headerAvatar.style.backgroundImage = '';
+            }
+
+            // ペルソナデータをリセット
+            aiPersona = { relationship: '', gender: '', ageGroup: '', personality: '', speakingStyle: '', aiName: '', avatarUrl: '' };
+
+            // 選択状態もリセット
+            document.querySelectorAll('.wizard-option').forEach(o => o.classList.remove('selected'));
+            document.getElementById('aiNameInput').value = '';
+
+            wizardStep = 1;
+            updateWizardStep();
+        }
+
+        // チャット画面表示
+        function showAiChatScreen() {
+            document.getElementById('aiSetupWizard').style.display = 'none';
+            document.getElementById('aiMessagesContainer').style.display = 'block';
+            document.getElementById('aiInputArea').style.display = 'flex';
+            document.getElementById('aiHeaderName').textContent = aiPersona.aiName || 'AI';
+            
+            // ヘッダーのアバターを更新
+            const headerAvatar = document.querySelector('#ai-section .dm-avatar');
+            if (headerAvatar && aiPersona.avatarUrl) {
+                headerAvatar.innerHTML = `<img src="${aiPersona.avatarUrl}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="AI Avatar">`;
+            }
+            
+            // リストアイテムのアバターも更新
+            updateAiListAvatar();
+            
+            // リスト表示も更新
+            document.getElementById('aiListName').textContent = aiPersona.aiName || 'AI';
+            document.getElementById('aiListStatus').textContent = 'タップしてチャットを続ける';
+            // 「すべて」タブのAIリストも更新
+            if (document.getElementById('aiListNameAll')) {
+                document.getElementById('aiListNameAll').textContent = aiPersona.aiName || 'AI';
+                document.getElementById('aiListStatusAll').textContent = 'タップしてチャットを続ける';
+            }
+        }
+
+        // AIリストアイテムのアバターを更新する関数
+        function updateAiListAvatar() {
+            const aiAvatars = [
+                document.querySelector('#openAiChatBtn .chat-avatar'),
+                document.querySelector('#openAiChatBtnAll .chat-avatar')
+            ];
+            
+            aiAvatars.forEach(avatar => {
+                if (!avatar) return;
+                
+                if (aiPersona && aiPersona.avatarUrl) {
+                    avatar.innerHTML = `<img src="${aiPersona.avatarUrl}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="AI Avatar">`;
+                } else {
+                    avatar.innerHTML = '<i class="fas fa-robot" style="font-size: 24px; color: #667eea;"></i>';
+                }
+            });
+        }
+
+        // AI画面を開くイベント
+        document.getElementById('openAiChatBtn').addEventListener('click', openAiSection);
+        // 「すべて」タブのAIアイテムにもクリックイベント
+        document.getElementById('openAiChatBtnAll').addEventListener('click', openAiSection);
+
+        // 戻るボタン
+        document.getElementById('backFromAiBtn').addEventListener('click', closeAiSection);
+
+        // ウィザードステップ更新
+        function updateWizardStep() {
+            // すべてのステップを非表示
+            document.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
+            // 現在のステップを表示
+            const current = document.getElementById('wizardStep' + wizardStep);
+            if (current) current.classList.add('active');
+
+            // プログレス更新
+            document.querySelectorAll('.progress-step').forEach(s => {
+                const step = parseInt(s.dataset.step);
+                s.classList.toggle('active', step <= wizardStep);
+                s.classList.toggle('completed', step < wizardStep);
+            });
+
+            // 戻るボタン表示制御
+            document.getElementById('wizardBackBtn').style.display = wizardStep > 1 ? 'block' : 'none';
+
+            // ステップ6でアバター選択肢を生成
+            if (wizardStep === 6) {
+                generateAvatarOptions();
+            }
+
+            // ステップ7でサマリー表示
+            if (wizardStep === 7) {
+                updateWizardSummary();
+            }
+        }
+
+        // ステップ6の初期化（アバター生成ボタンの設定）
+        function generateAvatarOptions() {
+            const container = document.getElementById('avatarSelection');
+            const generateBtn = document.getElementById('avatarGenerateBtn');
+            const regenerateBtn = document.getElementById('avatarRegenerateBtn');
+            const loadingEl = document.getElementById('avatarLoading');
+
+            container.innerHTML = '';
+            generateBtn.style.display = 'flex';
+            regenerateBtn.style.display = 'none';
+            loadingEl.style.display = 'none';
+        }
+
+        // Leonardo AIでアバターを生成
+        async function generateAvatarsWithLeonardo() {
+            const container = document.getElementById('avatarSelection');
+            const generateBtn = document.getElementById('avatarGenerateBtn');
+            const regenerateBtn = document.getElementById('avatarRegenerateBtn');
+            const loadingEl = document.getElementById('avatarLoading');
+
+            // UIを更新
+            generateBtn.style.display = 'none';
+            regenerateBtn.style.display = 'none';
+            loadingEl.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch('/api/ai/avatar/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        gender: aiPersona.gender,
+                        ageGroup: aiPersona.ageGroup,
+                        personality: aiPersona.personality
+                    })
+                });
+
+                const data = await response.json();
+                loadingEl.style.display = 'none';
+
+                if (data.success && data.avatars && data.avatars.length > 0) {
+                    displayAvatarOptions(data.avatars);
+                    regenerateBtn.style.display = 'flex';
+                } else {
+                    // エラー時はフォールバック
+                    console.error('Avatar generation failed:', data.error);
+                    displayFallbackAvatars();
+                    regenerateBtn.style.display = 'flex';
+                }
+            } catch (error) {
+                console.error('Avatar generation error:', error);
+                loadingEl.style.display = 'none';
+                displayFallbackAvatars();
+                regenerateBtn.style.display = 'flex';
+            }
+        }
+
+        // 生成されたアバターを表示
+        function displayAvatarOptions(avatars) {
+            const container = document.getElementById('avatarSelection');
+            container.innerHTML = '';
+
+            avatars.forEach((url, index) => {
+                const option = document.createElement('div');
+                option.className = 'avatar-option';
+                option.dataset.url = url;
+                option.innerHTML = `<img src="${url}" alt="Avatar ${index + 1}" loading="lazy">`;
+
+                option.addEventListener('click', function() {
+                    container.querySelectorAll('.avatar-option').forEach(o => o.classList.remove('selected'));
+                    this.classList.add('selected');
+                    aiPersona.avatarUrl = this.dataset.url;
+                    // 次のステップへ自動移動
+                    setTimeout(() => {
+                        wizardStep = 7;
+                        updateWizardStep();
+                    }, 300);
+                });
+
+                container.appendChild(option);
+            });
+        }
+
+        // フォールバック用アバター（DiceBear）
+        function displayFallbackAvatars() {
+            const gender = aiPersona.gender || 'neutral';
+            const personality = aiPersona.personality || 'cheerful';
+
+            const fallbackAvatars = [
+                `https://api.dicebear.com/7.x/lorelei/svg?seed=${gender}-1-${personality}&backgroundColor=ffd5dc`,
+                `https://api.dicebear.com/7.x/lorelei/svg?seed=${gender}-2-${personality}&backgroundColor=d5e8ff`,
+                `https://api.dicebear.com/7.x/lorelei/svg?seed=${gender}-3-${personality}&backgroundColor=e8d5ff`,
+                `https://api.dicebear.com/7.x/lorelei/svg?seed=${gender}-4-${personality}&backgroundColor=d5ffe8`
+            ];
+
+            displayAvatarOptions(fallbackAvatars);
+        }
+
+        // アバター生成ボタンのイベント
+        document.getElementById('avatarGenerateBtn').addEventListener('click', generateAvatarsWithLeonardo);
+        document.getElementById('avatarRegenerateBtn').addEventListener('click', generateAvatarsWithLeonardo);
+
+        // サマリー表示を更新
+        function updateWizardSummary() {
+            const labels = {
+                relationship: { friend: '友達', lover: '恋人', senior: '先輩', junior: '後輩', teacher: '先生', family: '家族' },
+                gender: { male: '男性', female: '女性', neutral: '中性' },
+                ageGroup: { teen: '10代', twenties: '20代', thirties: '30代', forties: '40代+' },
+                personality: { cheerful: '明るい', calm: '落ち着いた', cool: 'クール', tsundere: 'ツンデレ', gentle: '優しい', playful: 'おちゃめ' },
+                speakingStyle: { casual: 'カジュアル', polite: '丁寧', formal: 'フォーマル', dialect: '方言' }
+            };
+
+            document.getElementById('summaryRelationship').textContent = labels.relationship[aiPersona.relationship] || '-';
+            document.getElementById('summaryGender').textContent = labels.gender[aiPersona.gender] || '-';
+            document.getElementById('summaryAge').textContent = labels.ageGroup[aiPersona.ageGroup] || '-';
+            document.getElementById('summaryPersonality').textContent = labels.personality[aiPersona.personality] || '-';
+            document.getElementById('summarySpeaking').textContent = labels.speakingStyle[aiPersona.speakingStyle] || '-';
+
+            // アバタープレビューを表示
+            const previewContainer = document.getElementById('summaryAvatarPreview');
+            if (aiPersona.avatarUrl) {
+                previewContainer.innerHTML = `<img src="${aiPersona.avatarUrl}" alt="Selected Avatar">`;
+            } else {
+                previewContainer.innerHTML = '<i class="fas fa-robot" style="font-size: 32px; color: #a78bfa; line-height: 74px;"></i>';
+            }
+        }
+
+        // ウィザードオプション選択
+        document.querySelectorAll('.wizard-option').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const value = this.dataset.value;
+                const stepFields = ['', 'relationship', 'gender', 'ageGroup', 'personality', 'speakingStyle'];
+
+                if (wizardStep <= 5) {
+                    aiPersona[stepFields[wizardStep]] = value;
+
+                    // 選択状態を更新
+                    this.closest('.wizard-options').querySelectorAll('.wizard-option').forEach(o => o.classList.remove('selected'));
+                    this.classList.add('selected');
+
+                    // 次のステップへ（少し遅延）
+                    setTimeout(() => {
+                        wizardStep++;
+                        updateWizardStep();
+                    }, 200);
+                }
+            });
+        });
+
+        // 戻るボタン
+        document.getElementById('wizardBackBtn').addEventListener('click', () => {
+            if (wizardStep > 1) {
+                wizardStep--;
+                updateWizardStep();
+            }
+        });
+
+        // 完了ボタン
+        document.getElementById('wizardCompleteBtn').addEventListener('click', async () => {
+            const nameInput = document.getElementById('aiNameInput');
+            const name = nameInput.value.trim();
+
+            if (!name) {
+                nameInput.focus();
+                nameInput.style.borderColor = '#ff6b6b';
+                return;
+            }
+
+            aiPersona.aiName = name;
+            // 選択されたアバターがない場合のみ自動生成
+            if (!aiPersona.avatarUrl) {
+                aiPersona.avatarUrl = generateAiAvatar(aiPersona);
+            }
+
+            try {
+                const response = await fetch('/api/ai/persona', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(aiPersona)
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showAiChatScreen();
+                    // メッセージエリアをクリア
+                    document.getElementById('aiChatMessages').innerHTML = '';
+                    
+                    // AIからの挨拶メッセージを取得（会話履歴には保存しない）
+                    appendAiLoading();
+                    try {
+                        const greetingResponse = await fetch('/api/ai/chat/greeting', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({})
+                        });
+                        const greetingData = await greetingResponse.json();
+                        removeAiLoading();
+                        if (greetingData.success) {
+                            appendAiMessage(greetingData.reply);
+                        }
+                    } catch (err) {
+                        removeAiLoading();
+                        // エラー時は既存APIを使用
+                        try {
+                            const fallbackResponse = await fetch('/api/ai/chat', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ message: 'こんにちは' })
+                            });
+                            const fallbackData = await fallbackResponse.json();
+                            if (fallbackData.success) {
+                                appendAiMessage(fallbackData.reply);
+                            }
+                        } catch (e) {
+                            console.error('挨拶メッセージの取得エラー:', e);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('ペルソナ保存エラー:', error);
+            }
+        });
+
+        // 設定ボタン（再設定）
+        document.getElementById('aiHeaderSettingsBtn').addEventListener('click', async () => {
+            if (confirm('AIキャラクターを作り直しますか？\n会話履歴もリセットされます。')) {
+                try {
+                    await fetch('/api/ai/persona', { method: 'DELETE' });
+                    aiPersona = { relationship: '', gender: '', ageGroup: '', personality: '', speakingStyle: '', aiName: '' };
+                    showAiWizard();
+                } catch (error) {
+                    console.error('リセットエラー:', error);
+                }
+            }
+        });
+
+        // AIチャット履歴を読み込む
+        async function loadAiChatHistory() {
+            try {
+                const response = await fetch('/api/ai/chat/history');
+                const data = await response.json();
+
+                const container = document.getElementById('aiChatMessages');
+                container.innerHTML = '';
+
+                if (data.success && data.history && data.history.length > 0) {
+                    data.history.forEach(msg => {
+                        if (msg.role === 'user') {
+                            appendUserMessage(msg.text);
+                        } else {
+                            appendAiMessage(msg.text);
+                        }
+                    });
+                    scrollAiChatToBottom();
+                }
+            } catch (error) {
+                console.error('AIチャット履歴の読み込みエラー:', error);
+            }
+        }
+
+        // ユーザーメッセージを表示
+        function appendUserMessage(text) {
+            const container = document.getElementById('aiChatMessages');
+            const div = document.createElement('div');
+            div.className = 'ai-user-message';
+            div.innerHTML = `<div class="user-bubble">${escapeHtml(text)}</div>`;
+            container.appendChild(div);
+        }
+
+        // AIメッセージを表示
+        function appendAiMessage(text) {
+            const container = document.getElementById('aiChatMessages');
+            const div = document.createElement('div');
+            div.className = 'ai-bot-message';
+            
+            const avatarHtml = aiPersona.avatarUrl 
+                ? `<img src="${aiPersona.avatarUrl}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="AI">`
+                : '<i class="fas fa-robot"></i>';
+            
+            div.innerHTML = `
+                <div class="ai-avatar">${avatarHtml}</div>
+                <div class="ai-bubble">${escapeHtml(text).replace(/\n/g, '<br>')}</div>
+            `;
+            container.appendChild(div);
+        }
+
+        // ローディング表示を追加
+        function appendAiLoading() {
+            const container = document.getElementById('aiChatMessages');
+            const div = document.createElement('div');
+            div.className = 'ai-bot-message ai-loading';
+            
+            const avatarHtml = aiPersona.avatarUrl 
+                ? `<img src="${aiPersona.avatarUrl}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="AI">`
+                : '<i class="fas fa-robot"></i>';
+            
+            div.innerHTML = `
+                <div class="ai-avatar">${avatarHtml}</div>
+                <div class="ai-bubble"><span class="typing-dots"><span>.</span><span>.</span><span>.</span></span></div>
+            `;
+            container.appendChild(div);
+            scrollAiChatToBottom();
+        }
+
+        // ローディング表示を削除
+        function removeAiLoading() {
+            const loading = document.querySelector('.ai-loading');
+            if (loading) loading.remove();
+        }
+
+        // AIにメッセージを送信
+        async function sendAiMessage() {
+            const input = document.getElementById('aiChatInput');
+            const message = input.value.trim();
+
+            if (!message || aiChatLoading) return;
+
+            aiChatLoading = true;
+            input.value = '';
+            input.style.height = 'auto';
+
+            appendUserMessage(message);
+            scrollAiChatToBottom();
+            appendAiLoading();
+
+            try {
+                const response = await fetch('/api/ai/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+
+                const data = await response.json();
+                removeAiLoading();
+
+                if (data.success) {
+                    appendAiMessage(data.reply);
+                    // 一覧のメッセージプレビューを更新
+                    updateAiLastMessage(document.getElementById('aiListStatus'), document.getElementById('aiListStatusAll'));
+                } else {
+                    appendAiMessage('エラー: ' + (data.error || '不明なエラー'));
+                }
+            } catch (error) {
+                removeAiLoading();
+                appendAiMessage('通信エラーが発生しました。');
+                console.error('AI送信エラー:', error);
+            }
+
+            aiChatLoading = false;
+            scrollAiChatToBottom();
+        }
+
+        // 会話履歴をクリア
+        async function clearAiHistory() {
+            if (!confirm('会話履歴をクリアしますか？')) return;
+
+            try {
+                const response = await fetch('/api/ai/chat/history', { method: 'DELETE' });
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('aiChatMessages').innerHTML = '';
+                    // 一覧のメッセージプレビューも更新
+                    const statusEl = document.getElementById('aiListStatus');
+                    const statusElAll = document.getElementById('aiListStatusAll');
+                    if (statusEl) statusEl.textContent = 'タップしてチャットを開始';
+                    if (statusElAll) statusElAll.textContent = 'タップしてチャットを開始';
+                }
+            } catch (error) {
+                console.error('履歴クリアエラー:', error);
+            }
+        }
+
+        // AIチャットを下にスクロール
+        function scrollAiChatToBottom() {
+            const container = document.getElementById('aiChatMessages');
+            if (container) {
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+
+        // HTMLエスケープ
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // AIチャットイベント設定
+        document.getElementById('aiSendBtn').addEventListener('click', sendAiMessage);
+        document.getElementById('aiClearBtn').addEventListener('click', clearAiHistory);
+        document.getElementById('aiChatInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendAiMessage();
+            }
+        });
+
+        document.getElementById('aiChatInput').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+        });
+        // ============ AIチャット機能 END ============
+
         // 会話リストからDMを開始
         async function startConversationFromList(conversationId, userId, displayName, avatarUrl) {
             currentConversationId = conversationId;
@@ -4821,10 +5888,10 @@
                 currentConversationId = parseInt(conversationId);
                 console.log('🔧 DM画面オープン - 会話ID設定:', currentConversationId);
                 
-                const dmHeader = document.querySelector('.dm-header .dm-user-info');
+                const dmHeader = document.querySelector('#dm-section .dm-header .dm-user-info');
                 const conversation = data.conversation;
-                const avatarStyle = conversation.avatarUrl 
-                    ? `background-image: url(${conversation.avatarUrl})` 
+                const avatarStyle = conversation.avatarUrl
+                    ? `background-image: url(${conversation.avatarUrl}); background-size: cover; background-position: center;`
                     : '';
                 dmHeader.innerHTML = `
                     <div class="dm-avatar" style="${avatarStyle}"></div>
@@ -4837,9 +5904,25 @@
                 };
                 
                 displayDMMessages(data.messages);
-                
-                const sections = document.querySelectorAll('.app-section');
-                sections.forEach(section => section.classList.remove('active'));
+
+                // メインセクションのみインラインスタイルをクリア
+                const mainSections = ['home-section', 'chat-section', 'room-section', 'match-section', 'mypage-section'];
+                mainSections.forEach(id => {
+                    const section = document.getElementById(id);
+                    if (section) {
+                        section.classList.remove('active');
+                        section.style.display = '';
+                    }
+                });
+
+                // 他のオーバーレイセクションを非表示
+                document.getElementById('ai-section').style.display = 'none';
+                document.getElementById('room-chat-section').style.display = 'none';
+                document.getElementById('room-members-section').style.display = 'none';
+                document.getElementById('room-invite-section').style.display = 'none';
+                document.getElementById('relations-section').style.display = 'none';
+
+                // DMセクションを表示
                 document.getElementById('dm-section').style.display = 'block';
                 document.getElementById('dm-section').classList.add('active');
                 
@@ -5022,31 +6105,59 @@
         }
         
         document.getElementById('backFromDmBtn').addEventListener('click', function() {
+            // メインセクションのみインラインスタイルをクリア（オーバーレイセクションは除く）
+            const mainSections = ['home-section', 'chat-section', 'room-section', 'match-section', 'mypage-section'];
+            mainSections.forEach(id => {
+                const section = document.getElementById(id);
+                if (section) {
+                    section.classList.remove('active');
+                    section.style.display = '';
+                }
+            });
+
+            // オーバーレイセクションを非表示
             document.getElementById('dm-section').style.display = 'none';
             document.getElementById('dm-section').classList.remove('active');
-            
-            const sections = document.querySelectorAll('.app-section');
-            sections.forEach(section => section.classList.remove('active'));
-            document.getElementById('home-section').classList.add('active');
-            
-            // フッターナビゲーションを再表示
+            document.getElementById('ai-section').style.display = 'none';
+            document.getElementById('room-chat-section').style.display = 'none';
+            document.getElementById('room-members-section').style.display = 'none';
+            document.getElementById('room-invite-section').style.display = 'none';
+            document.getElementById('relations-section').style.display = 'none';
+
+            // チャットセクションに戻る（「すべて」タブをアクティブに）
+            document.getElementById('chat-section').classList.add('active');
+
+            // フッターナビゲーションを再表示し、チャットタブをアクティブに
             const bottomNav = document.querySelector('.bottom-nav');
             if (bottomNav) {
                 bottomNav.style.display = 'flex';
             }
-            
-            // プロフィールアクションボタンを非表示のまま（元の画面に戻るだけなので）
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(nav => nav.classList.remove('active'));
+            const chatNavItem = Array.from(navItems).find(nav => nav.dataset.section === 'chat');
+            if (chatNavItem) chatNavItem.classList.add('active');
+
+            // 「すべて」タブをアクティブに
+            const chatTabBtns = document.querySelectorAll('#chat-section .chat-list-header .tab-btn');
+            const chatTabContents = document.querySelectorAll('#chat-section .tab-content');
+            chatTabBtns.forEach(b => b.classList.remove('active'));
+            chatTabContents.forEach(c => c.classList.remove('active'));
+            const allTabBtn = Array.from(chatTabBtns).find(btn => btn.dataset.tab === 'all-chat');
+            if (allTabBtn) allTabBtn.classList.add('active');
+            document.getElementById('all-chat-tab').classList.add('active');
+
+            // プロフィールアクションボタンを非表示
             const profileActions = document.getElementById('profileActions');
             if (profileActions) {
                 profileActions.style.display = 'none';
             }
-            
-            // 投稿ボタンを再表示
+
+            // 投稿ボタンを非表示（チャットタブなので）
             const createPostBtn = document.getElementById('btnCreatePost');
             if (createPostBtn) {
-                createPostBtn.style.display = 'flex';
+                createPostBtn.style.display = 'none';
             }
-            
+
             currentConversationId = null;
             currentDMUser = null;
         });
@@ -5148,12 +6259,23 @@
                 roomSubscription = null;
             }
 
-            const roomChatSection = document.getElementById('room-chat-section');
-            roomChatSection.style.display = 'none';
-            roomChatSection.classList.remove('active');
+            // メインセクションのみインラインスタイルをクリア
+            const mainSections = ['home-section', 'chat-section', 'room-section', 'match-section', 'mypage-section'];
+            mainSections.forEach(id => {
+                const section = document.getElementById(id);
+                if (section) {
+                    section.classList.remove('active');
+                    section.style.display = '';
+                }
+            });
 
-            const sections = document.querySelectorAll('.app-section');
-            sections.forEach(section => section.classList.remove('active'));
+            // オーバーレイセクションを非表示
+            document.getElementById('dm-section').style.display = 'none';
+            document.getElementById('ai-section').style.display = 'none';
+            document.getElementById('room-chat-section').style.display = 'none';
+            document.getElementById('room-members-section').style.display = 'none';
+            document.getElementById('room-invite-section').style.display = 'none';
+            document.getElementById('relations-section').style.display = 'none';
 
             // ルームセクションに戻る
             const roomSection = document.getElementById('room-section');
@@ -6025,13 +7147,25 @@
 
         // 戻るボタン
         document.getElementById('backFromRelationsBtn').addEventListener('click', function() {
-            const relationsSection = document.getElementById('relations-section');
-            relationsSection.style.display = 'none';
-            relationsSection.classList.remove('active');
+            // メインセクションのみインラインスタイルをクリア
+            const mainSections = ['home-section', 'chat-section', 'room-section', 'match-section', 'mypage-section'];
+            mainSections.forEach(id => {
+                const section = document.getElementById(id);
+                if (section) {
+                    section.classList.remove('active');
+                    section.style.display = '';
+                }
+            });
+
+            // オーバーレイセクションを非表示
+            document.getElementById('dm-section').style.display = 'none';
+            document.getElementById('ai-section').style.display = 'none';
+            document.getElementById('room-chat-section').style.display = 'none';
+            document.getElementById('room-members-section').style.display = 'none';
+            document.getElementById('room-invite-section').style.display = 'none';
+            document.getElementById('relations-section').style.display = 'none';
 
             // マイページに戻る
-            const sections = document.querySelectorAll('.app-section');
-            sections.forEach(section => section.classList.remove('active'));
             document.getElementById('mypage-section').classList.add('active');
 
             // フッターを表示
