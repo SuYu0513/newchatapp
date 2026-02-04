@@ -42,7 +42,7 @@ public class GeminiService {
      */
     private String buildSystemPrompt(AiPersona persona, String userName) {
         if (persona == null) {
-            return "あなたは親しみやすいAIアシスタントです。日本語で会話してください。";
+            return "あなたは親しみやすいAIパートナーです。日本語で会話してください。";
         }
 
         StringBuilder prompt = new StringBuilder();
@@ -210,6 +210,7 @@ public class GeminiService {
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
         String url = GEMINI_API_URL + "?key=" + apiKey;
+        @SuppressWarnings("unchecked")
         ResponseEntity<Map<String, Object>> response = restTemplate.exchange(url, HttpMethod.POST, entity, (Class<Map<String, Object>>)(Class<?>)Map.class);
 
         return extractReplyText(response.getBody());
@@ -312,6 +313,7 @@ public class GeminiService {
 
         try {
             String url = GEMINI_API_URL + "?key=" + apiKey;
+            @SuppressWarnings("unchecked")
             ResponseEntity<Map<String, Object>> response = restTemplate.exchange(url, HttpMethod.POST, entity, (Class<Map<String, Object>>)(Class<?>)Map.class);
             Map<String, Object> responseBody = response.getBody();
 
