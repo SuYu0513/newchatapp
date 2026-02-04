@@ -55,6 +55,9 @@ uploads/
 ### Node modules ###
 node_modules/
 
+### Render ###
+.render/
+
 ### SQL files (開発用) ###
 *.sql
 

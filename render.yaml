@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: chatapp
+    env: java
+    buildCommand: ./mvnw clean package -DskipTests
+    startCommand: java -jar target/chatapp-0.0.1-SNAPSHOT.jar
+    envVars:
+      - key: JAVA_TOOL_OPTIONS
+        value: -Xmx512m
+      - key: PORT
+        value: 9090
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: LEONARDO_API_KEY
+        sync: false
+    autoDeploy: true
