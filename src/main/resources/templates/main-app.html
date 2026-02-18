@@ -336,6 +336,20 @@
                     </div>
                 </div>
 
+                <!-- マッチング写真未設定オーバーレイ -->
+                <div class="match-no-photo-overlay" id="matchNoPhotoOverlay" style="display: none;">
+                    <div class="match-no-photo-card" id="matchNoPhotoCard">
+                        <div class="match-no-photo-icon">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                        <p class="match-no-photo-title">マッチング設定を行ってください</p>
+                        <p class="match-no-photo-desc">マッチタブを使用するには、マッチング用の写真を設定する必要があります。</p>
+                        <a href="/random-matching/settings" class="match-no-photo-btn">
+                            <i class="fas fa-cog"></i> マッチング設定へ
+                        </a>
+                    </div>
+                </div>
+
                 <!-- いいね一覧パネル（タブ切替で表示） -->
                 <div class="match-like-panel" id="matchLikePanel" style="display: none;">
                     <div class="match-like-list" id="matchLikeList">
@@ -2086,14 +2100,31 @@
             document.body.style.overflow = '';
         }
         
-        // ログアウト処理
+        // ログアウト処理（CSRF対応：GETではなくPOSTで送信）
         function handleLogout(event) {
+            event.preventDefault();
+
             // localStorageから記憶したログイン情報を削除
             localStorage.removeItem('rememberLogin');
             localStorage.removeItem('savedUsername');
             sessionStorage.clear();
-            console.log('ログイン情報を削除しました');
-            // ログアウト処理を続行（デフォルトのリンク動作）
+
+            // CSRFトークンを取得してPOSTフォームで送信
+            const csrfToken = window.csrfHelper ? window.csrfHelper.getToken() : null;
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/logout';
+
+            if (csrfToken) {
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '_csrf';
+                tokenInput.value = csrfToken;
+                form.appendChild(tokenInput);
+            }
+
+            document.body.appendChild(form);
+            form.submit();
         }
         
         // 星を生成
@@ -2198,6 +2229,17 @@
                         localStorage.setItem('seenLikeCount_' + k, latestLikeCounts[k] || 0);
                     });
                     updateNavBadge('navBadgeMatch', 0);
+
+                    // 未選択の場合は「近所」タブを自動選択
+                    const activeMatchBtn = document.querySelector('.match-type-btn.active');
+                    if (!activeMatchBtn) {
+                        const nearbyBtn = document.querySelector('.match-type-btn[data-match-type="nearby"]');
+                        if (nearbyBtn) {
+                            document.querySelectorAll('.match-type-btn').forEach(b => b.classList.remove('active'));
+                            nearbyBtn.classList.add('active');
+                            startMatching('nearby');
+                        }
+                    }
                 }
 
                 // マイページに遷移した時に自分の投稿を読み込み、スクロールハンドラを設定
@@ -2317,10 +2359,20 @@
             swipeActions.style.display = 'none';
             swipeLoading.style.display = 'flex';
 
+            const noPhotoOverlay = document.getElementById('matchNoPhotoOverlay');
+            if (noPhotoOverlay) noPhotoOverlay.style.display = 'none';
+
             fetch('/random-matching/api/candidates?type=' + matchType)
                 .then(r => r.json())
                 .then(data => {
                     swipeLoading.style.display = 'none';
+
+                    // ユーザー自身がマッチング写真を未設定の場合
+                    if (data.userHasPhotos === false) {
+                        if (noPhotoOverlay) noPhotoOverlay.style.display = 'flex';
+                        return;
+                    }
+
                     if (data.success && data.candidates.length > 0) {
                         swipeCandidates = data.candidates;
                         swipeIndex = 0;
@@ -2335,6 +2387,21 @@
                     swipeEmpty.style.display = 'flex';
                 });
         }
+
+        // オーバーレイの外タップでホームタブへ
+        (function() {
+            const overlay = document.getElementById('matchNoPhotoOverlay');
+            if (!overlay) return;
+            overlay.addEventListener('click', function(e) {
+                const card = document.getElementById('matchNoPhotoCard');
+                if (card && !card.contains(e.target)) {
+                    overlay.style.display = 'none';
+                    // ホームタブへ移動
+                    const homeNavBtn = document.querySelector('.nav-item[data-section="home"]');
+                    if (homeNavBtn) homeNavBtn.click();
+                }
+            });
+        })();
 
         // カードを最大2枚描画（現在 + 次）
         function renderSwipeCards() {
@@ -2357,29 +2424,87 @@
                 card.style.zIndex = '1';
             }
 
-            // タグHTML
-            let tagsHtml = '';
-            if (candidate.favoriteThings) {
-                const tags = candidate.favoriteThings.split(',');
-                tagsHtml = '<div class="swipe-card-tags">' +
-                    tags.map(t => '<span class="swipe-card-tag">' + t.trim() + '</span>').join('') +
-                    '</div>';
+            // 住所HTML
+            const locationHtml = candidate.location
+                ? '<div class="swipe-card-location"><i class="fas fa-map-marker-alt"></i>' + candidate.location + '</div>'
+                : '';
+
+            // 好きなものタグを「一致→非一致」順で並べるHTML生成（趣味・運命タブ用）
+            function buildTagsHtml() {
+                const matchSet = new Set(
+                    candidate.matchingTags
+                        ? candidate.matchingTags.split(',').map(t => t.trim()).filter(Boolean)
+                        : []
+                );
+                const allTags = candidate.favoriteThings
+                    ? candidate.favoriteThings.split(',').map(t => t.trim()).filter(Boolean)
+                    : [];
+
+                if (allTags.length === 0) return '';
+
+                const matchTags  = allTags.filter(t => matchSet.has(t));
+                const otherTags  = allTags.filter(t => !matchSet.has(t));
+
+                let html = '<div class="swipe-card-tags">';
+                matchTags.forEach(t => {
+                    html += '<span class="swipe-card-tag swipe-card-tag--match">' + t + '</span>';
+                });
+                otherTags.forEach(t => {
+                    html += '<span class="swipe-card-tag">' + t + '</span>';
+                });
+                html += '</div>';
+                return html;
             }
 
-            // 住所
-            let locationHtml = '';
-            if (candidate.location) {
-                locationHtml = '<div class="swipe-card-location"><i class="fas fa-map-marker-alt"></i>' + candidate.location + '</div>';
+            // 年齢層HTML（年齢・運命タブ用）
+            const ageGroupHtml = candidate.ageGroup
+                ? '<div class="swipe-card-age"><i class="fas fa-user"></i> ' + candidate.ageGroup + '</div>'
+                : '';
+
+            // タイプ別のカード情報エリア
+            let typeInfoHtml = '';
+            switch (currentMatchType) {
+                case 'nearby':
+                    typeInfoHtml =
+                        '<div class="swipe-card-type-info swipe-card-type-info--nearby">' +
+                        (locationHtml || '<div class="swipe-card-location swipe-card-location--unset"><i class="fas fa-map-marker-alt"></i> 居住地未設定</div>') +
+                        '</div>';
+                    break;
+                case 'hobby': {
+                    const tagsHtml = buildTagsHtml();
+                    typeInfoHtml =
+                        '<div class="swipe-card-type-info swipe-card-type-info--hobby">' +
+                        (tagsHtml || '<div class="swipe-card-match-label swipe-card-match-label--none">好きなものが未設定</div>') +
+                        '</div>';
+                    break;
+                }
+                case 'age':
+                    typeInfoHtml =
+                        '<div class="swipe-card-type-info swipe-card-type-info--age">' +
+                        (ageGroupHtml || '<div class="swipe-card-age swipe-card-age--unset"><i class="fas fa-user"></i> 年齢未設定</div>') +
+                        '</div>';
+                    break;
+                case 'destiny': {
+                    const tagsHtml = buildTagsHtml();
+                    typeInfoHtml =
+                        '<div class="swipe-card-type-info swipe-card-type-info--destiny">' +
+                        (locationHtml || '') +
+                        (ageGroupHtml || '') +
+                        (tagsHtml || '') +
+                        '</div>';
+                    break;
+                }
+                default:
+                    typeInfoHtml = locationHtml;
             }
 
             card.innerHTML =
                 '<div class="swipe-card-photo" style="background-image: url(\'' + candidate.photo + '\');"></div>' +
                 '<div class="swipe-card-name">' + candidate.displayName + '</div>' +
-                locationHtml +
                 '<div class="swipe-stamp swipe-stamp-like">LIKE</div>' +
                 '<div class="swipe-stamp swipe-stamp-skip">NOPE</div>' +
                 '<div class="swipe-card-info">' +
-                    tagsHtml +
+                    typeInfoHtml +
                     '<div class="swipe-card-bio">' + (candidate.bio || '') + '</div>' +
                 '</div>';
 
@@ -7367,5 +7492,11 @@
             }
         }
     </script>
+
+    <!-- CSRF対応 -->
+    <script th:src="@{/js/csrf-helper.js(v=${@appVersion})}"></script>
+
+    <!-- 二重送信防止 -->
+    <script th:src="@{/js/prevent-double-submit.js(v=${@appVersion})}"></script>
 </body>
 </html>

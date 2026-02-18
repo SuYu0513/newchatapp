@@ -1,5 +1,6 @@
 package com.example.chatapp.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -11,6 +12,12 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class LoginRedirectInterceptor implements HandlerInterceptor {
+
+    @Value("${app.debug.enabled:false}")
+    private boolean debugEnabled;
+
+    @Value("${spring.h2.console.enabled:false}")
+    private boolean h2ConsoleEnabled;
 
     @Override
     public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
@@ -33,21 +40,35 @@ public class LoginRedirectInterceptor implements HandlerInterceptor {
 
         return true;
     }
-    
+
     private boolean isAllowedPath(String requestURI) {
-        return requestURI.startsWith("/css/") ||
+        // 常に許可するパス
+        boolean allowed = requestURI.startsWith("/css/") ||
                requestURI.startsWith("/js/") ||
                requestURI.startsWith("/images/") ||
                requestURI.equals("/manifest.json") ||
                requestURI.equals("/sw.js") ||
                requestURI.startsWith("/icon-") ||
+               requestURI.equals("/apple-touch-icon.png") ||
                requestURI.equals("/login") ||
                requestURI.equals("/register") ||
-               requestURI.startsWith("/login/") ||
                requestURI.equals("/profile/create") ||
-               requestURI.startsWith("/h2-console/") ||
                requestURI.equals("/error") ||
                requestURI.equals("/passreset") ||
                requestURI.startsWith("/api/auth/");
+
+        // デバッグモード時のみ許可するパス
+        if (debugEnabled) {
+            allowed = allowed ||
+                requestURI.startsWith("/login/") ||
+                requestURI.equals("/icon-generator.html");
+        }
+
+        // H2コンソール有効時のみ許可するパス
+        if (h2ConsoleEnabled) {
+            allowed = allowed || requestURI.startsWith("/h2-console/");
+        }
+
+        return allowed;
     }
 }

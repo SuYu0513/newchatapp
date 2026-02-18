@@ -4,6 +4,7 @@ import com.example.chatapp.dto.UserRegistrationDto;
 import com.example.chatapp.entity.User;
 import com.example.chatapp.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -25,6 +26,9 @@ public class AuthController {
 
     @Autowired
     private UserService userService;
+
+    @Value("${app.debug.enabled:false}")
+    private boolean debugEnabled;
 
     @GetMapping("/")
     public String home(java.security.Principal principal) {
@@ -58,11 +62,14 @@ public class AuthController {
             model.addAttribute("success", "登録が完了しました。ログインしてください。");
         }
         
-        // デバッグモード情報を取得してテンプレートに渡す
+        // デバッグ機能が有効かどうか（本番では無効）
+        model.addAttribute("debugEnabled", debugEnabled);
+
+        // デバッグモード情報を取得してテンプレートに渡す（デバッグ機能有効時のみ意味がある）
         Boolean debugMode = (Boolean) session.getAttribute("debugMode");
-        boolean isDebugMode = debugMode != null && debugMode;
+        boolean isDebugMode = debugEnabled && debugMode != null && debugMode;
         model.addAttribute("debugMode", isDebugMode);
-        
+
         return "login";
     }
 

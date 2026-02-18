@@ -39,8 +39,151 @@
             border-radius: 15px 15px 0 0 !important;
         }
 
-        h2, .text-muted {
-            color: rgba(66, 8, 8, 0.9) !important;
+        /* カードヘッダー内のタイトル */
+        .card-header h6 {
+            color: rgba(255, 255, 255, 0.95) !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-header h6 i {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* カード内のテキスト */
+        .card-body .text-muted {
+            color: rgba(200, 200, 220, 0.85) !important;
+        }
+
+        .card-body p.text-muted {
+            color: rgba(180, 180, 200, 0.9) !important;
+        }
+
+        /* フォームラベル */
+        .card-body .form-label {
+            color: rgba(230, 230, 250, 0.95) !important;
+            font-weight: 500;
+        }
+
+        .card-body .form-label i {
+            color: rgba(180, 160, 220, 0.9);
+        }
+
+        /* 文字カウンター */
+        .character-counter {
+            color: rgba(160, 160, 180, 0.8) !important;
+        }
+
+        .character-counter.warning {
+            color: rgba(255, 193, 7, 0.9) !important;
+        }
+
+        .character-counter.danger {
+            color: rgba(255, 100, 100, 0.95) !important;
+        }
+
+        /* タグカウンター */
+        .tag-counter {
+            color: rgba(160, 160, 180, 0.8) !important;
+        }
+
+        .tag-counter.limit {
+            color: rgba(255, 100, 100, 0.95) !important;
+        }
+
+        /* セレクトボックス・入力フィールド */
+        .card-body .form-control,
+        .card-body .form-select {
+            background: rgba(255, 255, 255, 0.95) !important;
+            color: #333 !important;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .card-body .form-control:focus,
+        .card-body .form-select:focus {
+            background: rgba(255, 255, 255, 1) !important;
+            border-color: rgba(102, 126, 234, 0.6);
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .card-body .form-control::placeholder {
+            color: rgba(100, 100, 120, 0.7);
+        }
+
+        /* 居住地選択ボタン */
+        .location-selector-btn {
+            background: rgba(255, 255, 255, 0.95) !important;
+            color: #333 !important;
+        }
+
+        .location-selector-btn span {
+            color: #333;
+        }
+
+        .location-selector-btn i {
+            color: rgba(100, 100, 120, 0.8);
+        }
+
+        /* アラートメッセージ */
+        .alert-success {
+            background: rgba(40, 167, 69, 0.9);
+            border-color: rgba(40, 167, 69, 0.5);
+            color: #fff;
+        }
+
+        .alert-danger {
+            background: rgba(220, 53, 69, 0.9);
+            border-color: rgba(220, 53, 69, 0.5);
+            color: #fff;
+        }
+
+        /* ボタン */
+        .card-body .btn-outline-secondary {
+            color: rgba(200, 200, 220, 0.9);
+            border-color: rgba(200, 200, 220, 0.5);
+        }
+
+        .card-body .btn-outline-secondary:hover {
+            background: rgba(200, 200, 220, 0.2);
+            color: #fff;
+        }
+
+        .card-body .btn-outline-danger {
+            color: rgba(255, 150, 150, 0.95);
+            border-color: rgba(255, 100, 100, 0.5);
+        }
+
+        .card-body .btn-outline-danger:hover {
+            background: rgba(220, 53, 69, 0.8);
+            color: #fff;
+            border-color: transparent;
+        }
+
+        /* ファイルサイズ説明テキスト */
+        .card-body small.text-muted {
+            color: rgba(180, 180, 200, 0.8) !important;
+        }
+
+        /* タグコンテナ背景調整 */
+        .tags-container {
+            background: rgba(248, 249, 255, 0.95) !important;
+            border-color: rgba(102, 126, 234, 0.4) !important;
+        }
+
+        .tags-container.empty {
+            background: rgba(248, 249, 250, 0.1) !important;
+            border-color: rgba(200, 200, 220, 0.3) !important;
+            color: rgba(180, 180, 200, 0.7);
+        }
+
+        /* タグ入力エリア */
+        .tag-input-area .form-control {
+            background: rgba(255, 255, 255, 0.95) !important;
+        }
+
+        /* アバターアップロードエリア */
+        .avatar-upload-area {
+            position: relative;
+            cursor: pointer;
         }
 
         /* 星のキラキラ効果 */

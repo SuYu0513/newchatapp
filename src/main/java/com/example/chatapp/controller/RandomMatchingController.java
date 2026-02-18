@@ -355,6 +355,7 @@ public class RandomMatchingController {
             // レスポンス用にデータ変換
             List<Map<String, Object>> candidateList = new java.util.ArrayList<>();
             java.util.Random rand = new java.util.Random();
+            java.util.Set<String> myTagsForResponse = parseTags(myProfile.getFavoriteThings());
             for (UserProfile p : candidates) {
                 Map<String, Object> c = new HashMap<>();
                 c.put("userId", p.getUser().getId());
@@ -363,6 +364,17 @@ public class RandomMatchingController {
                 c.put("bio", p.getBio());
                 c.put("location", p.getLocation());
                 c.put("favoriteThings", p.getFavoriteThings());
+
+                // 年齢層
+                c.put("ageGroup", p.getAgeGroup() != null ? p.getAgeGroup().getDisplayName() : null);
+
+                // 一致するタグ（趣味・運命タブで表示用）
+                java.util.Set<String> theirTags = parseTags(p.getFavoriteThings());
+                java.util.List<String> commonTags = new java.util.ArrayList<>();
+                for (String tag : theirTags) {
+                    if (myTagsForResponse.contains(tag)) commonTags.add(tag);
+                }
+                c.put("matchingTags", commonTags.isEmpty() ? null : String.join(",", commonTags));
 
                 // マッチング写真からランダムで1枚選択
                 String[] photos = p.getMatchingPhotos().split(",");
@@ -374,6 +386,7 @@ public class RandomMatchingController {
 
             response.put("success", true);
             response.put("candidates", candidateList);
+            response.put("userHasPhotos", myProfile.getMatchingPhotos() != null && !myProfile.getMatchingPhotos().isEmpty());
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", e.getMessage());

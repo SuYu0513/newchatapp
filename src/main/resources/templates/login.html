@@ -27,6 +27,7 @@
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
     <link th:href="@{/css/app-style.css(v=${@appVersion})}" rel="stylesheet">
     <link th:href="@{/css/tenkou.css(v=${@appVersion})}" rel="stylesheet">
+    <link th:href="@{/css/common.css(v=${@appVersion})}" rel="stylesheet">
     <!-- 統合CSSファイルを使用（PC・モバイル対応） -->
 </head>
 <body>
@@ -146,10 +147,10 @@
                                         <i class="fas fa-bug me-1"></i>🔧 デバッグ無効化
                                     </a>
                                 </div>
-                                <!-- デバッグモード無効時にデバッグモード有効化リンクを表示 -->
-                                <div th:if="${!debugMode}" class="mt-3">
+                                <!-- デバッグ機能が有効で、かつデバッグモードが無効の場合のみ表示（本番では非表示） -->
+                                <div th:if="${debugEnabled and !debugMode}" class="mt-3">
                                     <small style="color: #999; font-size: 0.8rem;">
-                                        開発者の方は <a href="javascript:void(0)" onclick="tryEnableDebugMode()" style="color: #667eea; text-decoration: none;">こちら</a> からデバッグモードを有効にできます
+                                        <!-- 開発者の方は <a href="javascript:void(0)" onclick="tryEnableDebugMode()" style="color: #667eea; text-decoration: none;">こちら</a> からデバッグモードを有効にできます -->
                                     </small>
                                 </div>
                             </div>
@@ -570,5 +571,11 @@
     
     <!-- PWA機能 -->
     <script src="/js/pwa.js"></script>
+
+    <!-- CSRF対応 -->
+    <script th:src="@{/js/csrf-helper.js(v=${@appVersion})}"></script>
+
+    <!-- 二重送信防止 -->
+    <script th:src="@{/js/prevent-double-submit.js(v=${@appVersion})}"></script>
 </body>
 </html>
