@@ -51,7 +51,7 @@ public class SecurityConfig {
             .userDetailsService(userDetailsService)
             .authorizeHttpRequests(authz -> authz
                 // 完全に公開されるリソース（認証不要） - 最優先
-                .requestMatchers("/login", "/register", "/password-reset", "/api/auth/**").permitAll()
+                .requestMatchers("/login", "/register", "/passreset", "/api/auth/**").permitAll()
                 // プロフィール作成（新規登録直後のみ）
                 .requestMatchers("/profile/create").permitAll()
                 // 静的リソース（認証不要だが制限）

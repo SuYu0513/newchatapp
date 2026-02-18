@@ -77,30 +77,30 @@ public class ProfileCreationController {
         if (userId == null) {
             return "redirect:/login";
         }
-        
+
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
             return "redirect:/login";
         }
-        
+
         // UserProfileを取得または作成
         UserProfile userProfile = userProfileRepository.findByUser(user)
                 .orElse(new UserProfile(user));
-        
+
         // プロフィール情報を更新
         userProfile.setDisplayName(displayName);
         userProfile.setBio(bio != null ? bio : "");
-        
+
         // 好きなものを保存（カンマ区切り）
         if (favoriteThings != null && !favoriteThings.trim().isEmpty()) {
             userProfile.setFavoriteThings(favoriteThings);
-            
+
             // 各タグの使用回数を更新
             List<String> tags = Arrays.stream(favoriteThings.split(","))
                     .map(String::trim)
                     .filter(s -> !s.isEmpty())
                     .collect(Collectors.toList());
-            
+
             for (String tagName : tags) {
                 FavoriteTag tag = favoriteTagRepository.findByTagName(tagName)
                         .orElse(new FavoriteTag(tagName));
@@ -110,9 +110,9 @@ public class ProfileCreationController {
         } else {
             userProfile.setFavoriteThings("");
         }
-        
+
         userProfileRepository.save(userProfile);
-        
+
         // 自動ログイン処理
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
             user.getUsername(),
@@ -120,16 +120,16 @@ public class ProfileCreationController {
             List.of(new SimpleGrantedAuthority("ROLE_USER"))
         );
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        
+
         // セッションに認証情報を保存
         request.getSession().setAttribute(
             HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
             SecurityContextHolder.getContext()
         );
-        
+
         // セッションから一時データをクリア
         session.removeAttribute("newUserId");
-        
+
         // ログイン後と同じホーム画面にリダイレクト
         return "redirect:/home";
     }

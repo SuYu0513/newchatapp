@@ -15,22 +15,22 @@ public class LoginRedirectInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
         String requestURI = request.getRequestURI();
-        
+
         // 静的リソースや許可されたパスはスキップ
         if (isAllowedPath(requestURI)) {
             return true;
         }
-        
+
         // 認証状態をチェック
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isAuthenticated = auth != null && auth.isAuthenticated() && !auth.getName().equals("anonymousUser");
-        
+
         // 未認証でlogin/register以外にアクセスしようとした場合は強制的にloginにリダイレクト
         if (!isAuthenticated && !requestURI.equals("/login") && !requestURI.equals("/register")) {
             response.sendRedirect("/login");
             return false;
         }
-        
+
         return true;
     }
     
@@ -46,6 +46,8 @@ public class LoginRedirectInterceptor implements HandlerInterceptor {
                requestURI.startsWith("/login/") ||
                requestURI.equals("/profile/create") ||
                requestURI.startsWith("/h2-console/") ||
-               requestURI.equals("/error");
+               requestURI.equals("/error") ||
+               requestURI.equals("/passreset") ||
+               requestURI.startsWith("/api/auth/");
     }
 }

@@ -72,7 +72,7 @@ public class AuthController {
         return "register";
     }
     
-    @GetMapping("/password-reset")
+    @GetMapping("/passreset")
     public String passwordResetPage() {
         return "password-reset";
     }
