@@ -9,8 +9,21 @@ services:
         value: -Xmx512m
       - key: PORT
         value: 9090
+      # PostgreSQL (Supabase) 接続設定 - Renderダッシュボードで値を設定すること
+      - key: DATABASE_URL
+        sync: false   # jdbc:postgresql://db.xxxx.supabase.co:5432/postgres?sslmode=require
+      - key: DB_USERNAME
+        sync: false   # postgres
+      - key: DB_PASSWORD
+        sync: false   # Supabaseで設定したDBパスワード
+      - key: DB_DRIVER
+        value: org.postgresql.Driver
+      - key: DB_DIALECT
+        value: org.hibernate.dialect.PostgreSQLDialect
       - key: GEMINI_API_KEY
         sync: false
       - key: LEONARDO_API_KEY
         sync: false
+      - key: REMEMBER_ME_KEY
+        sync: false   # ランダムな文字列を設定（本番セキュリティ用）
     autoDeploy: true
